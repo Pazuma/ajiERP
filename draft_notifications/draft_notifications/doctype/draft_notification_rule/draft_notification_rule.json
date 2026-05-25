@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:rule_name",
+ "creation": "2026-05-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "rule_name",
+  "document_type",
+  "recipient_section",
+  "recipient_type",
+  "role",
+  "user_field",
+  "custom_method",
+  "fixed_recipients",
+  "permission_section",
+  "respect_permissions",
+  "include_owner",
+  "deduplicate",
+  "email_section",
+  "subject",
+  "message"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Rule Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Document Type",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "recipient_section",
+   "fieldtype": "Section Break",
+   "label": "Recipients"
+  },
+  {
+   "fieldname": "recipient_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Recipient Type",
+   "options": "Fixed Users\nUsers With Role\nUser Field\nOwner\nCustom Method",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='Users With Role'",
+   "fieldname": "role",
+   "fieldtype": "Link",
+   "label": "Role",
+   "mandatory_depends_on": "eval:doc.recipient_type=='Users With Role'",
+   "options": "Role"
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='User Field'",
+   "description": "Field on the target document that stores a User id.",
+   "fieldname": "user_field",
+   "fieldtype": "Data",
+   "label": "User Field",
+   "mandatory_depends_on": "eval:doc.recipient_type=='User Field'"
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='Custom Method'",
+   "description": "Python dotted path. The method receives the document and returns one user or a list of users.",
+   "fieldname": "custom_method",
+   "fieldtype": "Data",
+   "label": "Custom Method",
+   "mandatory_depends_on": "eval:doc.recipient_type=='Custom Method'"
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='Fixed Users'",
+   "fieldname": "fixed_recipients",
+   "fieldtype": "Table",
+   "label": "Fixed Recipients",
+   "options": "Draft Notification Recipient"
+  },
+  {
+   "fieldname": "permission_section",
+   "fieldtype": "Section Break",
+   "label": "Permission"
+  },
+  {
+   "default": "1",
+   "fieldname": "respect_permissions",
+   "fieldtype": "Check",
+   "label": "Respect Document Read Permission"
+  },
+  {
+   "default": "0",
+   "fieldname": "include_owner",
+   "fieldtype": "Check",
+   "label": "Include Owner"
+  },
+  {
+   "default": "1",
+   "fieldname": "deduplicate",
+   "fieldtype": "Check",
+   "label": "Do Not Send Twice For Same Document And User"
+  },
+  {
+   "fieldname": "email_section",
+   "fieldtype": "Section Break",
+   "label": "Email"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject"
+  },
+  {
+   "description": "Jinja template. The current document is available as doc.",
+   "fieldname": "message",
+   "fieldtype": "Text Editor",
+   "label": "Message"
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Draft Notifications",
+ "name": "Draft Notification Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
