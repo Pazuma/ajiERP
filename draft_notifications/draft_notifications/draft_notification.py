@@ -1,9 +1,12 @@
 import frappe
+from frappe import _
 from frappe.utils import get_url_to_form
 
 
 RULE_DOCTYPE = "Draft Notification Rule"
 LOG_DOCTYPE = "Draft Notification Log"
+DESK_NOTIFICATION_DOCTYPE = "Notification Log"
+ALLOWED_METHOD_PREFIXES_CONF = "draft_notification_allowed_method_prefixes"
 
 
 def handle_after_insert(doc, method=None):
@@ -55,66 +58,42 @@ def send_for_rule(doc, rule):
 			frappe.log_error(title=f"Draft notification failed for user {user}", message=traceback)
 
 
-def send_to_user(doc, rule, user):
+def send_to_user(doc, rule, user, ignore_deduplicate=False):
 	user_email = get_enabled_user_email(user)
 	if not user_email:
-		create_log(doc, rule, user=user, status="Skipped", reason="User is disabled or has no email")
-		return
+		return create_log(doc, rule, user=user, status="Skipped", reason="User is disabled or has no email")
 
-	if rule.deduplicate and already_sent(doc, rule, user):
-		create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="Already sent")
-		return
+	if not ignore_deduplicate and rule.deduplicate and already_sent(doc, rule, user):
+		return create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="Already sent")
 
 	if rule.respect_permissions and not can_read_doc(doc, user):
-		create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="No read permission")
-		return
+		return create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="No read permission")
 
 	try:
+		subject = render_subject(doc, rule)
+		message = render_message(doc, rule)
+		create_desk_notification(doc, rule, user, user_email, subject, message)
+
 		email_queue = frappe.sendmail(
 			recipients=[user_email],
-			subject=render_subject(doc, rule),
-			message=render_message(doc, rule),
+			subject=subject,
+			message=message,
 			reference_doctype=doc.doctype,
 			reference_name=doc.name,
 			delayed=True,
 		)
-		status, reason = send_email_queue_now(email_queue)
-		create_log(
+		return create_log(
 			doc,
 			rule,
 			user=user,
 			email=user_email,
-			status=status,
-			reason=reason,
+			status="Queued",
 			email_queue=email_queue.name if email_queue else None,
 		)
 	except Exception:
 		traceback = frappe.get_traceback()
-		create_log(doc, rule, user=user, email=user_email, status="Failed", reason=traceback)
 		frappe.log_error(title=f"Draft notification send failed: {doc.doctype} {doc.name}", message=traceback)
-
-
-def send_email_queue_now(email_queue):
-	if not email_queue:
-		return "Queued", None
-
-	try:
-		email_queue.send()
-	except Exception:
-		frappe.log_error(title=f"Immediate draft notification email failed: {email_queue.name}", message=frappe.get_traceback())
-
-	queue = frappe.db.get_value("Email Queue", email_queue.name, ["status", "error"], as_dict=True)
-	if not queue:
-		return "Queued", None
-
-	if queue.status == "Sent":
-		return "Sent", None
-	if queue.status == "Error":
-		return "Failed", queue.error or "Email Queue status is Error"
-	if queue.status == "Partially Sent":
-		return "Failed", queue.error or "Email Queue was partially sent"
-
-	return "Queued", queue.error
+		return create_log(doc, rule, user=user, email=user_email, status="Failed", reason=traceback)
 
 
 def has_enabled_rules(doctype):
@@ -163,6 +142,7 @@ def get_candidate_users(doc, rule):
 	elif rule.recipient_type == "Owner":
 		users.append(doc.owner)
 	elif rule.recipient_type == "Custom Method":
+		validate_custom_method(rule.custom_method)
 		users.extend(as_list(frappe.get_attr(rule.custom_method)(doc)))
 
 	if rule.include_owner:
@@ -233,6 +213,51 @@ def already_sent(doc, rule, user):
 	)
 
 
+def create_desk_notification(doc, rule, user, user_email, subject, message):
+	if not frappe.db.exists("DocType", DESK_NOTIFICATION_DOCTYPE):
+		return
+
+	if already_notified(doc, rule, user, subject):
+		return
+
+	try:
+		frappe.get_doc(
+			{
+				"doctype": DESK_NOTIFICATION_DOCTYPE,
+				"type": "Alert",
+				"for_user": user,
+				"from_user": doc.owner,
+				"document_type": doc.doctype,
+				"document_name": doc.name,
+				"subject": subject,
+				"email_content": message,
+			}
+		).insert(ignore_permissions=True)
+	except Exception:
+		frappe.log_error(
+			title=f"Draft notification desk alert failed for user {user_email}",
+			message=frappe.get_traceback(),
+		)
+
+
+def already_notified(doc, rule, user, subject):
+	if not rule.deduplicate:
+		return False
+
+	return bool(
+		frappe.db.exists(
+			DESK_NOTIFICATION_DOCTYPE,
+			{
+				"type": "Alert",
+				"for_user": user,
+				"document_type": doc.doctype,
+				"document_name": doc.name,
+				"subject": subject,
+			},
+		)
+	)
+
+
 def render_subject(doc, rule):
 	template = rule.subject or "New draft {{ doc.doctype }} {{ doc.name }}"
 	return frappe.render_template(template, get_template_context(doc))
@@ -258,7 +283,7 @@ def create_log(doc, rule, status, user=None, email=None, reason=None, email_queu
 		return
 
 	try:
-		frappe.get_doc(
+		return frappe.get_doc(
 			{
 				"doctype": LOG_DOCTYPE,
 				"rule": rule.name,
@@ -273,6 +298,7 @@ def create_log(doc, rule, status, user=None, email=None, reason=None, email_queu
 		).insert(ignore_permissions=True)
 	except Exception:
 		frappe.log_error(title="Failed to create Draft Notification Log", message=frappe.get_traceback())
+		return None
 
 
 def sync_queued_logs():
@@ -291,6 +317,56 @@ def sync_queued_logs():
 
 	for log in logs:
 		sync_log_from_email_queue(log)
+
+
+@frappe.whitelist()
+def retry_failed_log(log_name):
+	if not frappe.has_permission(LOG_DOCTYPE, "write"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	log = frappe.get_doc(LOG_DOCTYPE, log_name)
+	if log.status != "Failed":
+		frappe.throw(_("Only failed draft notification logs can be retried."))
+
+	if not log.rule or not frappe.db.exists(RULE_DOCTYPE, log.rule):
+		frappe.throw(_("Draft notification rule is missing."))
+
+	if not log.reference_doctype or not log.reference_name:
+		frappe.throw(_("Reference document is missing."))
+
+	if not frappe.db.exists(log.reference_doctype, log.reference_name):
+		frappe.throw(_("Reference document no longer exists."))
+
+	doc = frappe.get_doc(log.reference_doctype, log.reference_name)
+	if doc.docstatus != 0:
+		frappe.throw(_("Only draft documents can be retried."))
+
+	rule = frappe.get_doc(RULE_DOCTYPE, log.rule)
+	retry_log = send_to_user(doc, rule, log.user, ignore_deduplicate=True)
+	return {"status": retry_log.status if retry_log else None, "log": retry_log.name if retry_log else None}
+
+
+@frappe.whitelist()
+def retry_failed_logs(limit=100):
+	if not frappe.has_permission(LOG_DOCTYPE, "write"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	log_names = frappe.get_all(
+		LOG_DOCTYPE,
+		filters={"status": "Failed"},
+		pluck="name",
+		limit=int(limit or 100),
+	)
+
+	retried = []
+	for log_name in log_names:
+		try:
+			result = retry_failed_log(log_name)
+			retried.append({"source_log": log_name, **result})
+		except Exception:
+			frappe.log_error(title=f"Draft notification retry failed: {log_name}", message=frappe.get_traceback())
+
+	return {"retried": retried}
 
 
 def sync_log_from_email_queue(log):
@@ -329,7 +405,11 @@ def sync_partially_sent_log(log, queue):
 	)
 
 	if not recipient:
-		frappe.db.set_value(LOG_DOCTYPE, log.name, {"status": "Failed", "reason": "Recipient not found in Email Queue"})
+		frappe.db.set_value(
+			LOG_DOCTYPE,
+			log.name,
+			{"status": "Failed", "reason": "Recipient not found in Email Queue"},
+		)
 	elif recipient.status == "Sent":
 		frappe.db.set_value(LOG_DOCTYPE, log.name, {"status": "Sent", "reason": None})
 	else:
@@ -341,6 +421,30 @@ def sync_partially_sent_log(log, queue):
 				"reason": recipient.error or queue.error or "Email Queue was partially sent",
 			},
 		)
+
+
+def validate_custom_method(method_path):
+	if not method_path:
+		frappe.throw(_("Custom Method is required."))
+
+	if method_path.startswith("_") or "._" in method_path:
+		frappe.throw(_("Custom Method cannot point to private modules or methods."))
+
+	allowed_prefixes = get_allowed_custom_method_prefixes()
+	if not any(method_path.startswith(prefix) for prefix in allowed_prefixes):
+		frappe.throw(
+			_("Custom Method must start with one of these prefixes: {0}").format(", ".join(allowed_prefixes))
+		)
+
+
+def get_allowed_custom_method_prefixes():
+	configured_prefixes = frappe.conf.get(ALLOWED_METHOD_PREFIXES_CONF)
+	if configured_prefixes:
+		if isinstance(configured_prefixes, str):
+			configured_prefixes = configured_prefixes.split(",")
+		return [prefix.strip() for prefix in configured_prefixes if prefix and prefix.strip()]
+
+	return [f"{app}." for app in frappe.get_installed_apps() if app != "frappe"]
 
 
 def as_list(value):
