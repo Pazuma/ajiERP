@@ -110,15 +110,27 @@
 
 		return frappe
 			.call({
-				method: "frappe.desk.doctype.notification_log.notification_log.get_notification_logs",
-				args: { limit: 1 },
-				type: "GET",
+				method: "frappe.client.get_list",
+				args: {
+					doctype: "Notification Log",
+					fields: [
+						"name",
+						"subject",
+						"document_type",
+						"document_name",
+						"link",
+						"read",
+						"creation",
+					],
+					filters: {
+						for_user: frappe.session.user,
+					},
+					order_by: "creation desc",
+					limit_page_length: 1,
+				},
 				cache: false,
 			})
-			.then((response) => {
-				const logs = response.message?.notification_logs || [];
-				return logs[0] || null;
-			})
+			.then((response) => (response.message || [])[0] || null)
 			.catch(() => null);
 	}
 
@@ -165,7 +177,9 @@
 		refreshUnreadNotificationBadge();
 
 		fetchLatestNotification().then((notification) => {
-			if (!notification?.name || notification.read || notification.name === lastAlertNotificationName) return;
+			if (!notification?.name) return;
+
+			if (notification.read || notification.name === lastAlertNotificationName) return;
 
 			lastAlertNotificationName = notification.name;
 			showNativeNotificationAlert(notification);
