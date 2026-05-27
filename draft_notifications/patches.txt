@@ -1,1 +1,1 @@
-
+draft_notifications.patches.create_sales_order_notification_rule

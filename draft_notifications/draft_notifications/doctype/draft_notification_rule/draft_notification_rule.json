@@ -10,6 +10,7 @@
   "enabled",
   "rule_name",
   "document_type",
+  "trigger_event",
   "recipient_section",
   "recipient_type",
   "role",
@@ -22,7 +23,13 @@
   "deduplicate",
   "email_section",
   "subject",
-  "message"
+  "message",
+  "subject_zh",
+  "message_zh",
+  "subject_en",
+  "message_en",
+  "subject_es",
+  "message_es"
  ],
  "fields": [
   {
@@ -47,6 +54,16 @@
    "in_standard_filter": 1,
    "label": "Document Type",
    "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "default": "After Insert",
+   "fieldname": "trigger_event",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trigger Event",
+   "options": "After Insert\nOn Update\nOn Submit\nOn Cancel",
    "reqd": 1
   },
   {
@@ -131,6 +148,39 @@
    "fieldname": "message",
    "fieldtype": "Text Editor",
    "label": "Message"
+  },
+  {
+   "fieldname": "subject_zh",
+   "fieldtype": "Data",
+   "label": "Chinese Subject"
+  },
+  {
+   "description": "Chinese Jinja template. Used when recipient language starts with zh.",
+   "fieldname": "message_zh",
+   "fieldtype": "Text Editor",
+   "label": "Chinese Message"
+  },
+  {
+   "fieldname": "subject_en",
+   "fieldtype": "Data",
+   "label": "English Subject"
+  },
+  {
+   "description": "English Jinja template. Used when recipient language starts with en.",
+   "fieldname": "message_en",
+   "fieldtype": "Text Editor",
+   "label": "English Message"
+  },
+  {
+   "fieldname": "subject_es",
+   "fieldtype": "Data",
+   "label": "Spanish Subject"
+  },
+  {
+   "description": "Spanish Jinja template. Used when recipient language starts with es.",
+   "fieldname": "message_es",
+   "fieldtype": "Text Editor",
+   "label": "Spanish Message"
   }
  ],
  "links": [],

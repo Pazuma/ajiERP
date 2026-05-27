@@ -10,32 +10,48 @@ ALLOWED_METHOD_PREFIXES_CONF = "draft_notification_allowed_method_prefixes"
 
 
 def handle_after_insert(doc, method=None):
-	if doc.docstatus != 0 or not frappe.db.exists("DocType", RULE_DOCTYPE):
+	handle_document_event(doc, "After Insert")
+
+
+def handle_on_update(doc, method=None):
+	handle_document_event(doc, "On Update")
+
+
+def handle_on_submit(doc, method=None):
+	handle_document_event(doc, "On Submit")
+
+
+def handle_on_cancel(doc, method=None):
+	handle_document_event(doc, "On Cancel")
+
+
+def handle_document_event(doc, trigger_event):
+	if not frappe.db.exists("DocType", RULE_DOCTYPE):
 		return
 
-	if not has_enabled_rules(doc.doctype):
+	if not has_enabled_rules(doc.doctype, trigger_event):
 		return
 
 	frappe.enqueue(
 		"draft_notifications.draft_notifications.draft_notification.send_draft_notifications",
 		queue="short",
 		enqueue_after_commit=True,
-		job_id=f"draft-notification::{doc.doctype}::{doc.name}",
+		job_id=f"draft-notification::{trigger_event}::{doc.doctype}::{doc.name}",
 		deduplicate=True,
+		at_front=True,
 		doctype=doc.doctype,
 		name=doc.name,
+		trigger_event=trigger_event,
 	)
 
 
-def send_draft_notifications(doctype, name):
+def send_draft_notifications(doctype, name, trigger_event="After Insert"):
 	if not frappe.db.exists(doctype, name) or not frappe.db.exists("DocType", RULE_DOCTYPE):
 		return
 
 	doc = frappe.get_doc(doctype, name)
-	if doc.docstatus != 0:
-		return
 
-	for rule in get_enabled_rules(doctype):
+	for rule in get_enabled_rules(doctype, trigger_event):
 		send_for_rule(doc, rule)
 
 
@@ -70,8 +86,9 @@ def send_to_user(doc, rule, user, ignore_deduplicate=False):
 		return create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="No read permission")
 
 	try:
-		subject = render_subject(doc, rule)
-		message = render_message(doc, rule)
+		language = get_user_language(user)
+		subject = render_subject(doc, rule, language)
+		message = render_message(doc, rule, language)
 		create_desk_notification(doc, rule, user, user_email, subject, message)
 
 		email_queue = frappe.sendmail(
@@ -82,7 +99,7 @@ def send_to_user(doc, rule, user, ignore_deduplicate=False):
 			reference_name=doc.name,
 			delayed=True,
 		)
-		return create_log(
+		log = create_log(
 			doc,
 			rule,
 			user=user,
@@ -90,33 +107,38 @@ def send_to_user(doc, rule, user, ignore_deduplicate=False):
 			status="Queued",
 			email_queue=email_queue.name if email_queue else None,
 		)
+		queue_log_sync_after_commit(log)
+		return log
 	except Exception:
 		traceback = frappe.get_traceback()
 		frappe.log_error(title=f"Draft notification send failed: {doc.doctype} {doc.name}", message=traceback)
 		return create_log(doc, rule, user=user, email=user_email, status="Failed", reason=traceback)
 
 
-def has_enabled_rules(doctype):
+def has_enabled_rules(doctype, trigger_event="After Insert"):
 	return bool(
 		frappe.db.exists(
 			RULE_DOCTYPE,
 			{
 				"enabled": 1,
 				"document_type": doctype,
+				"trigger_event": trigger_event,
 			},
 		)
 	)
 
 
-def get_enabled_rules(doctype):
+def get_enabled_rules(doctype, trigger_event="After Insert"):
 	return frappe.get_all(
 		RULE_DOCTYPE,
 		filters={
 			"enabled": 1,
 			"document_type": doctype,
+			"trigger_event": trigger_event,
 		},
 		fields=[
 			"name",
+			"trigger_event",
 			"recipient_type",
 			"role",
 			"user_field",
@@ -126,6 +148,12 @@ def get_enabled_rules(doctype):
 			"deduplicate",
 			"subject",
 			"message",
+			"subject_zh",
+			"message_zh",
+			"subject_en",
+			"message_en",
+			"subject_es",
+			"message_es",
 		],
 	)
 
@@ -184,6 +212,10 @@ def get_enabled_user_email(user):
 		return None
 
 	return user_data.email
+
+
+def get_user_language(user):
+	return frappe.db.get_value("User", user, "language") or frappe.local.lang or "en"
 
 
 def can_read_doc(doc, user):
@@ -258,17 +290,37 @@ def already_notified(doc, rule, user, subject):
 	)
 
 
-def render_subject(doc, rule):
-	template = rule.subject or "New draft {{ doc.doctype }} {{ doc.name }}"
+def render_subject(doc, rule, language=None):
+	template = get_localized_template(rule, "subject", language) or "New draft {{ doc.doctype }} {{ doc.name }}"
 	return frappe.render_template(template, get_template_context(doc))
 
 
-def render_message(doc, rule):
-	template = rule.message or (
+def render_message(doc, rule, language=None):
+	template = get_localized_template(rule, "message", language) or (
 		"<p>A new draft {{ doc.doctype }} has been created: "
 		'<a href="{{ doc_url }}">{{ doc.name }}</a></p>'
 	)
 	return frappe.render_template(template, get_template_context(doc))
+
+
+def get_localized_template(rule, fieldname, language=None):
+	language_key = get_language_key(language)
+	localized_value = rule.get(f"{fieldname}_{language_key}") if language_key else None
+	return localized_value or rule.get(fieldname)
+
+
+def get_language_key(language):
+	if not language:
+		return None
+
+	language = language.replace("_", "-").lower()
+	if language.startswith("zh"):
+		return "zh"
+	if language.startswith("es"):
+		return "es"
+	if language.startswith("en"):
+		return "en"
+	return None
 
 
 def get_template_context(doc):
@@ -299,6 +351,29 @@ def create_log(doc, rule, status, user=None, email=None, reason=None, email_queu
 	except Exception:
 		frappe.log_error(title="Failed to create Draft Notification Log", message=frappe.get_traceback())
 		return None
+
+
+def queue_log_sync_after_commit(log):
+	if not log or not log.email_queue:
+		return
+
+	frappe.db.after_commit.add(lambda: send_email_queue_and_sync_log(log.email_queue, log.name))
+
+
+def send_email_queue_and_sync_log(email_queue_name, log_name):
+	try:
+		if frappe.db.exists("Email Queue", email_queue_name):
+			frappe.get_doc("Email Queue", email_queue_name).send()
+	except Exception:
+		frappe.log_error(
+			title=f"Draft notification email send failed: {email_queue_name}",
+			message=frappe.get_traceback(),
+		)
+	finally:
+		log = frappe.db.get_value(LOG_DOCTYPE, log_name, ["name", "email", "email_queue"], as_dict=True)
+		if log:
+			sync_log_from_email_queue(log)
+			frappe.db.commit()
 
 
 def sync_queued_logs():
