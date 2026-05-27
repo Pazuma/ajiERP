@@ -17,6 +17,8 @@ MESSAGE_ES = """<p>Estimado equipo,</p><p>Esta es una notificación automática 
 
 
 def execute():
+	ensure_schema()
+
 	if not frappe.db.exists("DocType", RULE_DOCTYPE):
 		return
 
@@ -27,6 +29,17 @@ def execute():
 		rule_name = create_rule()
 
 	ensure_default_recipients(rule_name)
+
+
+def ensure_schema():
+	# This patch can run before model sync on a fresh production site. Reload the
+	# DocTypes first so newly added columns like trigger_event exist before queries.
+	for doctype in (
+		"draft_notification_recipient",
+		"draft_notification_rule",
+		"draft_notification_log",
+	):
+		frappe.reload_doc("draft_notifications", "doctype", doctype, force=True)
 
 
 def get_existing_rule_name():
