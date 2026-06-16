@@ -1,1 +1,5 @@
 draft_notifications.patches.create_sales_order_notification_rule
+draft_notifications.patches.add_dingtalk_robot_ding
+draft_notifications.patches.add_user_dingtalk_user_id
+draft_notifications.patches.switch_dingtalk_ding_to_private_chat
+draft_notifications.patches.add_localized_dingtalk_templates

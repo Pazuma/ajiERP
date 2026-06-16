@@ -21,6 +21,13 @@
   "respect_permissions",
   "include_owner",
   "deduplicate",
+  "channel_section",
+  "notification_channel",
+  "dingtalk_config",
+  "dingtalk_message_template",
+  "dingtalk_message_zh",
+  "dingtalk_message_en",
+  "dingtalk_message_es",
   "email_section",
   "subject",
   "message",
@@ -132,6 +139,56 @@
    "fieldname": "deduplicate",
    "fieldtype": "Check",
    "label": "Do Not Send Twice For Same Document And User"
+  },
+  {
+   "fieldname": "channel_section",
+   "fieldtype": "Section Break",
+   "label": "Notification Channel"
+  },
+  {
+   "default": "Email",
+   "fieldname": "notification_channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Notification Channel",
+   "options": "Email\nDesk\nDingTalk Private Chat\nEmail + DingTalk Private Chat\nDesk + DingTalk Private Chat",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
+   "fieldname": "dingtalk_config",
+   "fieldtype": "Link",
+   "label": "DingTalk Robot Config",
+   "mandatory_depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
+   "options": "DingTalk Robot Config"
+  },
+  {
+   "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
+   "description": "Jinja template. Available variables: doc, doc_url, doc_type, doc_name.",
+   "fieldname": "dingtalk_message_template",
+   "fieldtype": "Text Editor",
+   "label": "DingTalk Message Template"
+  },
+  {
+   "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
+   "description": "Chinese DingTalk private chat template. Used when recipient language starts with zh.",
+   "fieldname": "dingtalk_message_zh",
+   "fieldtype": "Text Editor",
+   "label": "Chinese DingTalk Message"
+  },
+  {
+   "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
+   "description": "English DingTalk private chat template. Used when recipient language starts with en.",
+   "fieldname": "dingtalk_message_en",
+   "fieldtype": "Text Editor",
+   "label": "English DingTalk Message"
+  },
+  {
+   "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
+   "description": "Spanish DingTalk private chat template. Used when recipient language starts with es.",
+   "fieldname": "dingtalk_message_es",
+   "fieldtype": "Text Editor",
+   "label": "Spanish DingTalk Message"
   },
   {
    "fieldname": "email_section",

@@ -1,0 +1,74 @@
+AppKey,AppKey
+AppSecret,AppSecret
+Call Voice,Voz de llamada
+"Check whether the DingTalk app has the qyapi_robot_sendmsg permission, the RobotCode belongs to this app, and the robot is enabled.","Compruebe si la aplicación de DingTalk tiene el permiso qyapi_robot_sendmsg, si el RobotCode pertenece a esta aplicación y si el robot está habilitado."
+Config Name,Nombre de configuración
+Connection succeeded.,Conexión correcta.
+DING Type,Tipo de DING
+Default Recipients,Destinatarios predeterminados
+Desk,Notificación de escritorio
+Desk + DingTalk DING,Escritorio + mensaje privado de DingTalk
+Desk + DingTalk Private Chat,Escritorio + mensaje privado de DingTalk
+DingTalk Credentials,Credenciales de DingTalk
+DingTalk DING,Mensaje privado de DingTalk
+DingTalk DING message failed: {0} - {1},Error al enviar el mensaje privado de DingTalk: {0} - {1}
+DingTalk Error,Error de DingTalk
+DingTalk Message Template,Plantilla de mensaje de DingTalk
+DingTalk Open DING ID,ID Open DING de DingTalk
+DingTalk Private Chat,Mensaje privado de DingTalk
+DingTalk Robot Config,Configuración del robot de DingTalk
+DingTalk Robot Config is required for DingTalk notification channels.,La configuración del robot de DingTalk es obligatoria para los canales de notificación de DingTalk.
+DingTalk Robot Config is required for rule {0}.,La regla {0} requiere una configuración del robot de DingTalk.
+DingTalk Robot Recipient,Destinatario del robot de DingTalk
+DingTalk Status,Estado de DingTalk
+DingTalk UserId,UserId de DingTalk
+DingTalk access token failed: {0} - {1},Error al obtener el token de acceso de DingTalk: {0} - {1}
+DingTalk did not return accessToken.,DingTalk no devolvió accessToken.
+DingTalk receiver count exceeds limit: {0}/{1},La cantidad de destinatarios de DingTalk supera el límite: {0}/{1}
+DingTalk receiver list cannot be empty.,La lista de destinatarios de DingTalk no puede estar vacía.
+DingTalk user ID used by Draft Notification Rules when sending DingTalk DING messages.,ID de usuario de DingTalk usado por las reglas de notificación de borradores al enviar mensajes privados de DingTalk.
+DingTalk user ID used by Draft Notification Rules when sending DingTalk private chat messages.,ID de usuario de DingTalk usado por las reglas de notificación de borradores al enviar mensajes privados de DingTalk.
+DingTalk {0} failed ({1}): {2},DingTalk {0} falló ({1}): {2}
+DingTalk {0} request failed: {1},La solicitud {0} de DingTalk falló: {1}
+Draft Notification,Notificación de borrador
+Draft Notifications,Notificaciones de borradores
+Draft Notifications Test,Prueba de Notificaciones de borradores
+Email,Correo electrónico
+Email + DingTalk DING,Correo + mensaje privado de DingTalk
+Email + DingTalk Private Chat,Correo + mensaje privado de DingTalk
+HTTP {0},HTTP {0}
+"Jinja template. Available variables: doc, doc_url, doc_type, doc_name.","Plantilla Jinja. Variables disponibles: doc, doc_url, doc_type, doc_name."
+Message Settings,Configuración del mensaje
+No enabled DingTalk Robot Config found.,No se encontró una configuración habilitada del robot de DingTalk.
+No enabled DingTalk Robot Config found: {0},No se encontró una configuración habilitada del robot de DingTalk: {0}
+No error message returned by DingTalk.,DingTalk no devolvió ningún mensaje de error.
+Notification Channel,Canal de notificación
+Remark Name,Nombre de referencia
+RobotCode,RobotCode
+RobotCode of the DingTalk internal app robot.,RobotCode del robot de la aplicación interna de DingTalk.
+Send Test DING,Enviar mensaje privado de prueba
+Send Test Private Chat,Enviar mensaje privado de prueba
+Sending test DING...,Enviando DING de prueba...
+Sending test private chat...,Enviando mensaje privado de prueba...
+Sent. DING ID: {0},Enviado. ID de DING: {0}
+Test Connection,Probar conexión
+Testing connection...,Probando conexión...
+This is a test message from Draft Notifications.,Este es un mensaje de prueba de Notificaciones de borradores.
+code {0},código {0}
+Custom Method is required.,El método personalizado es obligatorio.
+Custom Method cannot point to private modules or methods.,El método personalizado no puede apuntar a módulos o métodos privados.
+Custom Method must start with one of these prefixes: {0},El método personalizado debe comenzar con uno de estos prefijos: {0}
+Draft notification rule is missing.,Falta la regla de notificación de borrador.
+Message,Mensaje
+New Notification,Nueva notificación
+No response,Sin respuesta
+Not permitted,No permitido
+Only failed draft notification logs can be retried.,Solo los registros de notificaciones fallidos pueden reintentarse.
+private chat message,mensaje privado
+Reference document is missing.,Falta el documento de referencia.
+Reference document no longer exists.,El documento de referencia ya no existe.
+request id {0},ID de solicitud {0}
+Send,Enviar
+Sent.,Enviado.
+unknown error,error desconocido
+View,Ver

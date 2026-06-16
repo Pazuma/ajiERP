@@ -1,3 +1,5 @@
+import json
+
 import frappe
 from frappe import _
 from frappe.utils import get_url_to_form
@@ -52,44 +54,119 @@ def send_draft_notifications(doctype, name, trigger_event="After Insert"):
 	doc = frappe.get_doc(doctype, name)
 
 	for rule in get_enabled_rules(doctype, trigger_event):
-		send_for_rule(doc, rule)
+		try:
+			send_for_rule(doc, rule)
+		except Exception:
+			frappe.log_error(
+				title=f"Draft notification rule failed: {rule.name}",
+				message=frappe.get_traceback(),
+			)
 
 
 def send_for_rule(doc, rule):
-	try:
-		candidates = get_candidate_users(doc, rule)
-	except Exception:
-		frappe.log_error(
-			title=f"Draft notification recipient error: {rule.name}",
-			message=frappe.get_traceback(),
-		)
-		return
+	channel = get_notification_channel(rule)
+	candidates = []
 
-	for user in unique(candidates):
+	if channel_uses_frappe_users(channel) or channel_uses_dingtalk_private_chat(channel):
 		try:
-			send_to_user(doc, rule, user)
+			candidates = get_candidate_users(doc, rule)
 		except Exception:
-			traceback = frappe.get_traceback()
-			create_log(doc, rule, user=user, status="Failed", reason=traceback)
-			frappe.log_error(title=f"Draft notification failed for user {user}", message=traceback)
+			frappe.log_error(
+				title=f"Draft notification recipient error: {rule.name}",
+				message=frappe.get_traceback(),
+			)
+			return
+
+	if channel_uses_email(channel) or channel_uses_desk(channel):
+		for user in unique(candidates):
+			try:
+				send_to_user(
+					doc,
+					rule,
+					user,
+					send_email=channel_uses_email(channel),
+					send_desk=channel_uses_desk(channel),
+					notification_channel=channel,
+				)
+			except Exception:
+				traceback = frappe.get_traceback()
+				create_log(doc, rule, user=user, status="Failed", reason=traceback, notification_channel=channel)
+				frappe.log_error(title=f"Draft notification failed for user {user}", message=traceback)
+
+	if channel_uses_dingtalk_private_chat(channel):
+		send_dingtalk_private_chat_for_rule(doc, rule, receiver_users=candidates)
 
 
-def send_to_user(doc, rule, user, ignore_deduplicate=False):
-	user_email = get_enabled_user_email(user)
-	if not user_email:
-		return create_log(doc, rule, user=user, status="Skipped", reason="User is disabled or has no email")
+def send_to_user(
+	doc,
+	rule,
+	user,
+	ignore_deduplicate=False,
+	send_email=True,
+	send_desk=True,
+	notification_channel=None,
+):
+	user_data = get_enabled_user_data(user)
+	if not user_data:
+		return create_log(
+			doc,
+			rule,
+			user=user,
+			status="Skipped",
+			reason="User is disabled or missing",
+			notification_channel=notification_channel,
+		)
+
+	user_email = user_data.email
+	if send_email and not user_email:
+		return create_log(
+			doc,
+			rule,
+			user=user,
+			status="Skipped",
+			reason="User has no email",
+			notification_channel=notification_channel,
+		)
 
 	if not ignore_deduplicate and rule.deduplicate and already_sent(doc, rule, user):
-		return create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="Already sent")
+		return create_log(
+			doc,
+			rule,
+			user=user,
+			email=user_email,
+			status="Skipped",
+			reason="Already sent",
+			notification_channel=notification_channel,
+		)
 
 	if rule.respect_permissions and not can_read_doc(doc, user):
-		return create_log(doc, rule, user=user, email=user_email, status="Skipped", reason="No read permission")
+		return create_log(
+			doc,
+			rule,
+			user=user,
+			email=user_email,
+			status="Skipped",
+			reason="No read permission",
+			notification_channel=notification_channel,
+		)
 
 	try:
 		language = get_user_language(user)
 		subject = render_subject(doc, rule, language)
 		message = render_message(doc, rule, language)
-		create_desk_notification(doc, rule, user, user_email, subject, message)
+
+		if send_desk:
+			create_desk_notification(doc, rule, user, user_email, subject, message)
+
+		if not send_email:
+			return create_log(
+				doc,
+				rule,
+				user=user,
+				email=user_email,
+				status="Sent",
+				notification_channel=notification_channel,
+			)
 
 		email_queue = frappe.sendmail(
 			recipients=[user_email],
@@ -106,13 +183,86 @@ def send_to_user(doc, rule, user, ignore_deduplicate=False):
 			email=user_email,
 			status="Queued",
 			email_queue=email_queue.name if email_queue else None,
+			notification_channel=notification_channel,
 		)
 		queue_log_sync_after_commit(log)
 		return log
 	except Exception:
 		traceback = frappe.get_traceback()
 		frappe.log_error(title=f"Draft notification send failed: {doc.doctype} {doc.name}", message=traceback)
-		return create_log(doc, rule, user=user, email=user_email, status="Failed", reason=traceback)
+		return create_log(
+			doc,
+			rule,
+			user=user,
+			email=user_email,
+			status="Failed",
+			reason=traceback,
+			notification_channel=notification_channel,
+		)
+
+
+def send_dingtalk_private_chat_for_rule(doc, rule, receiver_users=None):
+	from draft_notifications.dingtalk_robot import send_private_chat_notification
+
+	try:
+		result = send_private_chat_notification(doc, rule, receiver_users=receiver_users)
+		if not result:
+			return None
+
+		results = result if isinstance(result, list) else [result]
+		failed_results = [item for item in results if item.get("failed_list")]
+		status = "Failed" if failed_results else "Sent"
+		reason = json.dumps(failed_results, ensure_ascii=False) if failed_results else None
+		return create_log(
+			doc,
+			rule,
+			status=status,
+			reason=reason,
+			notification_channel="DingTalk Private Chat",
+			dingtalk_status=status,
+			dingtalk_open_ding_id="",
+			dingtalk_error=reason,
+		)
+	except Exception:
+		traceback = frappe.get_traceback()
+		create_log(
+			doc,
+			rule,
+			status="Failed",
+			reason=traceback,
+			notification_channel="DingTalk Private Chat",
+			dingtalk_status="Failed",
+			dingtalk_error=traceback,
+		)
+		frappe.log_error(title=f"DingTalk private chat notification failed: {rule.name}", message=traceback)
+		return None
+
+
+def get_notification_channel(rule):
+	return rule.get("notification_channel") or "Email"
+
+
+def channel_uses_email(channel):
+	return channel in ("Email", "Email + DingTalk Private Chat", "Email + DingTalk DING")
+
+
+def channel_uses_desk(channel):
+	return channel in ("Desk", "Desk + DingTalk Private Chat", "Desk + DingTalk DING")
+
+
+def channel_uses_dingtalk_private_chat(channel):
+	return channel in (
+		"DingTalk Private Chat",
+		"Email + DingTalk Private Chat",
+		"Desk + DingTalk Private Chat",
+		"DingTalk DING",
+		"Email + DingTalk DING",
+		"Desk + DingTalk DING",
+	)
+
+
+def channel_uses_frappe_users(channel):
+	return channel_uses_email(channel) or channel_uses_desk(channel)
 
 
 def has_enabled_rules(doctype, trigger_event="After Insert"):
@@ -154,6 +304,12 @@ def get_enabled_rules(doctype, trigger_event="After Insert"):
 			"message_en",
 			"subject_es",
 			"message_es",
+			"notification_channel",
+			"dingtalk_config",
+			"dingtalk_message_template",
+			"dingtalk_message_zh",
+			"dingtalk_message_en",
+			"dingtalk_message_es",
 		],
 	)
 
@@ -199,6 +355,11 @@ def get_users_with_role(role):
 
 
 def get_enabled_user_email(user):
+	user_data = get_enabled_user_data(user)
+	return user_data.email if user_data and user_data.email else None
+
+
+def get_enabled_user_data(user):
 	if not user:
 		return None
 
@@ -208,10 +369,10 @@ def get_enabled_user_email(user):
 		["enabled", "email"],
 		as_dict=True,
 	)
-	if not user_data or not user_data.enabled or not user_data.email:
+	if not user_data or not user_data.enabled:
 		return None
 
-	return user_data.email
+	return user_data
 
 
 def get_user_language(user):
@@ -330,7 +491,19 @@ def get_template_context(doc):
 	}
 
 
-def create_log(doc, rule, status, user=None, email=None, reason=None, email_queue=None):
+def create_log(
+	doc,
+	rule,
+	status,
+	user=None,
+	email=None,
+	reason=None,
+	email_queue=None,
+	notification_channel=None,
+	dingtalk_status=None,
+	dingtalk_open_ding_id=None,
+	dingtalk_error=None,
+):
 	if not frappe.db.exists("DocType", LOG_DOCTYPE):
 		return
 
@@ -339,12 +512,16 @@ def create_log(doc, rule, status, user=None, email=None, reason=None, email_queu
 			{
 				"doctype": LOG_DOCTYPE,
 				"rule": rule.name,
+				"notification_channel": notification_channel or get_notification_channel(rule),
 				"status": status,
 				"user": user,
 				"email": email,
 				"email_queue": email_queue,
 				"reference_doctype": doc.doctype,
 				"reference_name": doc.name,
+				"dingtalk_status": dingtalk_status,
+				"dingtalk_open_ding_id": dingtalk_open_ding_id,
+				"dingtalk_error": dingtalk_error,
 				"reason": reason,
 			}
 		).insert(ignore_permissions=True)
@@ -413,11 +590,13 @@ def retry_failed_log(log_name):
 		frappe.throw(_("Reference document no longer exists."))
 
 	doc = frappe.get_doc(log.reference_doctype, log.reference_name)
-	if doc.docstatus != 0:
-		frappe.throw(_("Only draft documents can be retried."))
-
 	rule = frappe.get_doc(RULE_DOCTYPE, log.rule)
-	retry_log = send_to_user(doc, rule, log.user, ignore_deduplicate=True)
+
+	if log.notification_channel in ("DingTalk Private Chat", "DingTalk DING") or (not log.user and channel_uses_dingtalk_private_chat(get_notification_channel(rule))):
+		retry_log = send_dingtalk_private_chat_for_rule(doc, rule)
+	else:
+		retry_log = send_to_user(doc, rule, log.user, ignore_deduplicate=True, notification_channel=log.notification_channel)
+
 	return {"status": retry_log.status if retry_log else None, "log": retry_log.name if retry_log else None}
 
 

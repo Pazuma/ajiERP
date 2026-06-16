@@ -1,0 +1,74 @@
+AppKey,AppKey
+AppSecret,AppSecret
+Call Voice,电话音色
+"Check whether the DingTalk app has the qyapi_robot_sendmsg permission, the RobotCode belongs to this app, and the robot is enabled.",请检查钉钉应用是否已开通 qyapi_robot_sendmsg 企业内机器人发送消息权限、RobotCode 是否属于该应用，以及机器人是否已启用。
+Config Name,配置名称
+Connection succeeded.,连接成功。
+DING Type,DING 类型
+Default Recipients,默认接收人
+Desk,桌面通知
+Desk + DingTalk DING,桌面通知 + 钉钉私聊消息
+Desk + DingTalk Private Chat,桌面通知 + 钉钉私聊消息
+DingTalk Credentials,钉钉凭证
+DingTalk DING,钉钉私聊消息
+DingTalk DING message failed: {0} - {1},钉钉私聊消息发送失败：{0} - {1}
+DingTalk Error,钉钉错误
+DingTalk Message Template,钉钉消息模板
+DingTalk Open DING ID,钉钉 Open DING ID
+DingTalk Private Chat,钉钉私聊消息
+DingTalk Robot Config,钉钉机器人配置
+DingTalk Robot Config is required for DingTalk notification channels.,选择钉钉通知渠道时必须配置钉钉机器人。
+DingTalk Robot Config is required for rule {0}.,规则 {0} 必须配置钉钉机器人。
+DingTalk Robot Recipient,钉钉机器人接收人
+DingTalk Status,钉钉状态
+DingTalk UserId,钉钉 UserId
+DingTalk access token failed: {0} - {1},钉钉 Access Token 获取失败：{0} - {1}
+DingTalk did not return accessToken.,钉钉未返回 accessToken。
+DingTalk receiver count exceeds limit: {0}/{1},钉钉接收人数超出限制：{0}/{1}
+DingTalk receiver list cannot be empty.,钉钉接收人列表不能为空。
+DingTalk user ID used by Draft Notification Rules when sending DingTalk DING messages.,Draft Notification Rule 发送钉钉私聊消息时使用的钉钉用户 ID。
+DingTalk user ID used by Draft Notification Rules when sending DingTalk private chat messages.,Draft Notification Rule 发送钉钉私聊消息时使用的钉钉用户 ID。
+DingTalk {0} failed ({1}): {2},钉钉 {0} 失败（{1}）：{2}
+DingTalk {0} request failed: {1},钉钉 {0} 请求失败：{1}
+Draft Notification,草稿通知
+Draft Notifications,草稿通知
+Draft Notifications Test,Draft Notifications 测试
+Email,邮件
+Email + DingTalk DING,邮件 + 钉钉私聊消息
+Email + DingTalk Private Chat,邮件 + 钉钉私聊消息
+HTTP {0},HTTP {0}
+"Jinja template. Available variables: doc, doc_url, doc_type, doc_name.",Jinja 模板。可用变量：doc、doc_url、doc_type、doc_name。
+Message Settings,消息设置
+No enabled DingTalk Robot Config found.,未找到启用的钉钉机器人配置。
+No enabled DingTalk Robot Config found: {0},未找到启用的钉钉机器人配置：{0}
+No error message returned by DingTalk.,钉钉未返回错误消息。
+Notification Channel,通知渠道
+Remark Name,备注名称
+RobotCode,RobotCode
+RobotCode of the DingTalk internal app robot.,钉钉企业内部应用机器人的 RobotCode。
+Send Test DING,发送测试私聊消息
+Send Test Private Chat,发送测试私聊消息
+Sending test DING...,正在发送测试 DING...
+Sending test private chat...,正在发送测试私聊消息...
+Sent. DING ID: {0},已发送。DING ID：{0}
+Test Connection,测试连接
+Testing connection...,正在测试连接...
+This is a test message from Draft Notifications.,这是一条来自 Draft Notifications 的测试消息。
+code {0},错误码 {0}
+Custom Method is required.,自定义方法为必填项。
+Custom Method cannot point to private modules or methods.,自定义方法不能指向私有模块或方法。
+Custom Method must start with one of these prefixes: {0},自定义方法必须以以下前缀之一开头：{0}
+Draft notification rule is missing.,草稿通知规则缺失。
+Message,消息
+New Notification,新通知
+No response,无响应
+Not permitted,没有权限
+Only failed draft notification logs can be retried.,仅失败的草稿通知日志可以重试。
+private chat message,私聊消息
+Reference document is missing.,引用文档缺失。
+Reference document no longer exists.,引用文档已不存在。
+request id {0},请求 ID {0}
+Send,发送
+Sent.,已发送。
+unknown error,未知错误
+View,查看
