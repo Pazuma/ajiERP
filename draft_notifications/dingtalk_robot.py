@@ -17,6 +17,13 @@ class DingTalkAPIError(Exception):
 	pass
 
 
+def clear_dingtalk_token_cache(config_name=None):
+	if config_name:
+		frappe.cache().delete_value(f"{TOKEN_CACHE_KEY}::{config_name}")
+	else:
+		frappe.cache().delete_keys(TOKEN_CACHE_KEY)
+
+
 def post_dingtalk_json(url, payload, headers, timeout, operation):
 	try:
 		response = requests.post(url, json=payload, headers=headers, timeout=timeout)
@@ -25,6 +32,8 @@ def post_dingtalk_json(url, payload, headers, timeout, operation):
 
 	data = get_response_json(response)
 	if response.status_code >= 400:
+		if response.status_code in (401, 403):
+			clear_dingtalk_token_cache()
 		raise_dingtalk_error(operation, response=response, data=data)
 
 	return data

@@ -247,7 +247,14 @@ def channel_uses_email(channel):
 
 
 def channel_uses_desk(channel):
-	return channel in ("Desk", "Desk + DingTalk Private Chat", "Desk + DingTalk DING")
+	return channel in (
+		"Email",
+		"Desk",
+		"Email + DingTalk Private Chat",
+		"Desk + DingTalk Private Chat",
+		"Email + DingTalk DING",
+		"Desk + DingTalk DING",
+	)
 
 
 def channel_uses_dingtalk_private_chat(channel):
