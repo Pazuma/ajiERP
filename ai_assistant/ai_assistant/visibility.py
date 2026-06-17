@@ -34,15 +34,14 @@ def ensure_ai_assistant_sidebar_visible():
 				"link_type": "Page",
 				"type": "Link",
 			})
-		if ("DocType", "AI Assistant Settings") not in existing:
-			sidebar.append("items", {
-				"icon": "settings",
-				"idx": 2,
-				"label": "AI Assistant Settings",
-				"link_to": "AI Assistant Settings",
-				"link_type": "DocType",
-				"type": "Link",
-			})
+		# Remove AI Assistant Settings link from sidebar — it is only
+		# needed for module visibility (the "All" read permission on the
+		# DocType handles that). Admins access Settings via global search
+		# or the module page, not the sidebar link.
+		sidebar.items = [
+			row for row in sidebar.items
+			if not (row.link_type == "DocType" and row.link_to == "AI Assistant Settings")
+		]
 		for idx, row in enumerate(sidebar.items, start=1):
 			row.idx = idx
 		sidebar.flags.ignore_permissions = True

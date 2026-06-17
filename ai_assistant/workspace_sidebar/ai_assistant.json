@@ -17,21 +17,9 @@
    "link_type": "Page",
    "show_arrow": 0,
    "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "settings",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "AI Assistant Settings",
-   "link_to": "AI Assistant Settings",
-   "link_type": "DocType",
-   "show_arrow": 0,
-   "type": "Link"
   }
  ],
- "modified": "2026-06-17 16:11:34.379495",
+ "modified": "2026-06-17 17:10:15.555969",
  "modified_by": "Administrator",
  "module": "",
  "name": "AI Assistant",
