@@ -1,0 +1,22 @@
+AI Assistant,AI 助手
+Deeplinkerp,Deeplinkerp
+Enterprise AI Business Assistant,企业智能业务助手
+企业智能业务助手,企业智能业务助手
+AI Assistant Settings,AI 助手配置
+Configure OpenAI-compatible model providers for DeeplinkERP AI Assistant. Values here override site_config and environment variables.,配置 DeeplinkERP AI 助手使用的 OpenAI 兼容模型服务。此处配置优先于 site_config 和环境变量。
+Enabled,启用
+"If disabled, AI Assistant falls back to site_config/common_site_config and environment variables.",关闭后，AI 助手将回退读取 site_config/common_site_config 和环境变量。
+Default Platform,默认平台
+Timeouts,超时设置
+Chat Timeout (seconds),聊天超时时间（秒）
+Normal chat/model routing timeout.,普通聊天和模型路由请求的超时时间。
+Tool Summary Timeout (seconds),工具总结超时时间（秒）
+Timeout for model summaries after ERP tool calls.,ERP 工具调用后，大模型总结回复的超时时间。
+Voucher AI Classification Timeout (seconds),凭证 AI 分类超时时间（秒）
+Timeout for AI-assisted voucher account classification.,财务凭证生成中，AI 辅助判断会计科目的超时时间。
+DashScope / Qwen,DashScope / 通义千问
+DeepSeek,DeepSeek
+GLM / BigModel,GLM / 智谱
+Base URL,请求 URL
+API Key,API Key
+Model,模型

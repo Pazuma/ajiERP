@@ -265,23 +265,38 @@ frappe.pages['ai-chat'].on_page_load = function(wrapper) {
         });
     }
 
-    $wrapper.find('#ai-platform').on('change', function() {
-        let platform = $(this).val();
-        let baseUrlInput = $wrapper.find('#ai-base-url');
-        let modelIdInput = $wrapper.find('#ai-model-id');
-        let platformName = "";
-
-        if (platform === 'deepseek') {
-            baseUrlInput.val('https://api.deepseek.com/v1'); modelIdInput.val('deepseek-chat');
-            platformName = "DeepSeek";
-        } else if (platform === 'qwen') {
-            baseUrlInput.val('https://dashscope.aliyuncs.com/compatible-mode/v1'); modelIdInput.val('qwen-plus');
-            platformName = "Qwen";
-        } else if (platform === 'glm4') {
-            baseUrlInput.val('https://open.bigmodel.cn/api/paas/v4'); modelIdInput.val('glm-4');
-            platformName = "GLM-4";
+    let engineConfig = {
+        default_platform: 'qwen',
+        platforms: {
+            deepseek: { label: 'DeepSeek', base_url: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+            qwen: { label: 'Qwen', base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+            glm4: { label: 'GLM-4', base_url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4' }
         }
-        addLog(`${dict['log_switch']} ${platformName}`, 'success');
+    };
+
+    function applyEngineConfig(platform, options = {}) {
+        let selected = engineConfig.platforms[platform] || engineConfig.platforms.qwen;
+        $wrapper.find('#ai-base-url').val(selected.base_url || '');
+        $wrapper.find('#ai-model-id').val(selected.model || '');
+        if (!options.silent) {
+            addLog(`${dict['log_switch']} ${selected.label || platform}`, 'success');
+        }
+    }
+
+    frappe.call({
+        method: 'ai_assistant.ai_assistant.api.get_public_ai_engine_config',
+        callback: function(r) {
+            if (r.message && r.message.platforms) {
+                engineConfig = r.message;
+                let defaultPlatform = engineConfig.default_platform || $wrapper.find('#ai-platform').val() || 'qwen';
+                $wrapper.find('#ai-platform').val(defaultPlatform);
+                applyEngineConfig(defaultPlatform, { silent: true });
+            }
+        }
+    });
+
+    $wrapper.find('#ai-platform').on('change', function() {
+        applyEngineConfig($(this).val());
     });
 
     $wrapper.find('#chat-history').on('click', '.ai-reply-content a', function(e) {

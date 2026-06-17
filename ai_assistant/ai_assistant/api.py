@@ -563,44 +563,107 @@ def get_employee_assets(employee_name=None):
     except Exception as e: 
         return {"text": f"执行员工资产追踪雷达扫描失败：{str(e)}", "data": []}
 
+def get_ai_assistant_settings():
+    try:
+        if not frappe.db.exists("DocType", "AI Assistant Settings"):
+            return {}
+        doc = frappe.get_single("AI Assistant Settings")
+        if not int(doc.get("enabled") or 0):
+            return {}
+
+        def password(fieldname):
+            if not doc.get(fieldname):
+                return None
+            try:
+                return doc.get_password(fieldname, raise_exception=False)
+            except TypeError:
+                try:
+                    return doc.get_password(fieldname)
+                except Exception:
+                    return None
+            except Exception:
+                return None
+
+        return {
+            "default_platform": doc.get("default_platform"),
+            "chat_timeout": doc.get("chat_timeout"),
+            "tool_summary_timeout": doc.get("tool_summary_timeout"),
+            "voucher_timeout": doc.get("voucher_timeout"),
+            "qwen_base_url": doc.get("qwen_base_url"),
+            "qwen_api_key": password("qwen_api_key"),
+            "qwen_model": doc.get("qwen_model"),
+            "deepseek_base_url": doc.get("deepseek_base_url"),
+            "deepseek_api_key": password("deepseek_api_key"),
+            "deepseek_model": doc.get("deepseek_model"),
+            "glm_base_url": doc.get("glm_base_url"),
+            "glm_api_key": password("glm_api_key"),
+            "glm_model": doc.get("glm_model"),
+        }
+    except Exception:
+        return {}
+
+
+def get_ai_setting(key):
+    return get_ai_assistant_settings().get(key)
+
+
 def get_ai_provider_config(platform):
-    platform = (platform or "qwen").lower()
+    settings = get_ai_assistant_settings()
+    platform = (platform or settings.get("default_platform") or "qwen").lower()
     providers = {
         "qwen": {
             "label": "DashScope/Qwen",
-            "base_url": frappe.conf.get("dashscope_base_url") or os.environ.get("DASHSCOPE_BASE_URL") or "https://dashscope.aliyuncs.com/compatible-mode/v1",
-            "api_key": frappe.conf.get("dashscope_api_key") or frappe.conf.get("qwen_api_key") or os.environ.get("DASHSCOPE_API_KEY") or os.environ.get("QWEN_API_KEY"),
-            "model": frappe.conf.get("dashscope_model") or frappe.conf.get("qwen_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("DASHSCOPE_MODEL") or os.environ.get("QWEN_MODEL"),
+            "base_url": settings.get("qwen_base_url") or frappe.conf.get("dashscope_base_url") or os.environ.get("DASHSCOPE_BASE_URL") or "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "api_key": settings.get("qwen_api_key") or frappe.conf.get("dashscope_api_key") or frappe.conf.get("qwen_api_key") or os.environ.get("DASHSCOPE_API_KEY") or os.environ.get("QWEN_API_KEY"),
+            "model": settings.get("qwen_model") or frappe.conf.get("dashscope_model") or frappe.conf.get("qwen_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("DASHSCOPE_MODEL") or os.environ.get("QWEN_MODEL"),
             "default_model": "qwen-plus",
-            "config_hint": "dashscope_api_key",
-            "model_config_hint": "qwen_model",
+            "config_hint": "AI Assistant Settings / dashscope_api_key",
+            "model_config_hint": "AI Assistant Settings / qwen_model",
             "env_hint": "DASHSCOPE_API_KEY",
             "model_env_hint": "QWEN_MODEL",
         },
         "deepseek": {
             "label": "DeepSeek",
-            "base_url": frappe.conf.get("deepseek_base_url") or os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1",
-            "api_key": frappe.conf.get("deepseek_api_key") or os.environ.get("DEEPSEEK_API_KEY"),
-            "model": frappe.conf.get("deepseek_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("DEEPSEEK_MODEL"),
+            "base_url": settings.get("deepseek_base_url") or frappe.conf.get("deepseek_base_url") or os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1",
+            "api_key": settings.get("deepseek_api_key") or frappe.conf.get("deepseek_api_key") or os.environ.get("DEEPSEEK_API_KEY"),
+            "model": settings.get("deepseek_model") or frappe.conf.get("deepseek_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("DEEPSEEK_MODEL"),
             "default_model": "deepseek-chat",
-            "config_hint": "deepseek_api_key",
-            "model_config_hint": "deepseek_model",
+            "config_hint": "AI Assistant Settings / deepseek_api_key",
+            "model_config_hint": "AI Assistant Settings / deepseek_model",
             "env_hint": "DEEPSEEK_API_KEY",
             "model_env_hint": "DEEPSEEK_MODEL",
         },
         "glm4": {
             "label": "GLM-4",
-            "base_url": frappe.conf.get("glm_base_url") or frappe.conf.get("bigmodel_base_url") or os.environ.get("GLM_BASE_URL") or os.environ.get("BIGMODEL_BASE_URL") or "https://open.bigmodel.cn/api/paas/v4",
-            "api_key": frappe.conf.get("glm_api_key") or frappe.conf.get("bigmodel_api_key") or os.environ.get("GLM_API_KEY") or os.environ.get("BIGMODEL_API_KEY"),
-            "model": frappe.conf.get("glm_model") or frappe.conf.get("bigmodel_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("GLM_MODEL") or os.environ.get("BIGMODEL_MODEL"),
+            "base_url": settings.get("glm_base_url") or frappe.conf.get("glm_base_url") or frappe.conf.get("bigmodel_base_url") or os.environ.get("GLM_BASE_URL") or os.environ.get("BIGMODEL_BASE_URL") or "https://open.bigmodel.cn/api/paas/v4",
+            "api_key": settings.get("glm_api_key") or frappe.conf.get("glm_api_key") or frappe.conf.get("bigmodel_api_key") or os.environ.get("GLM_API_KEY") or os.environ.get("BIGMODEL_API_KEY"),
+            "model": settings.get("glm_model") or frappe.conf.get("glm_model") or frappe.conf.get("bigmodel_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("GLM_MODEL") or os.environ.get("BIGMODEL_MODEL"),
             "default_model": "glm-4",
-            "config_hint": "glm_api_key",
-            "model_config_hint": "glm_model",
+            "config_hint": "AI Assistant Settings / glm_api_key",
+            "model_config_hint": "AI Assistant Settings / glm_model",
             "env_hint": "GLM_API_KEY",
             "model_env_hint": "GLM_MODEL",
         },
     }
     return providers.get(platform, providers["qwen"])
+
+
+@frappe.whitelist()
+def get_public_ai_engine_config():
+    settings = get_ai_assistant_settings()
+    default_platform = (settings.get("default_platform") or "qwen").lower()
+    platforms = {}
+    for platform in ["qwen", "deepseek", "glm4"]:
+        provider = get_ai_provider_config(platform)
+        platforms[platform] = {
+            "label": provider.get("label"),
+            "base_url": provider.get("base_url"),
+            "model": provider.get("model") or provider.get("default_model"),
+        }
+    return {
+        "default_platform": default_platform if default_platform in platforms else "qwen",
+        "platforms": platforms,
+    }
 
 
 def build_ai_error_reply(provider, detail):
@@ -656,23 +719,23 @@ def should_attach_erp_tools(message):
     return any(keyword in text for keyword in keywords)
 
 
-def _configured_timeout(key, default):
+def _configured_timeout(settings_key, conf_key, default):
     try:
-        return int(frappe.conf.get(key) or default)
+        return int(get_ai_setting(settings_key) or frappe.conf.get(conf_key) or default)
     except Exception:
         return default
 
 
 def ai_chat_timeout():
-    return _configured_timeout("ai_assistant_chat_timeout", 45)
+    return _configured_timeout("chat_timeout", "ai_assistant_chat_timeout", 45)
 
 
 def ai_tool_summary_timeout():
-    return _configured_timeout("ai_assistant_tool_summary_timeout", 60)
+    return _configured_timeout("tool_summary_timeout", "ai_assistant_tool_summary_timeout", 60)
 
 
 def ai_voucher_classification_timeout():
-    return _configured_timeout("ai_assistant_voucher_timeout", 180)
+    return _configured_timeout("voucher_timeout", "ai_assistant_voucher_timeout", 180)
 
 
 def parse_model_json_array(content):

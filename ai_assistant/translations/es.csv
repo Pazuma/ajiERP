@@ -1,0 +1,22 @@
+AI Assistant,Asistente de IA
+Deeplinkerp,Deeplinkerp
+Enterprise AI Business Assistant,Asistente empresarial de IA
+企业智能业务助手,Asistente empresarial de IA
+AI Assistant Settings,Configuración del asistente de IA
+Configure OpenAI-compatible model providers for DeeplinkERP AI Assistant. Values here override site_config and environment variables.,Configure proveedores de modelos compatibles con OpenAI para DeeplinkERP AI Assistant. Estos valores tienen prioridad sobre site_config y las variables de entorno.
+Enabled,Habilitado
+"If disabled, AI Assistant falls back to site_config/common_site_config and environment variables.","Si se deshabilita, el asistente de IA usará site_config/common_site_config y variables de entorno."
+Default Platform,Plataforma predeterminada
+Timeouts,Tiempos de espera
+Chat Timeout (seconds),Tiempo de espera del chat (segundos)
+Normal chat/model routing timeout.,Tiempo de espera para chat normal y enrutamiento del modelo.
+Tool Summary Timeout (seconds),Tiempo de espera del resumen de herramientas (segundos)
+Timeout for model summaries after ERP tool calls.,Tiempo de espera para los resúmenes del modelo después de llamadas a herramientas ERP.
+Voucher AI Classification Timeout (seconds),Tiempo de espera para clasificación contable con IA (segundos)
+Timeout for AI-assisted voucher account classification.,Tiempo de espera para la clasificación de cuentas contables asistida por IA.
+DashScope / Qwen,DashScope / Qwen
+DeepSeek,DeepSeek
+GLM / BigModel,GLM / BigModel
+Base URL,URL base
+API Key,Clave API
+Model,Modelo

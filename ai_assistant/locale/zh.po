@@ -1,0 +1,162 @@
+# Translations template for AI Assistant.
+# Copyright (C) 2026 yuewei
+# This file is distributed under the same license as the AI Assistant project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: AI Assistant VERSION\n"
+"Report-Msgid-Bugs-To: 308642281@qq.com\n"
+"POT-Creation-Date: 2026-06-17 01:25+0000\n"
+"PO-Revision-Date: 2026-06-17 01:25+0000\n"
+"Last-Translator: 308642281@qq.com\n"
+"Language-Team: 308642281@qq.com\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#. Label of a Desktop Icon
+#. Title of a Workspace Sidebar
+#: ai_assistant/desktop_icon/ai_assistant.json
+#: ai_assistant/workspace_sidebar/ai_assistant.json
+msgid "AI Assistant"
+msgstr "AI 助手"
+
+#. Name of a DocType
+#. Label of a Workspace Sidebar Item
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+#: ai_assistant/workspace_sidebar/ai_assistant.json
+msgid "AI Assistant Settings"
+msgstr "AI 助手配置"
+
+#. Label of the qwen_api_key (Password) field in DocType 'AI Assistant
+#. Settings'
+#. Label of the deepseek_api_key (Password) field in DocType 'AI Assistant
+#. Label of the glm_api_key (Password) field in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "API Key"
+msgstr "API Key"
+
+#. Label of the qwen_base_url (Data) field in DocType 'AI Assistant Settings'
+#. Label of the deepseek_base_url (Data) field in DocType 'AI Assistant
+#. Settings'
+#. Label of the glm_base_url (Data) field in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Base URL"
+msgstr "请求 URL"
+
+#. Label of the chat_timeout (Int) field in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Chat Timeout (seconds)"
+msgstr "聊天超时时间（秒）"
+
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.js:3
+msgid "Configure OpenAI-compatible model providers for DeeplinkERP AI Assistant. Values here override site_config and environment variables."
+msgstr "配置 DeeplinkERP AI 助手使用的 OpenAI 兼容模型服务。此处配置优先于 site_config 和环境变量。"
+
+#. Label of the qwen_section (Section Break) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "DashScope / Qwen"
+msgstr "DashScope / 通义千问"
+
+#. Label of the deepseek_section (Section Break) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "DeepSeek"
+msgstr "DeepSeek"
+
+#. Label of the default_platform (Select) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Default Platform"
+msgstr "默认平台"
+
+#. Label of the enabled (Check) field in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Enabled"
+msgstr "启用"
+
+#. Label of the glm_section (Section Break) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "GLM / BigModel"
+msgstr "GLM / 智谱"
+
+#. Description of the 'Enabled' (Check) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "If disabled, AI Assistant falls back to site_config/common_site_config and environment variables."
+msgstr "关闭后，AI 助手将回退读取 site_config/common_site_config 和环境变量。"
+
+#. Label of the qwen_model (Data) field in DocType 'AI Assistant Settings'
+#. Label of the deepseek_model (Data) field in DocType 'AI Assistant Settings'
+#. Label of the glm_model (Data) field in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Model"
+msgstr "模型"
+
+#. Description of the 'Chat Timeout (seconds)' (Int) field in DocType 'AI
+#. Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Normal chat/model routing timeout."
+msgstr "普通聊天和模型路由请求的超时时间。"
+
+#. Name of a role
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "System Manager"
+msgstr ""
+
+#. Description of the 'Voucher AI Classification Timeout (seconds)' (Int) field
+#. in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Timeout for AI-assisted voucher account classification."
+msgstr "财务凭证生成中，AI 辅助判断会计科目的超时时间。"
+
+#. Description of the 'Tool Summary Timeout (seconds)' (Int) field in DocType
+#. 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Timeout for model summaries after ERP tool calls."
+msgstr "ERP 工具调用后，大模型总结回复的超时时间。"
+
+#. Label of the timeouts_section (Section Break) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Timeouts"
+msgstr "超时设置"
+
+#. Label of the tool_summary_timeout (Int) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Tool Summary Timeout (seconds)"
+msgstr "工具总结超时时间（秒）"
+
+#. Label of the voucher_timeout (Int) field in DocType 'AI Assistant Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "Voucher AI Classification Timeout (seconds)"
+msgstr "凭证 AI 分类超时时间（秒）"
+
+#. Option for the 'Default Platform' (Select) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "deepseek"
+msgstr ""
+
+#. Option for the 'Default Platform' (Select) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "glm4"
+msgstr ""
+
+#. Option for the 'Default Platform' (Select) field in DocType 'AI Assistant
+#. Settings'
+#: ai_assistant/ai_assistant/doctype/ai_assistant_settings/ai_assistant_settings.json
+msgid "qwen"
+msgstr ""
+
+#. Label of a Workspace Sidebar Item
+#: ai_assistant/workspace_sidebar/ai_assistant.json
+msgid "企业智能业务助手"
+msgstr "企业智能业务助手"
+

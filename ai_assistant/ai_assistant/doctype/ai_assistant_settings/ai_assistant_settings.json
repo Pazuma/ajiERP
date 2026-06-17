@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "creation": "2026-06-17 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "default_platform",
+  "timeouts_section",
+  "chat_timeout",
+  "tool_summary_timeout",
+  "voucher_timeout",
+  "qwen_section",
+  "qwen_base_url",
+  "qwen_api_key",
+  "qwen_model",
+  "deepseek_section",
+  "deepseek_base_url",
+  "deepseek_api_key",
+  "deepseek_model",
+  "glm_section",
+  "glm_base_url",
+  "glm_api_key",
+  "glm_model"
+ ],
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "description": "If disabled, AI Assistant falls back to site_config/common_site_config and environment variables."
+  },
+  {
+   "fieldname": "default_platform",
+   "fieldtype": "Select",
+   "label": "Default Platform",
+   "options": "qwen\ndeepseek\nglm4",
+   "default": "qwen",
+   "reqd": 1
+  },
+  {
+   "fieldname": "timeouts_section",
+   "fieldtype": "Section Break",
+   "label": "Timeouts"
+  },
+  {
+   "fieldname": "chat_timeout",
+   "fieldtype": "Int",
+   "label": "Chat Timeout (seconds)",
+   "default": "45",
+   "description": "Normal chat/model routing timeout."
+  },
+  {
+   "fieldname": "tool_summary_timeout",
+   "fieldtype": "Int",
+   "label": "Tool Summary Timeout (seconds)",
+   "default": "60",
+   "description": "Timeout for model summaries after ERP tool calls."
+  },
+  {
+   "fieldname": "voucher_timeout",
+   "fieldtype": "Int",
+   "label": "Voucher AI Classification Timeout (seconds)",
+   "default": "180",
+   "description": "Timeout for AI-assisted voucher account classification."
+  },
+  {
+   "fieldname": "qwen_section",
+   "fieldtype": "Section Break",
+   "label": "DashScope / Qwen"
+  },
+  {
+   "fieldname": "qwen_base_url",
+   "fieldtype": "Data",
+   "label": "Base URL",
+   "default": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  },
+  {
+   "fieldname": "qwen_api_key",
+   "fieldtype": "Password",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "qwen_model",
+   "fieldtype": "Data",
+   "label": "Model",
+   "default": "qwen-plus"
+  },
+  {
+   "fieldname": "deepseek_section",
+   "fieldtype": "Section Break",
+   "label": "DeepSeek"
+  },
+  {
+   "fieldname": "deepseek_base_url",
+   "fieldtype": "Data",
+   "label": "Base URL",
+   "default": "https://api.deepseek.com/v1"
+  },
+  {
+   "fieldname": "deepseek_api_key",
+   "fieldtype": "Password",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "deepseek_model",
+   "fieldtype": "Data",
+   "label": "Model",
+   "default": "deepseek-chat"
+  },
+  {
+   "fieldname": "glm_section",
+   "fieldtype": "Section Break",
+   "label": "GLM / BigModel"
+  },
+  {
+   "fieldname": "glm_base_url",
+   "fieldtype": "Data",
+   "label": "Base URL",
+   "default": "https://open.bigmodel.cn/api/paas/v4"
+  },
+  {
+   "fieldname": "glm_api_key",
+   "fieldtype": "Password",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "glm_model",
+   "fieldtype": "Data",
+   "label": "Model",
+   "default": "glm-4"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-06-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AI Assistant",
+ "name": "AI Assistant Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

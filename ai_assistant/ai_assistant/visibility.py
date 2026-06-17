@@ -23,6 +23,30 @@ def ensure_ai_assistant_sidebar_visible():
 			},
 			update_modified=False,
 		)
+		sidebar = frappe.get_doc("Workspace Sidebar", "AI Assistant")
+		existing = {(row.link_type, row.link_to) for row in sidebar.items}
+		if ("Page", "ai-chat") not in existing:
+			sidebar.append("items", {
+				"icon": "panel-top",
+				"idx": 1,
+				"label": "企业智能业务助手",
+				"link_to": "ai-chat",
+				"link_type": "Page",
+				"type": "Link",
+			})
+		if ("DocType", "AI Assistant Settings") not in existing:
+			sidebar.append("items", {
+				"icon": "settings",
+				"idx": 2,
+				"label": "AI Assistant Settings",
+				"link_to": "AI Assistant Settings",
+				"link_type": "DocType",
+				"type": "Link",
+			})
+		for idx, row in enumerate(sidebar.items, start=1):
+			row.idx = idx
+		sidebar.flags.ignore_permissions = True
+		sidebar.save(ignore_permissions=True)
 
 	if frappe.db.exists("Desktop Icon", "AI Assistant"):
 		frappe.db.set_value(
