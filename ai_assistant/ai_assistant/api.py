@@ -803,7 +803,7 @@ def build_financial_voucher_ai_classifier(provider, selected_model):
 @frappe.whitelist()
 def generate_financial_voucher_report(file_url, platform="qwen", model_id=None):
     user_roles = frappe.get_roles(frappe.session.user)
-    is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles
+    is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles or "Accounts Manager" in user_roles
     if not is_boss:
         frappe.throw("当前账号无权生成财务凭证报表。")
 
@@ -846,7 +846,7 @@ def chat(message, platform, model_id, lang="zh"):
 
     try:
         user_roles = frappe.get_roles(frappe.session.user)
-        is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles
+        is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles or "Accounts Manager" in user_roles
 
         if is_simple_greeting(message):
             return {
@@ -903,7 +903,7 @@ def chat(message, platform, model_id, lang="zh"):
         # 🛡️ 极其极其霸气的后端 RBAC 拦截防线（釜底抽薪大法！）
         # =========================================================
         user_roles = frappe.get_roles(frappe.session.user)
-        is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles
+        is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles or "Accounts Manager" in user_roles
 
         all_tools = [
             {"type": "function", "function": {"name": "get_recent_sales_orders", "description": "当用户询问销售订单时调用", "parameters": common_parameters}},

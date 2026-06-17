@@ -164,7 +164,7 @@ frappe.pages['ai-chat'].on_page_load = function(wrapper) {
     // =========================================================
     // 🛡️ 极其极其极其霸气的前端 RBAC 权限拦截雷达！
     // =========================================================
-    let is_boss = frappe.user.has_role('Administrator') || frappe.user.has_role('System Manager') || frappe.session.user === "Administrator";
+    let is_boss = frappe.user.has_role('Administrator') || frappe.user.has_role('System Manager') || frappe.user.has_role('Accounts Manager') || frappe.session.user === "Administrator";
     
     if (!is_boss) {
         $wrapper.find('#finance-menu').remove();
