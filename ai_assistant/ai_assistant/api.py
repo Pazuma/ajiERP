@@ -753,6 +753,51 @@ def parse_model_json_array(content):
     return parsed
 
 
+def parse_model_json_object(content):
+    text = str(content or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        text = text[start:end + 1]
+    parsed = json.loads(text)
+    if not isinstance(parsed, dict):
+        raise ValueError("模型没有返回 JSON 对象。")
+    return parsed
+
+
+def build_financial_voucher_header_classifier(provider, selected_model):
+    if not provider.get("api_key"):
+        return None
+
+    def classify(cell_values):
+        url = f"{provider['base_url'].rstrip('/')}/chat/completions"
+        headers = {"Authorization": f"Bearer {provider['api_key']}", "Content-Type": "application/json"}
+        system_prompt = (
+            "你是银行 Excel 表头识别助手。只判断单元格表头对应的标准字段。"
+            "标准字段只能是：入账日期、转出金额、转入金额、余额、对方单位、对方账号、摘要、用途。"
+            "返回严格 JSON 对象，key 为标准字段名，value 为该字段在输入列表中的索引，索引从 0 开始。"
+            "无法确定的字段不要返回。不要 Markdown，不要解释。"
+        )
+        payload = {
+            "model": selected_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(list(cell_values or []), ensure_ascii=False)},
+            ],
+            "temperature": 0.0,
+        }
+        response = requests.post(url, headers=headers, json=payload, timeout=ai_chat_timeout())
+        response.raise_for_status()
+        result_json = response.json()
+        content = result_json["choices"][0]["message"].get("content", "")
+        return parse_model_json_object(content)
+
+    return classify
+
+
 def build_financial_voucher_ai_classifier(provider, selected_model):
     if not provider.get("api_key"):
         return None
@@ -773,28 +818,31 @@ def build_financial_voucher_ai_classifier(provider, selected_model):
             f"基础科目只能来自：{', '.join(allowed_accounts)}。"
             "无法确定时使用 fallback_debit_account/fallback_credit_account，并把 confidence 设为 0.5。"
         )
-        payload = {
-            "model": selected_model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": json.dumps(candidates[:40], ensure_ascii=False)},
-            ],
-            "temperature": 0.1,
-        }
-        response = requests.post(url, headers=headers, json=payload, timeout=ai_voucher_classification_timeout())
-        response.raise_for_status()
-        result_json = response.json()
-        content = result_json["choices"][0]["message"].get("content", "")
-        rows = parse_model_json_array(content)
-
         suggestions = {}
-        candidate_ids = {item["id"] for item in candidates}
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            item_id = row.get("id")
-            if item_id in candidate_ids:
-                suggestions[item_id] = row
+        batch_size = 40
+        for start in range(0, len(candidates), batch_size):
+            batch = candidates[start:start + batch_size]
+            payload = {
+                "model": selected_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": json.dumps(batch, ensure_ascii=False)},
+                ],
+                "temperature": 0.1,
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=ai_voucher_classification_timeout())
+            response.raise_for_status()
+            result_json = response.json()
+            content = result_json["choices"][0]["message"].get("content", "")
+            rows = parse_model_json_array(content)
+
+            candidate_ids = {item["id"] for item in batch}
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                item_id = row.get("id")
+                if item_id in candidate_ids:
+                    suggestions[item_id] = row
         return suggestions
 
     return classify
@@ -810,7 +858,8 @@ def generate_financial_voucher_report(file_url, platform="qwen", model_id=None):
     provider = get_ai_provider_config(platform)
     selected_model = provider.get("model") or model_id or provider.get("default_model")
     ai_classifier = build_financial_voucher_ai_classifier(provider, selected_model)
-    return generate_financial_vouchers(file_url, ai_classifier=ai_classifier)
+    header_classifier = build_financial_voucher_header_classifier(provider, selected_model)
+    return generate_financial_vouchers(file_url, ai_classifier=ai_classifier, header_classifier=header_classifier)
 
 
 def build_financial_voucher_response(tool_result, ai_classifier=None, provider_label=None, called_by_model=False):
@@ -868,7 +917,7 @@ def chat(message, platform, model_id, lang="zh"):
                     "reply": "⚠️ 抱歉，您的账号当前无权访问该机密业务模块。",
                     "logs": ["后端权限拦截：当前用户无权生成财务凭证报表。"]
                 }
-            tool_result = generate_financial_vouchers(voucher_file_url, ai_classifier=None)
+            tool_result = generate_financial_vouchers(voucher_file_url, ai_classifier=None, header_classifier=None)
             return build_financial_voucher_response(tool_result, ai_classifier=None, provider_label=provider["label"])
 
         if not provider["api_key"]:
@@ -1022,7 +1071,10 @@ def chat(message, platform, model_id, lang="zh"):
                             "logs": ["大模型调用财务凭证工具但未提供 file_url。"]
                         }
                     ai_classifier = build_financial_voucher_ai_classifier(provider, selected_model)
-                    tool_result = generate_financial_vouchers(file_url, ai_classifier=ai_classifier)
+                    header_classifier = build_financial_voucher_header_classifier(provider, selected_model)
+                    tool_result = generate_financial_vouchers(
+                        file_url, ai_classifier=ai_classifier, header_classifier=header_classifier
+                    )
                     return build_financial_voucher_response(
                         tool_result,
                         ai_classifier=ai_classifier,
@@ -1107,7 +1159,10 @@ def chat(message, platform, model_id, lang="zh"):
                     "logs": ["后端权限拦截：当前用户无权生成财务凭证报表。"]
                 }
             ai_classifier = build_financial_voucher_ai_classifier(provider, selected_model)
-            tool_result = generate_financial_vouchers(voucher_file_url, ai_classifier=ai_classifier)
+            header_classifier = build_financial_voucher_header_classifier(provider, selected_model)
+            tool_result = generate_financial_vouchers(
+                voucher_file_url, ai_classifier=ai_classifier, header_classifier=header_classifier
+            )
             return build_financial_voucher_response(
                 tool_result,
                 ai_classifier=ai_classifier,

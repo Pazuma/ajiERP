@@ -30,7 +30,7 @@ frappe.pages['ai-chat'].on_page_load = function(wrapper) {
             ctx_boss: `<div class="context-tag">模块: 销售、采购、库存、财务、资产</div><div class="context-tag">状态: 高管最高级全链路授权</div>`,
             
             msg_fin_health: "生成一句话财务体检报告，看看公司总资产、负债和目前的利润", msg_fin_overdue: "帮我查一下目前有哪些客户的账款逾期了？列出催款清单",
-            msg_fin_expense: "帮我查一下上个月各成本中心一共烧了多少钱？列出开销明细", msg_fin_voucher_upload: "请上传银行交易明细 Excel 源文件（.xlsx 或 .xls）。上传完成后，我会自动生成财务凭证报表。", btn_upload_source: "📎 上传源文件", btn_download_report: "⬇️ 下载财务报表", msg_fin_voucher_ready: "帮我根据已上传的银行交易明细源文件生成财务凭证、科目余额表、资产负债表和利润表。文件：{fileName}，路径：{fileUrl}", msg_ast_list: "帮我盘点一下公司现在的固定资产家底，总共值多少钱？列出资产清单",
+            msg_fin_expense: "帮我查一下上个月各成本中心一共烧了多少钱？列出开销明细", msg_fin_voucher_upload: "请上传银行交易明细 Excel 源文件（.xlsx ）。上传完成后，我会自动生成财务凭证报表。", btn_upload_source: "📎 上传源文件", btn_download_report: "⬇️ 下载财务报表", msg_fin_voucher_ready: "帮我根据已上传的银行交易明细源文件生成财务凭证、科目余额表、资产负债表和利润表。文件：{fileName}，路径：{fileUrl}", msg_ast_list: "帮我盘点一下公司现在的固定资产家底，总共值多少钱？列出资产清单",
             msg_ast_value: "查一下咱们目前最值钱的5个资产是什么？看看净值和贬值情况", msg_ast_leave: "有员工要离职了，查一下名下挂着哪些公司资产需要交接？",
             msg_stk_sales_report: "帮我生成本月的销售月报及大客户贡献榜", msg_stk_low: "帮我查一下当前库存数量低于 10 的商品",
             msg_stk_so: "查看最近的销售订单", msg_stk_si: "查看最近的销售发票", msg_stk_pr: "查看最近的采购入库单", msg_stk_dn: "查看最近的销售出库单",
