@@ -6,12 +6,7 @@ from datetime import date, datetime
 from .account_mapping import account_root_type, base_account
 
 
-BALANCE_ACCOUNTS = [
-    "银行存款", "应收账款", "预付账款", "其他应收款", "库存商品", "固定资产", "累计折旧",
-    "应付账款", "预收账款", "应付职工薪酬", "应交税费", "其他应付款", "实收资本", "利润分配",
-    "主营业务收入", "其他业务收入", "主营业务成本", "其他业务成本", "税金及附加", "销售费用",
-    "管理费用", "财务费用", "营业外支出", "所得税", "以前年度损益调整",
-]
+BALANCE_ACCOUNTS = ['库存现金', '银行存款', '其他货币资金', '交易性金融资产', '应收票据', '应收账款', '预付账款', '应收股利', '应收利息', '其他应收款', '坏账准备', '受托代销商品', '材料采购', '在途物资', '原材料', '材料成本差异', '库存商品', '发出商品', '商品进销差价', '委托加工物资', '周转材料', '存货跌价准备', '持有至到期投资', '持有至到期投资减值准备', '可供出售金融资产', '长期股权投资', '长期股权投资减值准备', '投资性房地产', '长期应收款', '未实现融资收益', '固定资产', '累计折旧', '固定资产减值准备', '在建工程', '工程物资', '固定资产清理', '生产性生物资产', '生产性生物资产累计折旧', '无形资产', '累计摊销', '无形资产减值准备', '商誉', '长期待摊费用', '递延所得税资产', '待处理财产损溢', '短期借款', '交易性金融负债', '应付票据', '应付账款', '预收账款', '应付职工薪酬', '应交税费', '应付股利', '应付利息', '其他应付款', '受托代销商品款', '递延收益', '长期借款', '应付债券', '长期应付款', '未确认融资费用', '专项应付款', '预计负债', '递延所得税负债', '衍生工具', '套期工具', '被套期项目', '实收资本', '资本公积', '其他综合收益', '盈余公积', '本年利润', '利润分配', '库存股', '生产成本', '制造费用', '劳务成本', '研发支出', '主营业务收入', '其他业务收入', '公允价值变动损益', '投资收益', '其他收益-政府补助', '营业外收入', '主营业务成本', '其他业务成本', '税金及附加', '销售费用', '管理费用', '财务费用', '资产减值损失', '营业外支出', '所得税', '以前年度损益调整']
 
 
 def _amount(value):
@@ -55,16 +50,15 @@ def _style_sheet(ws, header_rows=(1,), freeze="A2"):
 def _write_vouchers(wb, voucher_rows):
     ws = wb.active
     ws.title = "凭证模板"
-    headers = ["凭证号", "凭证组号", "分录行号", "摘要", "借方科目", "贷方科目", "借方金额", "贷方金额", "匹配来源", "复核状态", "AI置信度", "匹配说明"]
+    headers = ["凭证号", "摘要", "借方科目", "贷方科目", "借方金额", "贷方金额", "AI置信度", "匹配说明"]
     ws.append(headers)
     for row in voucher_rows:
         ws.append([
-            row.get("voucher_no"), row.get("group_id"), row.get("line_no"), row.get("summary"),
-            row.get("debit_account"), row.get("credit_account"), _amount(row.get("debit_amount")),
-            _amount(row.get("credit_amount")), row.get("mapping_source"), row.get("review_status"),
-            row.get("ai_confidence"), row.get("mapping_reason"),
+            row.get("voucher_no"), row.get("summary"), row.get("debit_account"), row.get("credit_account"),
+            _amount(row.get("debit_amount")), _amount(row.get("credit_amount")), row.get("ai_confidence"),
+            row.get("mapping_reason"),
         ])
-    widths = [10, 12, 10, 42, 24, 28, 14, 14, 12, 12, 12, 48]
+    widths = [10, 42, 24, 28, 14, 14, 12, 48]
     for idx, width in enumerate(widths, start=1):
         ws.column_dimensions[chr(64 + idx)].width = width
     _style_sheet(ws)
@@ -107,11 +101,13 @@ def _ending_credit(trial_balance, account):
 
 
 def _period_debit(trial_balance, account):
-    return float(trial_balance.get(account, {}).get("period_debit") or 0)
+    data = trial_balance.get(account, {})
+    return float(data.get("statement_debit") if data.get("statement_debit") is not None else data.get("period_debit") or 0)
 
 
 def _period_credit(trial_balance, account):
-    return float(trial_balance.get(account, {}).get("period_credit") or 0)
+    data = trial_balance.get(account, {})
+    return float(data.get("statement_credit") if data.get("statement_credit") is not None else data.get("period_credit") or 0)
 
 
 def _opening_credit(trial_balance, account):
@@ -200,8 +196,12 @@ def _write_balance_sheet(wb, trial_balance, company_name=None, bank_context=None
     opening_retained = _opening_credit(trial_balance, "利润分配") - _opening_debit(trial_balance, "利润分配")
     current_year_profit = _net_liability_balance(trial_balance, "本年利润")
     net_profit = _net_profit_amount(trial_balance)
-    retained = opening_retained + current_year_profit + net_profit
-    total_equity = _root_total(trial_balance, "equity") + net_profit
+    has_generated_closing = bool(
+        trial_balance.get("本年利润", {}).get("closing_debit")
+        or trial_balance.get("本年利润", {}).get("closing_credit")
+    )
+    retained = opening_retained + current_year_profit if has_generated_closing else opening_retained + current_year_profit + net_profit
+    total_equity = _root_total(trial_balance, "equity")
     total_liabilities_equity = total_liabilities + total_equity
 
     rows = [

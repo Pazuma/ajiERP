@@ -168,8 +168,11 @@ def _clean(value):
 
 
 def _build_merged_lookup(ws):
+    merged_ranges = list(getattr(ws.merged_cells, "ranges", []) or [])
+    if not merged_ranges:
+        return None
     merged_lookup = {}
-    for merged_range in getattr(ws.merged_cells, "ranges", []):
+    for merged_range in merged_ranges:
         min_col, min_row, max_col, max_row = merged_range.bounds
         top_left = ws.cell(row=min_row, column=min_col).value
         for row_idx in range(min_row, max_row + 1):
@@ -430,6 +433,90 @@ def validate_voucher_entry_balance(mapped_entries):
     return notes
 
 
+
+
+def _append_voucher_line(voucher_rows, entry, summary, debit_account=None, credit_account=None, debit_amount=None, credit_amount=None, mapping_reason=None, is_closing=False):
+    voucher_rows.append({
+        "voucher_no": entry["voucher_no"] if isinstance(entry, dict) else entry,
+        "summary": summary,
+        "debit_account": debit_account,
+        "credit_account": credit_account,
+        "debit_amount": float(debit_amount or 0) if debit_amount is not None else None,
+        "credit_amount": float(credit_amount or 0) if credit_amount is not None else None,
+        "source_row": entry.get("tx", {}).get("row_no") if isinstance(entry, dict) else None,
+        "mapping_reason": mapping_reason or (entry.get("mapping_reason") if isinstance(entry, dict) else ""),
+        "needs_review": bool(entry.get("needs_review")) if isinstance(entry, dict) else False,
+        "ai_applied": bool(entry.get("ai_applied")) if isinstance(entry, dict) else False,
+        "ai_confidence": entry.get("ai_confidence") if isinstance(entry, dict) else None,
+        "mapping_source": "AI" if isinstance(entry, dict) and entry.get("ai_applied") else "规则",
+        "review_status": "需复核" if isinstance(entry, dict) and entry.get("needs_review") else "已匹配",
+        "is_closing": is_closing,
+    })
+
+
+def _payroll_benefit_accrual_account(account):
+    if account == "应付职工薪酬-社保":
+        return "管理费用-社保"
+    if account == "应付职工薪酬-公积金":
+        return "管理费用-公积金"
+    return None
+
+
+def _append_payroll_benefit_accrual(voucher_rows, entry, amount_float):
+    expense_account = _payroll_benefit_accrual_account(entry.get("debit_account"))
+    if not expense_account or entry.get("direction") != "out":
+        return False
+    summary = f"计提{entry['debit_account'].split('-', 1)[1]}"
+    reason = f"支付{entry['debit_account'].split('-', 1)[1]}时同步计提：借记{expense_account}，贷记{entry['debit_account']}"
+    _append_voucher_line(voucher_rows, entry, summary, debit_account=expense_account, debit_amount=amount_float, mapping_reason=reason)
+    _append_voucher_line(voucher_rows, entry, None, credit_account=entry["debit_account"], credit_amount=amount_float, mapping_reason=reason)
+    return True
+
+
+def _append_profit_loss_closing_entries(voucher_rows):
+    account_totals = defaultdict(lambda: {"debit": 0.0, "credit": 0.0})
+    for row in voucher_rows:
+        if row.get("is_closing"):
+            continue
+        debit_account = row.get("debit_account")
+        credit_account = row.get("credit_account")
+        if debit_account:
+            base = base_account(debit_account)
+            if account_root_type(base) in ("income", "expense"):
+                account_totals[base]["debit"] += float(row.get("debit_amount") or 0)
+        if credit_account:
+            base = base_account(credit_account)
+            if account_root_type(base) in ("income", "expense"):
+                account_totals[base]["credit"] += float(row.get("credit_amount") or 0)
+
+    next_voucher_no = max([int(row.get("voucher_no") or 0) for row in voucher_rows] or [0]) + 1
+    closing_count = 0
+    for account in sorted(account_totals):
+        root = account_root_type(account)
+        debit = account_totals[account]["debit"]
+        credit = account_totals[account]["credit"]
+        if root == "income":
+            amount = round(credit - debit, 2)
+            if amount <= 0:
+                continue
+            entry = {"voucher_no": next_voucher_no, "needs_review": False, "ai_applied": False, "ai_confidence": None, "tx": {}}
+            reason = f"月末损益结转：{account} 转入 本年利润"
+            _append_voucher_line(voucher_rows, entry, f"结转本期损益-{account}", debit_account=account, debit_amount=amount, mapping_reason=reason, is_closing=True)
+            _append_voucher_line(voucher_rows, entry, None, credit_account="本年利润", credit_amount=amount, mapping_reason=reason, is_closing=True)
+        elif root == "expense":
+            amount = round(debit - credit, 2)
+            if amount <= 0:
+                continue
+            entry = {"voucher_no": next_voucher_no, "needs_review": False, "ai_applied": False, "ai_confidence": None, "tx": {}}
+            reason = f"月末损益结转：{account} 转入 本年利润"
+            _append_voucher_line(voucher_rows, entry, f"结转本期损益-{account}", debit_account="本年利润", debit_amount=amount, mapping_reason=reason, is_closing=True)
+            _append_voucher_line(voucher_rows, entry, None, credit_account=account, credit_amount=amount, mapping_reason=reason, is_closing=True)
+        else:
+            continue
+        next_voucher_no += 1
+        closing_count += 1
+    return closing_count
+
 def build_voucher_rows(transactions, ai_classifier=None):
     voucher_rows = []
     mapped_entries, _candidates, review_notes = _build_mapped_entries(transactions)
@@ -443,41 +530,19 @@ def build_voucher_rows(transactions, ai_classifier=None):
         if entry["needs_review"]:
             review_notes.append(f"凭证 {entry['voucher_no']}（源文件第 {tx['row_no']} 行）需人工复核：{summary}；{entry['mapping_reason']}")
 
-        group_id = f"V{entry['voucher_no']:04d}"
-        voucher_rows.append({
-            "voucher_no": entry["voucher_no"],
-            "group_id": group_id,
-            "line_no": 1,
-            "summary": summary,
-            "debit_account": entry["debit_account"],
-            "credit_account": None,
-            "debit_amount": amount_float,
-            "credit_amount": None,
-            "source_row": tx["row_no"],
-            "mapping_reason": entry["mapping_reason"],
-            "needs_review": entry["needs_review"],
-            "ai_applied": entry["ai_applied"],
-            "ai_confidence": entry.get("ai_confidence"),
-            "mapping_source": "AI" if entry["ai_applied"] else "规则",
-            "review_status": "需复核" if entry["needs_review"] else "已匹配",
-        })
-        voucher_rows.append({
-            "voucher_no": entry["voucher_no"],
-            "group_id": group_id,
-            "line_no": 2,
-            "summary": None,
-            "debit_account": None,
-            "credit_account": entry["credit_account"],
-            "debit_amount": None,
-            "credit_amount": amount_float,
-            "source_row": tx["row_no"],
-            "mapping_reason": entry["mapping_reason"],
-            "needs_review": entry["needs_review"],
-            "ai_applied": entry["ai_applied"],
-            "ai_confidence": entry.get("ai_confidence"),
-            "mapping_source": "AI" if entry["ai_applied"] else "规则",
-            "review_status": "需复核" if entry["needs_review"] else "已匹配",
-        })
+        _append_voucher_line(
+            voucher_rows, entry, summary, debit_account=entry["debit_account"],
+            debit_amount=amount_float, mapping_reason=entry["mapping_reason"]
+        )
+        _append_voucher_line(
+            voucher_rows, entry, None, credit_account=entry["credit_account"],
+            credit_amount=amount_float, mapping_reason=entry["mapping_reason"]
+        )
+        _append_payroll_benefit_accrual(voucher_rows, entry, amount_float)
+
+    closing_count = _append_profit_loss_closing_entries(voucher_rows)
+    if closing_count:
+        review_notes.append(f"已自动生成 {closing_count} 组月末损益结转分录，结转至本年利润。")
 
     if ai_stats["error"]:
         review_notes.append(f"AI辅助判断失败，已使用规则兜底：{ai_stats['error']}")
@@ -552,7 +617,12 @@ def build_bank_balance_context(transactions):
 
 
 def build_trial_balance(voucher_rows, bank_context=None):
-    totals = defaultdict(lambda: {"opening_debit": 0.0, "opening_credit": 0.0, "period_debit": 0.0, "period_credit": 0.0})
+    totals = defaultdict(lambda: {
+        "opening_debit": 0.0, "opening_credit": 0.0,
+        "period_debit": 0.0, "period_credit": 0.0,
+        "statement_debit": 0.0, "statement_credit": 0.0,
+        "closing_debit": 0.0, "closing_credit": 0.0,
+    })
 
     bank_context = bank_context or {}
     opening_bank = float(bank_context.get("opening_balance") or 0)
@@ -567,10 +637,23 @@ def build_trial_balance(voucher_rows, bank_context=None):
     for row in voucher_rows:
         debit_account = row.get("debit_account")
         credit_account = row.get("credit_account")
+        is_closing = bool(row.get("is_closing"))
         if debit_account:
-            totals[base_account(debit_account)]["period_debit"] += float(row.get("debit_amount") or 0)
+            base = base_account(debit_account)
+            amount = float(row.get("debit_amount") or 0)
+            totals[base]["period_debit"] += amount
+            if is_closing:
+                totals[base]["closing_debit"] += amount
+            else:
+                totals[base]["statement_debit"] += amount
         if credit_account:
-            totals[base_account(credit_account)]["period_credit"] += float(row.get("credit_amount") or 0)
+            base = base_account(credit_account)
+            amount = float(row.get("credit_amount") or 0)
+            totals[base]["period_credit"] += amount
+            if is_closing:
+                totals[base]["closing_credit"] += amount
+            else:
+                totals[base]["statement_credit"] += amount
 
     for account, data in totals.items():
         cumulative_debit = data["opening_debit"] + data["period_debit"]
@@ -593,11 +676,13 @@ def _tb_ending_credit(trial_balance, account):
 
 
 def _tb_period_debit(trial_balance, account):
-    return float(trial_balance.get(account, {}).get("period_debit") or 0)
+    data = trial_balance.get(account, {})
+    return float(data.get("statement_debit") if data.get("statement_debit") is not None else data.get("period_debit") or 0)
 
 
 def _tb_period_credit(trial_balance, account):
-    return float(trial_balance.get(account, {}).get("period_credit") or 0)
+    data = trial_balance.get(account, {})
+    return float(data.get("statement_credit") if data.get("statement_credit") is not None else data.get("period_credit") or 0)
 
 
 def _tb_net_asset(trial_balance, account):
@@ -634,7 +719,7 @@ def _tb_net_profit(trial_balance):
 def validate_balance_sheet_totals(trial_balance):
     total_assets = _tb_root_total(trial_balance, "asset") + _tb_root_total(trial_balance, "asset_credit")
     total_liabilities = _tb_root_total(trial_balance, "liability")
-    total_equity = _tb_root_total(trial_balance, "equity") + _tb_net_profit(trial_balance)
+    total_equity = _tb_root_total(trial_balance, "equity")
     diff = round(total_assets - total_liabilities - total_equity, 2)
     if abs(diff) <= 0.01:
         return []

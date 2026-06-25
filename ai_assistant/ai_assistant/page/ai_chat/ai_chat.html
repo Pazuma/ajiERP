@@ -41,7 +41,7 @@
     .chat-input-area { display: flex; gap: var(--margin-sm); padding: var(--padding-md) var(--padding-lg); background-color: var(--card-bg); border-top: 1px solid var(--border-color); }
     .chat-input { flex: 1; height: var(--input-height); padding: 4px 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius); outline: none; font-size: var(--text-sm); background: var(--control-bg); color: var(--text-color); }
     .send-btn { min-width: 72px; }
-    .ai-log-panel { height: 132px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); display: flex; flex-direction: column; overflow: hidden; }
+    .ai-log-panel { display: none; }
     .log-header { background-color: var(--subtle-fg); padding: 8px var(--padding-md); font-weight: 600; font-size: var(--text-sm); color: var(--heading-color); border-bottom: 1px solid var(--border-color); }
     .log-content { flex: 1; padding: 10px var(--padding-md); overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: var(--text-xs); background-color: var(--gray-900); }
     .log-sys { color: var(--gray-400); } .log-success { color: var(--green-300, #9de5b3); } .log-warn { color: var(--yellow-300, #f5d76e); } .log-error { color: var(--red-300, #f8a5a5); }

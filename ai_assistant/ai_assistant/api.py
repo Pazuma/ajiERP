@@ -1,853 +1,51 @@
 import frappe
 import requests
 import json
-import os
 import re
 
-from .account_mapping import allowed_base_accounts
+from .i18n.translations import translate_headers
+from .prompts.system import build_system_prompt, language_label
+from .tools.registry import (
+    dispatch_tool,
+    get_tools,
+    is_restricted_tool,
+    is_valid_tool,
+    tool_file_prefix,
+)
 from .voucher_generator import generate_financial_vouchers
 
-# =========================================================
-# 🛠️ 极其强大的本地业务工具箱 (十五大金刚 - 终极安全与权限防线版)
-# =========================================================
-
-# --- 销售模块 ---
-def get_recent_sales_orders(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50) 
-        
-        filters = {}
-        if start_date and end_date: filters["transaction_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["transaction_date"] = [">=", start_date]
-        elif end_date: filters["transaction_date"] = ["<=", end_date]
-
-        orders = frappe.db.get_list("Sales Order", fields=["name", "customer", "transaction_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not orders: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何销售订单记录。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的销售订单（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        orders_data = [] 
-        for o in orders:
-            result_str += f"- 订单号: [{o.name}](/app/sales-order/{o.name}), 客户: {o.customer}, 日期: {o.transaction_date}, 金额: ￥{o.grand_total}, 状态: {o.status}\n"
-            orders_data.append({"订单编号": o.name, "客户名称": o.customer, "交易日期": str(o.transaction_date), "总金额(元)": float(o.grand_total) if o.grand_total else 0.0, "当前状态": o.status})
-        return {"text": result_str, "data": orders_data}
-    except Exception as e: return {"text": f"查询销售订单失败：{str(e)}", "data": []}
-
-def get_recent_sales_invoices(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        filters = {}
-        if start_date and end_date: filters["posting_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["posting_date"] = [">=", start_date]
-        elif end_date: filters["posting_date"] = ["<=", end_date]
-
-        invoices = frappe.db.get_list("Sales Invoice", fields=["name", "customer", "posting_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not invoices: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何销售发票。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的销售发票（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        invoices_data = [] 
-        for i in invoices:
-            result_str += f"- 发票号: [{i.name}](/app/sales-invoice/{i.name}), 客户: {i.customer}, 日期: {i.posting_date}, 金额: ￥{i.grand_total}, 状态: {i.status}\n"
-            invoices_data.append({"发票编号": i.name, "客户名称": i.customer, "开票日期": str(i.posting_date), "总金额(元)": float(i.grand_total) if i.grand_total else 0.0, "当前状态": i.status})
-        return {"text": result_str, "data": invoices_data}
-    except Exception as e: return {"text": f"查询销售发票失败：{str(e)}", "data": []}
-
-# --- 库存与预警模块 ---
-def get_recent_purchase_receipts(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        filters = {}
-        if start_date and end_date: filters["posting_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["posting_date"] = [">=", start_date]
-        elif end_date: filters["posting_date"] = ["<=", end_date]
-
-        receipts = frappe.db.get_list("Purchase Receipt", fields=["name", "supplier", "posting_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not receipts: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何采购入库单。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的采购入库单（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        receipts_data = [] 
-        for r in receipts:
-            result_str += f"- 入库单号: [{r.name}](/app/purchase-receipt/{r.name}), 供应商: {r.supplier}, 日期: {r.posting_date}, 金额: ￥{r.grand_total}, 状态: {r.status}\n"
-            receipts_data.append({"入库单编号": r.name, "供应商名称": r.supplier, "入库日期": str(r.posting_date), "总金额(元)": float(r.grand_total) if r.grand_total else 0.0, "当前状态": r.status})
-        return {"text": result_str, "data": receipts_data}
-    except Exception as e: return {"text": f"查询采购入库单失败：{str(e)}", "data": []}
-
-def get_recent_delivery_notes(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        filters = {}
-        if start_date and end_date: filters["posting_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["posting_date"] = [">=", start_date]
-        elif end_date: filters["posting_date"] = ["<=", end_date]
-
-        notes = frappe.db.get_list("Delivery Note", fields=["name", "customer", "posting_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not notes: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何销售出库单。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的销售出库单（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        notes_data = [] 
-        for n in notes:
-            result_str += f"- 出库单号: [{n.name}](/app/delivery-note/{n.name}), 客户: {n.customer}, 日期: {n.posting_date}, 金额: ￥{n.grand_total}, 状态: {n.status}\n"
-            notes_data.append({"出库单编号": n.name, "客户名称": n.customer, "出库日期": str(n.posting_date), "总金额(元)": float(n.grand_total) if n.grand_total else 0.0, "当前状态": n.status})
-        return {"text": result_str, "data": notes_data}
-    except Exception as e: return {"text": f"查询销售出库单失败：{str(e)}", "data": []}
-
-def get_low_stock_warnings(limit=10, threshold=10):
-    try:
-        req_limit = int(limit) if limit else 10
-        limit = min(req_limit, 50)
-        threshold = float(threshold) if threshold else 10.0
-
-        bins = frappe.db.sql("""
-            SELECT item_code, warehouse, actual_qty
-            FROM `tabBin`
-            WHERE actual_qty <= %s
-            ORDER BY actual_qty ASC
-            LIMIT %s
-        """, (threshold, limit), as_dict=True)
-
-        if not bins:
-            return {"text": f"报告老板：目前系统内各大仓库没有发现库存小于或等于 {threshold} 的商品，库存状况极其健康！", "data": []}
-
-        result_str = f"⚠️ **极其重要的低库存预警**（实际库存 <= {threshold}，受性能保护最高展示 {limit} 条）：\n"
-        warning_data = []
-        for b in bins:
-            result_str += f"- 商品编码: [{b.item_code}](/app/item/{b.item_code}), 仓库: {b.warehouse}, 当前实际库存: **{b.actual_qty}**\n"
-            warning_data.append({"商品编码": b.item_code, "所在仓库": b.warehouse, "实际库存量": float(b.actual_qty), "预警警戒线": threshold})
-            
-        return {"text": result_str, "data": warning_data}
-    except Exception as e: return {"text": f"执行低库存预警扫描失败：{str(e)}", "data": []}
-
-# --- 采购模块 ---
-def get_recent_supplier_quotations(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        filters = {}
-        if start_date and end_date: filters["transaction_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["transaction_date"] = [">=", start_date]
-        elif end_date: filters["transaction_date"] = ["<=", end_date]
-
-        quotations = frappe.db.get_list("Supplier Quotation", fields=["name", "supplier", "transaction_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not quotations: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何供应商报价记录。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的供应商报价（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        quotations_data = [] 
-        for q in quotations:
-            result_str += f"- 报价单号: [{q.name}](/app/supplier-quotation/{q.name}), 供应商: {q.supplier}, 日期: {q.transaction_date}, 金额: ￥{q.grand_total}, 状态: {q.status}\n"
-            quotations_data.append({"报价单编号": q.name, "供应商名称": q.supplier, "报价日期": str(q.transaction_date), "总金额(元)": float(q.grand_total) if q.grand_total else 0.0, "当前状态": q.status})
-        return {"text": result_str, "data": quotations_data}
-    except Exception as e: return {"text": f"查询供应商报价失败：{str(e)}", "data": []}
-
-def get_recent_purchase_orders(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        filters = {}
-        if start_date and end_date: filters["transaction_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["transaction_date"] = [">=", start_date]
-        elif end_date: filters["transaction_date"] = ["<=", end_date]
-
-        orders = frappe.db.get_list("Purchase Order", fields=["name", "supplier", "transaction_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not orders: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何采购订单记录。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的采购订单（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        orders_data = [] 
-        for o in orders:
-            result_str += f"- 订单号: [{o.name}](/app/purchase-order/{o.name}), 供应商: {o.supplier}, 日期: {o.transaction_date}, 金额: ￥{o.grand_total}, 状态: {o.status}\n"
-            orders_data.append({"采购订单编号": o.name, "供应商名称": o.supplier, "交易日期": str(o.transaction_date), "总金额(元)": float(o.grand_total) if o.grand_total else 0.0, "当前状态": o.status})
-        return {"text": result_str, "data": orders_data}
-    except Exception as e: return {"text": f"查询采购订单失败：{str(e)}", "data": []}
-
-def get_recent_purchase_invoices(limit=5, start_date=None, end_date=None):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        filters = {}
-        if start_date and end_date: filters["posting_date"] = ["between", [start_date, end_date]]
-        elif start_date: filters["posting_date"] = [">=", start_date]
-        elif end_date: filters["posting_date"] = ["<=", end_date]
-
-        invoices = frappe.db.get_list("Purchase Invoice", fields=["name", "supplier", "posting_date", "grand_total", "status"], filters=filters, order_by="creation desc", limit=limit)
-        if not invoices: return {"text": f"报告：在指定范围内（{start_date or '未知'} 至 {end_date or '未知'}）没有找到任何采购发票记录。", "data": []}
-        
-        result_str = f"以下是从 ERPNext 数据库中查到的采购发票（受性能安全阀保护，最高展示前 {limit} 条）：\n"
-        invoices_data = [] 
-        for i in invoices:
-            result_str += f"- 发票号: [{i.name}](/app/purchase-invoice/{i.name}), 供应商: {i.supplier}, 日期: {i.posting_date}, 金额: ￥{i.grand_total}, 状态: {i.status}\n"
-            invoices_data.append({"采购发票编号": i.name, "供应商名称": i.supplier, "开票日期": str(i.posting_date), "总金额(元)": float(i.grand_total) if i.grand_total else 0.0, "当前状态": i.status})
-        return {"text": result_str, "data": invoices_data}
-    except Exception as e: return {"text": f"查询采购发票失败：{str(e)}", "data": []}
-
-# --- 财务及分析模块 ---
-def generate_sales_monthly_report(target_month=None):
-    try:
-        if not target_month:
-            target_month = frappe.utils.nowdate()[:7] 
-            
-        target_month_like = f"{target_month}%"
-
-        overall_stats = frappe.db.sql("""
-            SELECT COUNT(name) as total_orders, SUM(grand_total) as total_revenue
-            FROM `tabSales Order`
-            WHERE transaction_date LIKE %s AND docstatus < 2
-        """, (target_month_like,), as_dict=True)[0]
-
-        total_orders = overall_stats.get('total_orders') or 0
-        total_revenue = overall_stats.get('total_revenue') or 0.0
-
-        if total_orders == 0:
-            return {"text": f"报告老板：经过极其仔细的盘点，系统在 {target_month} 月份没有产生任何销售订单数据。", "data": []}
-
-        top_customers = frappe.db.sql("""
-            SELECT customer, SUM(grand_total) as revenue, COUNT(name) as order_count
-            FROM `tabSales Order`
-            WHERE transaction_date LIKE %s AND docstatus < 2
-            GROUP BY customer
-            ORDER BY revenue DESC
-            LIMIT 5
-        """, (target_month_like,), as_dict=True)
-
-        result_str = f"这是 {target_month} 月份的极其详尽的销售业绩汇总数据：\n\n"
-        result_str += f"- **总订单数**: {total_orders} 笔\n"
-        result_str += f"- **总销售额**: ￥{total_revenue:,.2f}\n\n"
-        
-        result_str += "👑 **Top 5 客户贡献榜**：\n"
-        report_data = []
-        for idx, c in enumerate(top_customers):
-            result_str += f"  {idx+1}. 客户: **{c.customer}** - 订单: {c.order_count}笔, 贡献金额: ￥{c.revenue:,.2f}\n"
-            report_data.append({
-                "统计月份": target_month, "排名": idx + 1, "大客户名称": c.customer,
-                "下单总笔数": c.order_count, "总贡献金额(元)": float(c.revenue)
-            })
-
-        result_str += "\n老板，请根据以上极其精准的数据，写一份极其专业、有商业洞察的销售月报总结，并用漂亮的 Markdown 结构（如加粗、表格）展现出来！"
-        return {"text": result_str, "data": report_data}
-    except Exception as e: return {"text": f"执行销售月报聚合分析失败：{str(e)}", "data": []}
-
-def get_overdue_sales_invoices(limit=10):
-    try:
-        req_limit = int(limit) if limit else 10
-        limit = min(req_limit, 50)
-        
-        overdue_invoices = frappe.db.sql("""
-            SELECT name, customer, posting_date, due_date, grand_total, outstanding_amount, DATEDIFF(CURDATE(), due_date) as overdue_days
-            FROM `tabSales Invoice`
-            WHERE docstatus = 1 AND outstanding_amount > 0 AND due_date < CURDATE()
-            ORDER BY overdue_days DESC, outstanding_amount DESC
-            LIMIT %s
-        """, (limit,), as_dict=True)
-
-        if not overdue_invoices:
-            return {"text": "🎉 报告老板：系统内极其干净！没有任何逾期未收的销售账款，现金流极其健康！", "data": []}
-
-        total_overdue = sum([float(i.outstanding_amount) for i in overdue_invoices])
-
-        result_str = f"🚨 **极其紧急的催款雷达警告！**\n"
-        result_str += f"以下是当前系统内拖欠时间最长的账款单据（防爆破最高展示 {limit} 笔），请务必尽快安排财务催收：\n\n"
-        
-        report_data = []
-        for i in overdue_invoices:
-            result_str += f"- 客户: **{i.customer}** | 发票: [{i.name}](/app/sales-invoice/{i.name}) | 逾期天数: **{i.overdue_days}天** | 未收金额: **￥{i.outstanding_amount:,.2f}**\n"
-            report_data.append({
-                "发票编号": i.name, "大客户名称": i.customer, "开票日期": str(i.posting_date),
-                "最晚收款日": str(i.due_date), "发票总金额(元)": float(i.grand_total),
-                "拖欠未付金额(元)": float(i.outstanding_amount), "已逾期天数": int(i.overdue_days)
-            })
-
-        result_str += f"\n💰 **总计预警待收金额**: **￥{total_overdue:,.2f}**\n"
-        result_str += "\n老板，我已经为您整理了极度详细的 Excel 催款清单，请直接点击下方按钮导出，以便发送给销售或财务部门进行精准催收！"
-        
-        return {"text": result_str, "data": report_data}
-    except Exception as e: return {"text": f"执行智能催款雷达扫描失败：{str(e)}", "data": []}
-
-def get_financial_health_summary():
-    try:
-        gl_summary = frappe.db.sql("""
-            SELECT a.root_type, SUM(gle.debit) as total_debit, SUM(gle.credit) as total_credit
-            FROM `tabGL Entry` gle
-            JOIN `tabAccount` a ON gle.account = a.name
-            WHERE gle.is_cancelled = 0
-            GROUP BY a.root_type
-        """, as_dict=True)
-
-        assets, liabilities, income, expense = 0.0, 0.0, 0.0, 0.0
-
-        for row in gl_summary:
-            if row.root_type == 'Asset':
-                assets += float(row.total_debit or 0) - float(row.total_credit or 0)
-            elif row.root_type == 'Liability':
-                liabilities += float(row.total_credit or 0) - float(row.total_debit or 0)
-            elif row.root_type == 'Income':
-                income += float(row.total_credit or 0) - float(row.total_debit or 0)
-            elif row.root_type == 'Expense':
-                expense += float(row.total_debit or 0) - float(row.total_credit or 0)
-
-        net_profit = income - expense
-
-        result_str = "🏥 **企业极其核心的财务体检简报**：\n\n"
-        result_str += f"- **总资产 (Assets)**: ￥{assets:,.2f}\n"
-        result_str += f"- **总负债 (Liabilities)**: ￥{liabilities:,.2f}\n"
-        result_str += f"- **累计收入 (Income)**: ￥{income:,.2f}\n"
-        result_str += f"- **累计支出 (Expense)**: ￥{expense:,.2f}\n"
-        result_str += f"- **当前账面净利润 (Net Profit)**: **￥{net_profit:,.2f}**\n\n"
-
-        if net_profit < 0:
-            result_str += "⚠️ **极其严肃的洞察警报**：老板，咱们目前的账面净利润处于**亏损状态**！请密切关注现金流储备，并核查近期大额支出科目！\n"
-        elif net_profit > 0 and assets > liabilities:
-            result_str += "✅ **极其振奋的洞察报告**：老板，公司目前的资产负债极其健康，账面实现**盈利**！请继续保持极其凶猛的增长势头！\n"
-        else:
-            result_str += "💡 **架构师洞察**：老板，目前利润为正，但请同步关注资产负债率，确保资金链极其充沛。\n"
-
-        report_data = [{
-            "体检日期": str(frappe.utils.today()),
-            "总资产(元)": assets, "总负债(元)": liabilities,
-            "总计收入(元)": income, "总计支出(元)": expense, "净利润(元)": net_profit
-        }]
-
-        return {"text": result_str, "data": report_data}
-    except Exception as e: return {"text": f"执行财务体检失败：{str(e)}", "data": []}
-
-def get_cost_center_expenses(cost_center=None, target_month=None, limit=10):
-    try:
-        req_limit = int(limit) if limit else 10
-        limit = min(req_limit, 50)
-        
-        conditions = ["a.root_type = 'Expense'", "gle.is_cancelled = 0"]
-        values = []
-
-        if target_month:
-            conditions.append("gle.posting_date LIKE %s")
-            values.append(f"{target_month}%")
-        
-        if cost_center:
-            conditions.append("gle.cost_center LIKE %s")
-            values.append(f"%{cost_center}%")
-
-        where_clause = " AND ".join(conditions)
-
-        query = f"""
-            SELECT gle.account, gle.cost_center, SUM(gle.debit - gle.credit) as net_expense
-            FROM `tabGL Entry` gle
-            JOIN `tabAccount` a ON gle.account = a.name
-            WHERE {where_clause}
-            GROUP BY gle.account, gle.cost_center
-            HAVING net_expense > 0
-            ORDER BY net_expense DESC
-            LIMIT %s
-        """
-        values.append(limit)
-
-        expenses = frappe.db.sql(query, tuple(values), as_dict=True)
-
-        if not expenses:
-            return {"text": f"🎉 报告老板：在指定条件（月份：{target_month or '全部'}，成本中心：{cost_center or '全部'}）下没有发现任何支出记录！", "data": []}
-
-        total_expense = sum([float(e.net_expense) for e in expenses])
-
-        result_str = f"💸 **极其清晰的成本“烧钱”追踪明细**（月份：{target_month or '全部'} | 成本中心：{cost_center or '全部'} | 防爆破展示前 {limit} 项）：\n\n"
-        
-        report_data = []
-        for e in expenses:
-            result_str += f"- 科目: **{e.account}** | 成本中心: {e.cost_center} | 净支出: **￥{e.net_expense:,.2f}**\n"
-            report_data.append({
-                "统计月份": target_month or "全部",
-                "成本中心": e.cost_center or "未指定",
-                "支出科目": e.account,
-                "净支出金额(元)": float(e.net_expense)
-            })
-
-        result_str += f"\n🔥 **总计排查出上述科目的总支出**: **￥{total_expense:,.2f}**\n"
-        result_str += "\n老板，我已经为您揪出了极其具体的花销科目！请结合上述数据，为各部门下达极其严格的成本管控指令！"
-        
-        return {"text": result_str, "data": report_data}
-    except Exception as e: return {"text": f"执行成本追踪扫描失败：{str(e)}", "data": []}
-
-def get_asset_inventory_snapshot():
-    try:
-        valid_columns = frappe.db.get_table_columns("Asset")
-        
-        value_field = "0" 
-        for field in ["gross_purchase_amount", "gross_purchase_cost", "purchase_amount", "value_after_depreciation"]:
-            if field in valid_columns:
-                value_field = field
-                break
-
-        department_field = "department" if "department" in valid_columns else "''"
-        location_field = "location" if "location" in valid_columns else "''"
-        asset_name_field = "asset_name" if "asset_name" in valid_columns else "item_code"
-
-        query = f"""
-            SELECT 
-                name, 
-                item_code, 
-                {asset_name_field} as asset_name, 
-                status, 
-                {value_field} as asset_value, 
-                {department_field} as department, 
-                {location_field} as location
-            FROM `tabAsset`
-            WHERE docstatus < 2
-            ORDER BY asset_value DESC
-        """
-        assets = frappe.db.sql(query, as_dict=True)
-
-        if not assets:
-            return {"text": "报告老板：经过极其仔细的搜寻，系统内目前没有任何固定资产记录！公司处于“极简轻资产”状态，建议抓紧购置！", "data": []}
-
-        total_value = sum([float(a.asset_value or 0) for a in assets])
-        
-        status_count = {}
-        for a in assets:
-            st = a.status or "状态未知"
-            status_count[st] = status_count.get(st, 0) + 1
-
-        result_str = f"🏢 **企业全局固定资产“硬家底”盘点快照**：\n\n"
-        result_str += f"- **登记资产总数**: {len(assets)} 件\n"
-        result_str += f"- **资产采购总原值**: **￥{total_value:,.2f}**\n\n"
-        
-        result_str += "📊 **资产状态分布**：\n"
-        for st, count in status_count.items():
-            result_str += f"- {st}: **{count}** 件\n"
-
-        result_str += "\n💎 **核心高价值资产清单 (Top 10)**：\n"
-        report_data = []
-        for idx, a in enumerate(assets):
-            if idx < 10:
-                result_str += f"  {idx+1}. 资产: **{a.asset_name or a.item_code}** | 编号: [{a.name}](/app/asset/{a.name}) | 状态: {a.status} | 原值: ￥{float(a.asset_value or 0):,.2f}\n"
-            
-            report_data.append({
-                "资产编号": a.name,
-                "资产名称": a.asset_name or a.item_code,
-                "当前状态": a.status,
-                "所属部门": a.department or "未分配",
-                "存放位置": a.location or "未分配",
-                "价值(元)": float(a.asset_value or 0)
-            })
-
-        result_str += "\n老板，以上是咱们公司极其珍贵的核心家底！完整资产明细表已为您准备好，请直接点击下方按钮导出查阅！"
-        
-        return {"text": result_str, "data": report_data}
-    except Exception as e: 
-        return {"text": f"执行资产盘点雷达扫描失败：{str(e)}", "data": []}
-
-def get_top_valuable_assets(limit=5):
-    try:
-        req_limit = int(limit) if limit else 5
-        limit = min(req_limit, 50)
-        
-        valid_columns = frappe.db.get_table_columns("Asset")
-        
-        orig_field = "0"
-        for field in ["gross_purchase_amount", "gross_purchase_cost", "purchase_amount"]:
-            if field in valid_columns:
-                orig_field = field
-                break
-                
-        net_field = orig_field
-        for field in ["value_after_depreciation", "net_value"]:
-            if field in valid_columns:
-                net_field = field
-                break
-                
-        asset_name_field = "asset_name" if "asset_name" in valid_columns else "item_code"
-
-        query = f"""
-            SELECT 
-                name, 
-                {asset_name_field} as asset_name, 
-                status, 
-                {orig_field} as original_value, 
-                {net_field} as net_value
-            FROM `tabAsset`
-            WHERE docstatus < 2
-            ORDER BY net_value DESC
-            LIMIT %s
-        """
-        assets = frappe.db.sql(query, (limit,), as_dict=True)
-
-        if not assets:
-            return {"text": "报告老板：系统内暂无任何有效资产数据，无法进行净值排行透视！", "data": []}
-
-        result_str = f"📉 **固定资产“缩水”透视与净值排行榜 (防爆破最高展示 Top {limit})**：\n\n"
-        
-        report_data = []
-        for idx, a in enumerate(assets):
-            orig_val = float(a.original_value or 0)
-            net_val = float(a.net_value or 0)
-            
-            shrink_rate = ((orig_val - net_val) / orig_val * 100) if orig_val > 0 else 0
-
-            result_str += f"{idx+1}. **{a.asset_name or '未知资产'}** | 编号: [{a.name}](/app/asset/{a.name})\n"
-            result_str += f"   - 采购原值: ￥{orig_val:,.2f} | **当前净值: ￥{net_val:,.2f}** | 已贬值: {shrink_rate:.1f}%\n\n"
-            
-            report_data.append({
-                "资产编号": a.name,
-                "资产名称": a.asset_name or '未知资产',
-                "当前状态": a.status,
-                "采购原值(元)": orig_val,
-                "当前净值(元)": net_val,
-                "贬值率(%)": round(shrink_rate, 2)
-            })
-
-        result_str += "老板，以上是目前公司账面上最值钱的家当！如需核对具体折旧明细，请导出 Excel 查阅。"
-        return {"text": result_str, "data": report_data}
-    except Exception as e: 
-        return {"text": f"执行资产净值透视失败：{str(e)}", "data": []}
-
-def get_employee_assets(employee_name=None):
-    try:
-        if not employee_name:
-            return {"text": "报告老板：请告诉我具体要查询哪位员工的名字，我好去系统里帮您精准狙击！", "data": []}
-
-        valid_columns = frappe.db.get_table_columns("Asset")
-        
-        custodian_field = "custodian" if "custodian" in valid_columns else ("employee" if "employee" in valid_columns else None)
-        asset_name_field = "asset_name" if "asset_name" in valid_columns else "item_code"
-        
-        value_field = "0"
-        for field in ["gross_purchase_amount", "gross_purchase_cost", "purchase_amount"]:
-            if field in valid_columns:
-                value_field = field
-                break
-
-        if not custodian_field:
-            return {"text": "⚠️ 数据库字段不兼容：当前 ERPNext 版本资产表中没有找到『保管人/员工』相关字段，无法执行离职交接核查！", "data": []}
-
-        query = f"""
-            SELECT 
-                name, 
-                item_code, 
-                {asset_name_field} as asset_name, 
-                status, 
-                {value_field} as asset_value,
-                {custodian_field} as custodian
-            FROM `tabAsset`
-            WHERE docstatus < 2 AND {custodian_field} LIKE %s
-        """
-        assets = frappe.db.sql(query, (f"%{employee_name}%",), as_dict=True)
-
-        if not assets:
-            return {"text": f"🎉 报告老板：经过系统彻查，员工 **{employee_name}** 名下目前没有挂载任何公司固定资产，可以放心办理离职交接！", "data": []}
-
-        total_value = sum([float(a.asset_value or 0) for a in assets])
-
-        result_str = f"🏃‍♂️ **员工【{employee_name}】名下资产防流失追踪报告**：\n\n"
-        result_str += f"⚠️ **极其严肃的警告**：查出该员工名下挂有 **{len(assets)}** 件未归还/正在使用的公司资产，总原值约 **￥{total_value:,.2f}**，请务必在离职前追回！\n\n"
-        result_str += "📦 **应收回设备清单**：\n"
-        
-        report_data = []
-        for idx, a in enumerate(assets):
-            result_str += f"  {idx+1}. 资产名称: **{a.asset_name or a.item_code}** | 编号: [{a.name}](/app/asset/{a.name}) | 状态: {a.status}\n"
-            
-            report_data.append({
-                "被查员工": employee_name,
-                "资产编号": a.name,
-                "资产名称": a.asset_name or a.item_code,
-                "当前状态": a.status,
-                "系统登记者": a.custodian,
-                "采购原值(元)": float(a.asset_value or 0)
-            })
-
-        result_str += "\n老板，为了防止公司财产流失，我已经为您一键生成了极其标准的《离职资产交接单》，请直接点击下方按钮导出，火速发给 HR 和行政部门！"
-        
-        return {"text": result_str, "data": report_data}
-    except Exception as e: 
-        return {"text": f"执行员工资产追踪雷达扫描失败：{str(e)}", "data": []}
-
-def get_ai_assistant_settings():
-    try:
-        if not frappe.db.exists("DocType", "AI Assistant Settings"):
-            return {}
-        doc = frappe.get_single("AI Assistant Settings")
-        if not int(doc.get("enabled") or 0):
-            return {}
-
-        def password(fieldname):
-            if not doc.get(fieldname):
-                return None
-            try:
-                return doc.get_password(fieldname, raise_exception=False)
-            except TypeError:
-                try:
-                    return doc.get_password(fieldname)
-                except Exception:
-                    return None
-            except Exception:
-                return None
-
-        return {
-            "default_platform": doc.get("default_platform"),
-            "chat_timeout": doc.get("chat_timeout"),
-            "tool_summary_timeout": doc.get("tool_summary_timeout"),
-            "voucher_timeout": doc.get("voucher_timeout"),
-            "qwen_base_url": doc.get("qwen_base_url"),
-            "qwen_api_key": password("qwen_api_key"),
-            "qwen_model": doc.get("qwen_model"),
-            "deepseek_base_url": doc.get("deepseek_base_url"),
-            "deepseek_api_key": password("deepseek_api_key"),
-            "deepseek_model": doc.get("deepseek_model"),
-            "glm_base_url": doc.get("glm_base_url"),
-            "glm_api_key": password("glm_api_key"),
-            "glm_model": doc.get("glm_model"),
-        }
-    except Exception:
-        return {}
-
-
-def get_ai_setting(key):
-    return get_ai_assistant_settings().get(key)
-
-
-def get_ai_provider_config(platform):
-    settings = get_ai_assistant_settings()
-    platform = (platform or settings.get("default_platform") or "qwen").lower()
-    providers = {
-        "qwen": {
-            "label": "DashScope/Qwen",
-            "base_url": settings.get("qwen_base_url") or frappe.conf.get("dashscope_base_url") or os.environ.get("DASHSCOPE_BASE_URL") or "https://dashscope.aliyuncs.com/compatible-mode/v1",
-            "api_key": settings.get("qwen_api_key") or frappe.conf.get("dashscope_api_key") or frappe.conf.get("qwen_api_key") or os.environ.get("DASHSCOPE_API_KEY") or os.environ.get("QWEN_API_KEY"),
-            "model": settings.get("qwen_model") or frappe.conf.get("dashscope_model") or frappe.conf.get("qwen_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("DASHSCOPE_MODEL") or os.environ.get("QWEN_MODEL"),
-            "default_model": "qwen-plus",
-            "config_hint": "AI Assistant Settings / dashscope_api_key",
-            "model_config_hint": "AI Assistant Settings / qwen_model",
-            "env_hint": "DASHSCOPE_API_KEY",
-            "model_env_hint": "QWEN_MODEL",
-        },
-        "deepseek": {
-            "label": "DeepSeek",
-            "base_url": settings.get("deepseek_base_url") or frappe.conf.get("deepseek_base_url") or os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1",
-            "api_key": settings.get("deepseek_api_key") or frappe.conf.get("deepseek_api_key") or os.environ.get("DEEPSEEK_API_KEY"),
-            "model": settings.get("deepseek_model") or frappe.conf.get("deepseek_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("DEEPSEEK_MODEL"),
-            "default_model": "deepseek-chat",
-            "config_hint": "AI Assistant Settings / deepseek_api_key",
-            "model_config_hint": "AI Assistant Settings / deepseek_model",
-            "env_hint": "DEEPSEEK_API_KEY",
-            "model_env_hint": "DEEPSEEK_MODEL",
-        },
-        "glm4": {
-            "label": "GLM-4",
-            "base_url": settings.get("glm_base_url") or frappe.conf.get("glm_base_url") or frappe.conf.get("bigmodel_base_url") or os.environ.get("GLM_BASE_URL") or os.environ.get("BIGMODEL_BASE_URL") or "https://open.bigmodel.cn/api/paas/v4",
-            "api_key": settings.get("glm_api_key") or frappe.conf.get("glm_api_key") or frappe.conf.get("bigmodel_api_key") or os.environ.get("GLM_API_KEY") or os.environ.get("BIGMODEL_API_KEY"),
-            "model": settings.get("glm_model") or frappe.conf.get("glm_model") or frappe.conf.get("bigmodel_model") or frappe.conf.get("ai_assistant_model") or os.environ.get("GLM_MODEL") or os.environ.get("BIGMODEL_MODEL"),
-            "default_model": "glm-4",
-            "config_hint": "AI Assistant Settings / glm_api_key",
-            "model_config_hint": "AI Assistant Settings / glm_model",
-            "env_hint": "GLM_API_KEY",
-            "model_env_hint": "GLM_MODEL",
-        },
-    }
-    return providers.get(platform, providers["qwen"])
-
-
-@frappe.whitelist()
-def get_public_ai_engine_config():
-    settings = get_ai_assistant_settings()
-    default_platform = (settings.get("default_platform") or "qwen").lower()
-    platforms = {}
-    for platform in ["qwen", "deepseek", "glm4"]:
-        provider = get_ai_provider_config(platform)
-        platforms[platform] = {
-            "label": provider.get("label"),
-            "base_url": provider.get("base_url"),
-            "model": provider.get("model") or provider.get("default_model"),
-        }
-    return {
-        "default_platform": default_platform if default_platform in platforms else "qwen",
-        "platforms": platforms,
-    }
-
-
-def build_ai_error_reply(provider, detail):
-    return (
-        "⚠️ 连接大脑时发生异常 / Connection Error：<br><br>"
-        f"<b>{provider['label']} {detail}</b><br><br>"
-        f"请检查站点配置 <code>{provider['config_hint']}</code> 或环境变量 <code>{provider['env_hint']}</code>。"
-        f"模型可通过 <code>{provider['model_config_hint']}</code> 或 <code>{provider['model_env_hint']}</code> 配置。"
-    )
-
-
-def extract_financial_voucher_file_url(message):
-    text = str(message or "")
-    has_intent = any(keyword in text for keyword in ["财务凭证", "凭证报表", "科目余额表", "资产负债表", "利润表", "financial voucher", "voucher"])
-    if not has_intent:
-        return None
-
-    patterns = [
-        r"路径[:：]\s*(/[^\s，,。]+)",
-        r"path[:：]\s*(/[^\s，,。]+)",
-        r"file_url[:=]\s*(/[^\s，,。]+)",
-        r"(/private/files/[^\s，,。]+)",
-        r"(/files/[^\s，,。]+)",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text, flags=re.IGNORECASE)
-        if match:
-            return match.group(1).strip()
-    return None
-
-
-def is_simple_greeting(message):
-    text = re.sub(r"[\s!！。,.，?？~～]+", "", str(message or "").lower())
-    greetings = {"你好", "您好", "hi", "hello", "hey", "在吗", "早", "早上好", "下午好", "晚上好"}
-    return text in greetings
-
-
-def build_local_greeting_reply(lang="zh"):
-    if lang == "en":
-        return "Hello. I am DeeplinkERP AI Assistant. You can ask me to query ERPNext documents, run financial checks, track costs, inspect assets, or generate financial voucher reports."
-    if lang == "es":
-        return "Hola. Soy DeeplinkERP AI Assistant. Puede pedirme consultar documentos de ERPNext, revisar finanzas, analizar costos, inspeccionar activos o generar reportes contables."
-    return "您好，我是 DeeplinkERP AI Assistant。您可以让我查询 ERPNext 单据、做财务体检、成本追踪、资产盘点，或上传银行流水生成财务凭证报表。"
-
-
-def should_attach_erp_tools(message):
-    text = str(message or "").lower()
-    keywords = [
-        "销售", "订单", "发票", "采购", "入库", "出库", "库存", "供应商", "报价", "月报",
-        "催款", "逾期", "财务", "资产", "成本", "支出", "利润", "负债", "低库存",
-        "sales", "invoice", "purchase", "stock", "inventory", "asset", "cost", "overdue", "report",
-    ]
-    return any(keyword in text for keyword in keywords)
-
-
-def _configured_timeout(settings_key, conf_key, default):
-    try:
-        return int(get_ai_setting(settings_key) or frappe.conf.get(conf_key) or default)
-    except Exception:
-        return default
-
-
-def ai_chat_timeout():
-    return _configured_timeout("chat_timeout", "ai_assistant_chat_timeout", 45)
-
-
-def ai_tool_summary_timeout():
-    return _configured_timeout("tool_summary_timeout", "ai_assistant_tool_summary_timeout", 60)
-
-
-def ai_voucher_classification_timeout():
-    return _configured_timeout("voucher_timeout", "ai_assistant_voucher_timeout", 180)
-
-
-def parse_model_json_array(content):
-    text = str(content or "").strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
-        text = re.sub(r"\s*```$", "", text)
-    start = text.find("[")
-    end = text.rfind("]")
-    if start >= 0 and end > start:
-        text = text[start:end + 1]
-    parsed = json.loads(text)
-    if not isinstance(parsed, list):
-        raise ValueError("模型没有返回 JSON 数组。")
-    return parsed
-
-
-def parse_model_json_object(content):
-    text = str(content or "").strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
-        text = re.sub(r"\s*```$", "", text)
-    start = text.find("{")
-    end = text.rfind("}")
-    if start >= 0 and end > start:
-        text = text[start:end + 1]
-    parsed = json.loads(text)
-    if not isinstance(parsed, dict):
-        raise ValueError("模型没有返回 JSON 对象。")
-    return parsed
-
-
-def build_financial_voucher_header_classifier(provider, selected_model):
-    if not provider.get("api_key"):
-        return None
-
-    def classify(cell_values):
-        url = f"{provider['base_url'].rstrip('/')}/chat/completions"
-        headers = {"Authorization": f"Bearer {provider['api_key']}", "Content-Type": "application/json"}
-        system_prompt = (
-            "你是银行 Excel 表头识别助手。只判断单元格表头对应的标准字段。"
-            "标准字段只能是：入账日期、转出金额、转入金额、余额、对方单位、对方账号、摘要、用途。"
-            "返回严格 JSON 对象，key 为标准字段名，value 为该字段在输入列表中的索引，索引从 0 开始。"
-            "无法确定的字段不要返回。不要 Markdown，不要解释。"
-        )
-        payload = {
-            "model": selected_model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": json.dumps(list(cell_values or []), ensure_ascii=False)},
-            ],
-            "temperature": 0.0,
-        }
-        response = requests.post(url, headers=headers, json=payload, timeout=ai_chat_timeout())
-        response.raise_for_status()
-        result_json = response.json()
-        content = result_json["choices"][0]["message"].get("content", "")
-        return parse_model_json_object(content)
-
-    return classify
-
-
-def build_financial_voucher_ai_classifier(provider, selected_model):
-    if not provider.get("api_key"):
-        return None
-
-    def classify(candidates):
-        if not candidates:
-            return {}
-
-        url = f"{provider['base_url'].rstrip('/')}/chat/completions"
-        headers = {"Authorization": f"Bearer {provider['api_key']}", "Content-Type": "application/json"}
-        allowed_accounts = allowed_base_accounts()
-        system_prompt = (
-            "你是中国小企业会计凭证分类助手。只根据银行交易摘要、用途、对方单位、对方账号、方向和金额判断会计科目。"
-            "必须返回严格 JSON 数组，不要 Markdown，不要解释。"
-            '每项格式：{"id": string, "debit_account": string, "credit_account": string, "confidence": number, "reason": string}。'
-            "允许使用基础科目或带明细的子科目，例如 管理费用-办公费、应付账款-某公司、其他应付款-某人。"
-            "支出 direction=out 时贷方必须是 银行存款；收入 direction=in 时借方必须是 银行存款。"
-            f"基础科目只能来自：{', '.join(allowed_accounts)}。"
-            "无法确定时使用 fallback_debit_account/fallback_credit_account，并把 confidence 设为 0.5。"
-        )
-        suggestions = {}
-        batch_size = 40
-        for start in range(0, len(candidates), batch_size):
-            batch = candidates[start:start + batch_size]
-            payload = {
-                "model": selected_model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": json.dumps(batch, ensure_ascii=False)},
-                ],
-                "temperature": 0.1,
-            }
-            response = requests.post(url, headers=headers, json=payload, timeout=ai_voucher_classification_timeout())
-            response.raise_for_status()
-            result_json = response.json()
-            content = result_json["choices"][0]["message"].get("content", "")
-            rows = parse_model_json_array(content)
-
-            candidate_ids = {item["id"] for item in batch}
-            for row in rows:
-                if not isinstance(row, dict):
-                    continue
-                item_id = row.get("id")
-                if item_id in candidate_ids:
-                    suggestions[item_id] = row
-        return suggestions
-
-    return classify
-
-
+from .tools.business_tools import (
+    generate_sales_monthly_report,
+    get_asset_inventory_snapshot,
+    get_cost_center_expenses,
+    get_employee_assets,
+    get_financial_health_summary,
+    get_low_stock_warnings,
+    get_overdue_sales_invoices,
+    get_recent_delivery_notes,
+    get_recent_purchase_invoices,
+    get_recent_purchase_orders,
+    get_recent_purchase_receipts,
+    get_recent_sales_invoices,
+    get_recent_sales_orders,
+    get_recent_supplier_quotations,
+    get_top_valuable_assets,
+)
+from .model_client import (
+    ai_chat_timeout,
+    ai_tool_summary_timeout,
+    build_ai_error_reply,
+    build_financial_voucher_ai_classifier,
+    build_financial_voucher_header_classifier,
+    build_local_greeting_reply,
+    extract_financial_voucher_file_url,
+    get_ai_assistant_settings,
+    get_ai_provider_config,
+    get_ai_setting,
+    get_public_ai_engine_config,
+    is_simple_greeting,
+    should_attach_erp_tools,
+)
 @frappe.whitelist()
 def generate_financial_voucher_report(file_url, platform="qwen", model_id=None):
     user_roles = frappe.get_roles(frappe.session.user)
@@ -888,293 +86,187 @@ def build_financial_voucher_response(tool_result, ai_classifier=None, provider_l
     }
 
 
+
+def is_boss_user():
+    user_roles = frappe.get_roles(frappe.session.user)
+    return frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles or "Accounts Manager" in user_roles
+
+
+def _build_model_payload(message, provider, selected_model, is_boss, lang):
+    current_date = frappe.utils.nowdate()
+    target_language = language_label(lang)
+    messages = [
+        {
+            "role": "system",
+            "content": build_system_prompt(current_date, is_boss, provider["label"], target_language),
+        },
+        {"role": "user", "content": message},
+    ]
+    payload = {"model": selected_model, "messages": messages}
+    if should_attach_erp_tools(message):
+        payload.update({"tools": get_tools(is_boss), "tool_choice": "auto"})
+    return payload
+
+
+def _run_voucher_fast_path(voucher_file_url, is_boss, provider, selected_model):
+    if not is_boss:
+        return {
+            "status": "success",
+            "reply": "⚠️ 抱歉，您的账号当前无权访问该机密业务模块。",
+            "logs": ["后端权限拦截：当前用户无权生成财务凭证报表。"],
+        }
+    ai_classifier = build_financial_voucher_ai_classifier(provider, selected_model) if provider.get("api_key") else None
+    header_classifier = build_financial_voucher_header_classifier(provider, selected_model) if provider.get("api_key") else None
+    tool_result = generate_financial_vouchers(
+        voucher_file_url,
+        ai_classifier=ai_classifier,
+        header_classifier=header_classifier,
+    )
+    return build_financial_voucher_response(
+        tool_result,
+        ai_classifier=ai_classifier,
+        provider_label=provider["label"],
+    )
+
+
+def _build_http_error_response(provider, error):
+    status_code = error.response.status_code if error.response is not None else None
+    if status_code == 401:
+        detail = "API Key 无效、已过期或没有调用权限（401 Unauthorized）。"
+    else:
+        detail = f"接口返回 HTTP {status_code or '错误'}。"
+    if provider:
+        return {
+            "status": "success",
+            "reply": build_ai_error_reply(provider, detail),
+            "logs": [f"{provider['label']} 调用失败：{detail}"],
+        }
+    return {
+        "status": "success",
+        "reply": f"⚠️ 连接大脑时发生异常 / Connection Error：<br><br><b>{detail}</b>",
+        "logs": ["发生异常！"],
+    }
+
 # 💥 极其关键的修改：接收 JS 传来的 lang 语言参数！
 @frappe.whitelist()
 def chat(message, platform, model_id, lang="zh"):
     frappe.logger().info(f"AI 小助手接收到指令：[{message}]，准备呼叫：[{model_id}]，语言锁定为：[{lang}]")
+    provider = None
 
     try:
-        user_roles = frappe.get_roles(frappe.session.user)
-        is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles or "Accounts Manager" in user_roles
-
+        is_boss = is_boss_user()
         if is_simple_greeting(message):
             return {
                 "status": "success",
                 "reply": build_local_greeting_reply(lang),
-                "logs": ["本地快速回复：寒暄消息未调用外部大模型。"]
+                "logs": ["本地快速回复：寒暄消息未调用外部大模型。"],
             }
 
         provider = get_ai_provider_config(platform)
         selected_model = provider.get("model") or model_id or provider.get("default_model")
-
         voucher_file_url = extract_financial_voucher_file_url(message)
-
-        # 没有 API Key 时，大模型无法选择工具；明确的凭证生成请求走确定性兜底。
-        if voucher_file_url and not provider["api_key"]:
-            if not is_boss:
-                return {
-                    "status": "success",
-                    "reply": "⚠️ 抱歉，您的账号当前无权访问该机密业务模块。",
-                    "logs": ["后端权限拦截：当前用户无权生成财务凭证报表。"]
-                }
-            tool_result = generate_financial_vouchers(voucher_file_url, ai_classifier=None, header_classifier=None)
-            return build_financial_voucher_response(tool_result, ai_classifier=None, provider_label=provider["label"])
+        if voucher_file_url:
+            return _run_voucher_fast_path(voucher_file_url, is_boss, provider, selected_model)
 
         if not provider["api_key"]:
             return {
                 "status": "success",
                 "reply": build_ai_error_reply(provider, "缺少 API Key。"),
-                "logs": [f"{provider['label']} 缺少 API Key 配置。"]
+                "logs": [f"{provider['label']} 缺少 API Key 配置。"],
             }
 
-        selected_model = provider.get("model") or model_id or provider.get("default_model")
         url = f"{provider['base_url'].rstrip('/')}/chat/completions"
-        headers = { "Authorization": f"Bearer {provider['api_key']}", "Content-Type": "application/json" }
+        headers = {"Authorization": f"Bearer {provider['api_key']}", "Content-Type": "application/json"}
+        payload = _build_model_payload(message, provider, selected_model, is_boss, lang)
         frappe.logger().info(f"AI 小助手实际调用模型：[{selected_model}]，平台：[{provider['label']}]")
-        
-        common_parameters = { "type": "object", "properties": { "limit": {"type": "integer", "description": "返回数量限制"}, "start_date": {"type": "string"}, "end_date": {"type": "string"} } }
-        warning_parameters = { "type": "object", "properties": { "limit": {"type": "integer"}, "threshold": {"type": "integer"} } }
-        report_parameters = { "type": "object", "properties": { "target_month": {"type": "string", "description": "YYYY-MM"} } }
-        overdue_parameters = { "type": "object", "properties": { "limit": {"type": "integer"} } }
-        expense_parameters = { "type": "object", "properties": { "target_month": {"type": "string", "description": "YYYY-MM"}, "cost_center": {"type": "string", "description": "成本中心名称，例如 'jd-test'"}, "limit": {"type": "integer"} } }
-        voucher_parameters = {
-            "type": "object",
-            "properties": {
-                "file_url": {
-                    "type": "string",
-                    "description": "用户上传的银行交易明细 Excel 文件路径或 URL，例如 /private/files/bank.xlsx"
-                }
-            },
-            "required": ["file_url"]
-        }
-
-        # =========================================================
-        # 🛡️ 极其极其霸气的后端 RBAC 拦截防线（釜底抽薪大法！）
-        # =========================================================
-        user_roles = frappe.get_roles(frappe.session.user)
-        is_boss = frappe.session.user == "Administrator" or "Administrator" in user_roles or "System Manager" in user_roles or "Accounts Manager" in user_roles
-
-        all_tools = [
-            {"type": "function", "function": {"name": "get_recent_sales_orders", "description": "当用户询问销售订单时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_recent_sales_invoices", "description": "当用户询问销售发票时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_recent_purchase_receipts", "description": "当用户询问采购入库时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_recent_delivery_notes", "description": "当用户询问销售出库时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_recent_supplier_quotations", "description": "当用户询问供应商报价时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_recent_purchase_orders", "description": "当用户询问采购订单时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_recent_purchase_invoices", "description": "当用户询问采购发票时调用", "parameters": common_parameters}},
-            {"type": "function", "function": {"name": "get_low_stock_warnings", "description": "当用户询问低库存预警时调用", "parameters": warning_parameters}},
-            {"type": "function", "function": {"name": "generate_sales_monthly_report", "description": "当用户要求生成销售月报时调用", "parameters": report_parameters}},
-            {"type": "function", "function": {"name": "get_overdue_sales_invoices", "description": "当用户要求查询逾期账款或催款清单时调用", "parameters": overdue_parameters}},
-            {"type": "function", "function": {"name": "get_financial_health_summary", "description": "当用户要求查询财务体检、公司总资产、总负债、利润、亏损、财务基本盘时调用。不需要任何参数。", "parameters": {"type": "object", "properties": {}}}},
-            {"type": "function", "function": {"name": "get_cost_center_expenses", "description": "当用户要求查询某个成本中心的花销、支出、烧钱情况或各项开销明细时调用", "parameters": expense_parameters}},
-            {"type": "function", "function": {"name": "get_asset_inventory_snapshot", "description": "当用户要求查询公司固定资产、盘点家底、查看资产总值或资产清单时调用。不需要任何参数。", "parameters": {"type": "object", "properties": {}}}},
-            {"type": "function", "function": {"name": "get_top_valuable_assets", "description": "当用户要求查询最值钱的资产、资产净值排行榜、资产贬值情况、剩余价值时调用。", "parameters": {"type": "object", "properties": {"limit": {"type": "integer"}}}}},
-            {"type": "function", "function": {"name": "get_employee_assets", "description": "当用户要求查询某个员工名下资产、离职交接资产核查、员工保管的设备时调用。", "parameters": {"type": "object", "properties": {"employee_name": {"type": "string", "description": "要查询的员工名字，例如 '张三'"}}}}},
-            {"type": "function", "function": {"name": "generate_financial_voucher_report", "description": "当用户上传银行交易明细 Excel 并要求生成财务凭证、科目余额表、资产负债表或利润表时调用。必须把用户消息中的文件路径作为 file_url 传入。", "parameters": voucher_parameters}}
-        ]
-
-        # 🌟 定义机密功能名单
-        restricted_functions = [
-            "get_overdue_sales_invoices", "get_financial_health_summary", "get_cost_center_expenses",
-            "get_asset_inventory_snapshot", "get_top_valuable_assets", "get_employee_assets",
-            "generate_financial_voucher_report"
-        ]
-
-        # 🌟 动态过滤！如果不是老板，直接把机密工具没收！
-        tools = [t for t in all_tools if is_boss or t["function"]["name"] not in restricted_functions]
-
-        # 🌟 极其逆天的 7 天溯源时间推算魔法！
-        current_date = frappe.utils.nowdate()
-        seven_days_ago = frappe.utils.add_days(current_date, -7)
-
-        # 💥 极其强硬的大模型语言思想钢印！
-        lang_map = {"zh": "中文(Chinese)", "en": "English", "es": "Español (Spanish/Mexican)"}
-        target_language = lang_map.get(lang, "中文(Chinese)")
-        permission_instruction = "5. 👑 【管理员权限确认】：当前登录用户已通过后端管理员权限校验，财务、成本中心、资产等机密业务模块均已授权。收到工具返回的数据后，必须基于真实数据生成报告，绝对不要回复『无权访问该机密业务模块』！" if is_boss else "5. 🚫 【越权拦截高冷指令】：如果你发现当前可用的工具列表中无法完成用户的查询（例如用户询问财务、成本中心、资产或利润，但你发现自己只有进销存工具），请你极其高冷地直接回复：『⚠️ 抱歉，您的账号当前无权访问该机密业务模块。』绝对不允许向用户解释你缺少什么函数，也绝对不允许使用现有的进销存数据进行生搬硬套或拼凑糊弄！"
-
-        system_prompt = (
-            f"你是一个极其专业的企业级 ERPNext 智能业务助手和财务总监。当前日期是 {current_date}。"
-            "请根据数据生成极其醒目专业的 Markdown 汇报（加粗、表格、Emoji）。"
-            "\n\n🚨【极其严格的红线指令】："
-            "\n1. 绝对、严禁、不允许捏造、虚构、模拟任何数据库中没有返回的商品名称、客户名、成本中心、资产名称、明细科目或金额！"
-            "\n2. 数据库返回什么，你就只能输出什么。如果返回的数据极其粗糙、缺少名称或只有一条记录，请原样呈现，坦诚告知老板当前数据不完善，绝对不允许为了报表好看而自行脑补或填充假数据！"
-            "\n3. 为防止系统 Token 爆炸与性能崩溃，所有列表查询底层已硬性截断，最大仅返回 50 条。若用户请求的数据量庞大（被系统截断），请务必在回答中极其专业地向老板说明：'为保障系统性能与响应速度，已为您截断展示最新的50条记录，完整全量数据请通过左侧模块导航，前往 ERPNext 标准系统界面查阅全貌！'"
-            f"\n4. 🕰️ 【默认时间范围指令】：当用户查询“最近”、“当前”的单据数据，且没有显式指定具体日期时，请务必默认将查询时间范围设定为过去 7 天（即 start_date='{seven_days_ago}', end_date='{current_date}'），绝不能仅局限于当天！"
-            f"\n{permission_instruction}"
-            f"\n6. 🌐【国际化绝对指令】：当前登录用户的 ERPNext 系统语言已经切换为【{target_language}】！从现在开始，你必须、绝对、极其严格地使用【{target_language}】来书写所有的分析、报表、问候和回答！这是不可违背的最高原则！"
-            f"\n7. 🤖【身份声明指令】：你是 DeeplinkERP AI Assistant，由 DeeplinkERP 系统调用 {provider['label']} 模型服务提供能力。不要自称 Claude、Anthropic、ChatGPT、OpenAI 或任何与当前系统配置不一致的产品身份。"
-        )
-
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": message}
-        ]
-        
-        payload = { "model": selected_model, "messages": messages }
-        if should_attach_erp_tools(message):
-            payload.update({"tools": tools, "tool_choice": "auto"})
 
         response = requests.post(url, headers=headers, json=payload, timeout=ai_chat_timeout())
-        response.raise_for_status() 
-        result_json = response.json()
-        response_message = result_json["choices"][0]["message"]
-
-        # =========================================================
-        # 🧠 极其强悍的拦截调度中心
-        # =========================================================
+        response.raise_for_status(); response_message = response.json()["choices"][0]["message"]
         if response_message.get("tool_calls"):
-            tool_call = response_message["tool_calls"][0]
-            function_name = tool_call["function"]["name"]
-            tool_call_id = tool_call["id"]
-            
-            try: args = json.loads(tool_call["function"].get("arguments", "{}"))
-            except: args = {}
-            
-            valid_functions = [
-                "get_recent_sales_orders", "get_recent_sales_invoices", "get_recent_purchase_receipts", "get_recent_delivery_notes",
-                "get_recent_supplier_quotations", "get_recent_purchase_orders", "get_recent_purchase_invoices",
-                "get_low_stock_warnings", "generate_sales_monthly_report", "get_overdue_sales_invoices", "get_financial_health_summary",
-                "get_cost_center_expenses", "get_asset_inventory_snapshot", "get_top_valuable_assets", "get_employee_assets",
-                "generate_financial_voucher_report"
-            ]
-            
-            if function_name in valid_functions:
-                if function_name in restricted_functions and not is_boss:
-                    return {
-                        "status": "success",
-                        "reply": "⚠️ 抱歉，您的账号当前无权访问该机密业务模块。",
-                        "logs": ["后端权限拦截：当前用户无权调用机密业务工具。"]
-                    }
+            return _handle_tool_call(response_message, payload, url, headers, provider, selected_model, is_boss, lang, voucher_file_url)
 
-                # 生成业务数据
-                if function_name == "get_recent_sales_orders": tool_result, file_prefix = get_recent_sales_orders(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Sales_Orders"
-                elif function_name == "get_recent_sales_invoices": tool_result, file_prefix = get_recent_sales_invoices(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Sales_Invoices"
-                elif function_name == "get_recent_purchase_receipts": tool_result, file_prefix = get_recent_purchase_receipts(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Purchase_Receipts"
-                elif function_name == "get_recent_delivery_notes": tool_result, file_prefix = get_recent_delivery_notes(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Delivery_Notes"
-                elif function_name == "get_recent_supplier_quotations": tool_result, file_prefix = get_recent_supplier_quotations(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Supplier_Quotations"
-                elif function_name == "get_recent_purchase_orders": tool_result, file_prefix = get_recent_purchase_orders(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Purchase_Orders"
-                elif function_name == "get_recent_purchase_invoices": tool_result, file_prefix = get_recent_purchase_invoices(args.get("limit", 5), args.get("start_date"), args.get("end_date")), "ERPNext_Purchase_Invoices"
-                elif function_name == "get_low_stock_warnings": tool_result, file_prefix = get_low_stock_warnings(args.get("limit", 10), args.get("threshold", 10)), "ERPNext_Low_Stock"
-                elif function_name == "generate_sales_monthly_report": tool_result, file_prefix = generate_sales_monthly_report(args.get("target_month")), f"ERPNext_Sales_Report"
-                elif function_name == "get_overdue_sales_invoices": tool_result, file_prefix = get_overdue_sales_invoices(args.get("limit", 10)), "ERPNext_Overdue_Invoices"
-                elif function_name == "get_financial_health_summary": tool_result, file_prefix = get_financial_health_summary(), "ERPNext_Financial_Health"
-                elif function_name == "get_cost_center_expenses": tool_result, file_prefix = get_cost_center_expenses(args.get("cost_center"), args.get("target_month"), args.get("limit", 10)), "ERPNext_Cost_Center_Expenses"
-                elif function_name == "get_asset_inventory_snapshot": tool_result, file_prefix = get_asset_inventory_snapshot(), "ERPNext_Asset_Inventory"
-                elif function_name == "get_top_valuable_assets": tool_result, file_prefix = get_top_valuable_assets(args.get("limit", 5)), "ERPNext_Top_Assets"
-                elif function_name == "get_employee_assets": tool_result, file_prefix = get_employee_assets(args.get("employee_name")), f"ERPNext_Employee_Assets"
-                elif function_name == "generate_financial_voucher_report":
-                    file_url = args.get("file_url") or voucher_file_url
-                    if not file_url:
-                        return {
-                            "status": "success",
-                            "reply": "请先上传银行交易明细 Excel 源文件，然后再生成财务凭证报表。",
-                            "logs": ["大模型调用财务凭证工具但未提供 file_url。"]
-                        }
-                    ai_classifier = build_financial_voucher_ai_classifier(provider, selected_model)
-                    header_classifier = build_financial_voucher_header_classifier(provider, selected_model)
-                    tool_result = generate_financial_vouchers(
-                        file_url, ai_classifier=ai_classifier, header_classifier=header_classifier
-                    )
-                    return build_financial_voucher_response(
-                        tool_result,
-                        ai_classifier=ai_classifier,
-                        provider_label=provider["label"],
-                        called_by_model=True,
-                    )
-
-                messages.append(response_message)
-                messages.append({"role": "tool", "tool_call_id": tool_call_id, "name": function_name, "content": tool_result["text"]})
-                
-                payload["messages"] = messages
-                payload.pop("tools", None)
-                payload.pop("tool_choice", None)
-                
-                second_response = requests.post(url, headers=headers, json=payload, timeout=ai_tool_summary_timeout())
-                second_response.raise_for_status()
-                second_result_json = second_response.json()
-                final_reply = second_result_json["choices"][0]["message"]["content"]
-
-                if "无权访问该机密业务模块" in final_reply:
-                    return {
-                        "status": "success",
-                        "reply": final_reply,
-                        "logs": ["后端检测到权限拦截回复，已取消导出按钮。"]
-                    }
-                
-                # 👇 ========================================================= 👇
-                # 🚀 极其优雅的表头翻译拦截器 (Header Translation Interceptor) 
-                # 👇 ========================================================= 👇
-                export_data = tool_result.get("data", [])
-                if lang in ["en", "es"] and export_data:
-                    header_dict = {
-                        "en": {
-                            "订单编号": "Order Number", "客户名称": "Customer Name", "交易日期": "Transaction Date", "总金额(元)": "Total Amount (CNY)", "当前状态": "Status",
-                            "发票编号": "Invoice Number", "开票日期": "Posting Date", "入库单编号": "Receipt Number", "供应商名称": "Supplier Name", "入库日期": "Receipt Date",
-                            "出库单编号": "Delivery Note Number", "出库日期": "Posting Date", "报价单编号": "Quotation Number", "报价日期": "Quotation Date",
-                            "采购订单编号": "PO Number", "采购发票编号": "Purchase Invoice Number", "商品编码": "Item Code", "所在仓库": "Warehouse",
-                            "实际库存量": "Actual Qty", "预警警戒线": "Threshold", "统计月份": "Month", "排名": "Rank", "大客户名称": "Top Customer",
-                            "下单总笔数": "Total Orders", "总贡献金额(元)": "Total Revenue (CNY)", "最晚收款日": "Due Date", "发票总金额(元)": "Invoice Total (CNY)",
-                            "拖欠未付金额(元)": "Outstanding Amount (CNY)", "已逾期天数": "Overdue Days", "体检日期": "Date", "总资产(元)": "Total Assets (CNY)",
-                            "总负债(元)": "Total Liabilities (CNY)", "总计收入(元)": "Total Income (CNY)", "总计支出(元)": "Total Expense (CNY)", "净利润(元)": "Net Profit (CNY)",
-                            "成本中心": "Cost Center", "支出科目": "Expense Account", "净支出金额(元)": "Net Expense (CNY)", "资产编号": "Asset Number",
-                            "资产名称": "Asset Name", "所属部门": "Department", "存放位置": "Location", "价值(元)": "Value (CNY)", "采购原值(元)": "Purchase Value (CNY)",
-                            "当前净值(元)": "Net Value (CNY)", "贬值率(%)": "Depreciation Rate (%)", "被查员工": "Employee", "系统登记者": "Custodian"
-                        },
-                        "es": {
-                            "订单编号": "Número de Pedido", "客户名称": "Cliente", "交易日期": "Fecha de Transacción", "总金额(元)": "Monto Total (CNY)", "当前状态": "Estado",
-                            "发票编号": "Número de Factura", "开票日期": "Fecha de Contabilización", "入库单编号": "Número de Recibo", "供应商名称": "Proveedor", "入库日期": "Fecha de Recibo",
-                            "出库单编号": "Número de Entrega", "出库日期": "Fecha de Contabilización", "报价单编号": "Número de Cotización", "报价日期": "Fecha de Cotización",
-                            "采购订单编号": "Número de OC", "采购发票编号": "Factura de Compra", "商品编码": "Código de Artículo", "所在仓库": "Almacén",
-                            "实际库存量": "Cant. Actual", "预警警戒线": "Umbral", "统计月份": "Mes", "排名": "Rango", "大客户名称": "Mejor Cliente",
-                            "下单总笔数": "Total de Pedidos", "总贡献金额(元)": "Ingresos Totales (CNY)", "最晚收款日": "Fecha de Vencimiento", "发票总金额(元)": "Total de Factura (CNY)",
-                            "拖欠未付金额(元)": "Monto Pendiente (CNY)", "已逾期天数": "Días de Atraso", "体检日期": "Fecha", "总资产(元)": "Activos Totales (CNY)",
-                            "总负债(元)": "Pasivos Totales (CNY)", "总计收入(元)": "Ingresos Totales (CNY)", "总计支出(元)": "Gastos Totales (CNY)", "净利润(元)": "Beneficio Neto (CNY)",
-                            "成本中心": "Centro de Costos", "支出科目": "Cuenta de Gastos", "净支出金额(元)": "Gasto Neto (CNY)", "资产编号": "Número de Activo",
-                            "资产名称": "Nombre del Activo", "所属部门": "Departamento", "存放位置": "Ubicación", "价值(元)": "Valor (CNY)", "采购原值(元)": "Valor de Compra (CNY)",
-                            "当前净值(元)": "Valor Neto (CNY)", "贬值率(%)": "Tasa de Depreciación (%)", "被查员工": "Empleado", "系统登记者": "Custodio"
-                        }
-                    }
-                    lang_dict = header_dict.get(lang, {})
-                    translated_data = []
-                    for row in export_data:
-                        translated_row = {}
-                        for k, v in row.items():
-                            translated_row[lang_dict.get(k, k)] = v
-                        translated_data.append(translated_row)
-                    export_data = translated_data
-
-                return {
-                    "status": "success",
-                    "reply": final_reply,
-                    "action_button": { "type": "export_excel", "label": "⬇️ Export Data / 导出数据", "data": export_data, "file_prefix": file_prefix },
-                    "logs": ["后端 Python 接口触发成功！", f"大模型调用了：{function_name}。"]
-                }
-
-        # 模型漏调工具时保留确定性兜底，避免用户上传文件后没有报表输出。
-        if voucher_file_url:
-            if not is_boss:
-                return {
-                    "status": "success",
-                    "reply": "⚠️ 抱歉，您的账号当前无权访问该机密业务模块。",
-                    "logs": ["后端权限拦截：当前用户无权生成财务凭证报表。"]
-                }
-            ai_classifier = build_financial_voucher_ai_classifier(provider, selected_model)
-            header_classifier = build_financial_voucher_header_classifier(provider, selected_model)
-            tool_result = generate_financial_vouchers(
-                voucher_file_url, ai_classifier=ai_classifier, header_classifier=header_classifier
-            )
-            return build_financial_voucher_response(
-                tool_result,
-                ai_classifier=ai_classifier,
-                provider_label=provider["label"],
-            )
-
-        return {"status": "success", "reply": response_message.get("content"), "logs": ["大模型未触发数据库查询，已获取常规智能回复！"]}
+        return {
+            "status": "success",
+            "reply": response_message.get("content"),
+            "logs": ["大模型未触发数据库查询，已获取常规智能回复！"],
+        }
     except requests.exceptions.HTTPError as e:
-        status_code = e.response.status_code if e.response is not None else None
-        if status_code == 401:
-            detail = "API Key 无效、已过期或没有调用权限（401 Unauthorized）。"
-        else:
-            detail = f"接口返回 HTTP {status_code or '错误'}。"
-        return {"status": "success", "reply": build_ai_error_reply(provider, detail), "logs": [f"{provider['label']} 调用失败：{detail}"]}
-    except Exception as e: return {"status": "success", "reply": f"⚠️ 连接大脑时发生异常 / Connection Error：<br><br><b>{str(e)}</b>", "logs": ["发生异常！"]}
+        return _build_http_error_response(provider, e)
+    except Exception as e:
+        return {
+            "status": "success",
+            "reply": f"⚠️ 连接大脑时发生异常 / Connection Error：<br><br><b>{str(e)}</b>",
+            "logs": ["发生异常！"],
+        }
+
+def _handle_tool_call(response_message, payload, url, headers, provider, selected_model, is_boss, lang, voucher_file_url=None):
+    tool_call = response_message["tool_calls"][0]
+    function_name = tool_call["function"]["name"]
+    tool_call_id = tool_call["id"]
+
+    try:
+        args = json.loads(tool_call["function"].get("arguments", "{}"))
+    except Exception:
+        args = {}
+
+    if not is_valid_tool(function_name):
+        return {
+            "status": "success",
+            "reply": response_message.get("content") or "模型请求了未知工具，已取消执行。",
+            "logs": [f"未知工具调用已拦截：{function_name}"],
+        }
+
+    if is_restricted_tool(function_name) and not is_boss:
+        return {
+            "status": "success",
+            "reply": "⚠️ 抱歉，您的账号当前无权访问该机密业务模块。",
+            "logs": ["后端权限拦截：当前用户无权调用机密业务工具。"],
+        }
+
+    context = {
+        "provider": provider,
+        "selected_model": selected_model,
+        "voucher_file_url": voucher_file_url,
+    }
+    tool_result = dispatch_tool(function_name, args, context)
+
+    if isinstance(tool_result, dict) and tool_result.get("status") in {"success", "missing_file"} and "reply" in tool_result:
+        return tool_result
+
+    messages = list(payload.get("messages") or [])
+    messages.append(response_message)
+    messages.append({
+        "role": "tool",
+        "tool_call_id": tool_call_id,
+        "name": function_name,
+        "content": tool_result["text"],
+    })
+
+    summary_payload = {
+        "model": payload["model"],
+        "messages": messages,
+    }
+    second_response = requests.post(url, headers=headers, json=summary_payload, timeout=ai_tool_summary_timeout())
+    second_response.raise_for_status()
+    final_reply = second_response.json()["choices"][0]["message"]["content"]
+
+    if "无权访问该机密业务模块" in final_reply:
+        return {
+            "status": "success",
+            "reply": final_reply,
+            "logs": ["后端检测到权限拦截回复，已取消导出按钮。"],
+        }
+
+    export_data = translate_headers(tool_result.get("data", []), lang)
+    return {
+        "status": "success",
+        "reply": final_reply,
+        "action_button": {
+            "type": "export_excel",
+            "label": "⬇️ Export Data / 导出数据",
+            "data": export_data,
+            "file_prefix": tool_file_prefix(function_name),
+        },
+        "logs": ["后端 Python 接口触发成功！", f"大模型调用了：{function_name}。"],
+    }
+
