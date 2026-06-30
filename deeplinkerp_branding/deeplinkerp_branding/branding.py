@@ -9,6 +9,7 @@ FRAPPE_FRAMEWORK_NAME = "Frappe Framework"
 DLP_FRAMEWORK_NAME = "DLP Framework"
 FRAMEWORK_ICON_NAME = "Framework"
 FRAPPE_FRAMEWORK_ICON_NAMES = (FRAMEWORK_ICON_NAME, FRAPPE_FRAMEWORK_NAME)
+DLP_FRAMEWORK_ALLOWED_ROLE = "System Manager"
 DLP_ERP_IDX = 0
 DLP_FRAMEWORK_IDX = -1
 SETTINGS_DOCNAME = "Deeplinkerp Settings"
@@ -188,6 +189,7 @@ def apply_framework_desktop_icon_branding():
 				"link_type": "External",
 				"logo_url": BRAND_LOGO_URL,
 				"standard": 1,
+				"roles": [{"role": DLP_FRAMEWORK_ALLOWED_ROLE}],
 			}
 		)
 		icon.flags.ignore_permissions = True
@@ -209,6 +211,7 @@ def apply_framework_desktop_icon_branding():
 		},
 		update_modified=False,
 	)
+	set_desktop_icon_roles(DLP_FRAMEWORK_NAME, [DLP_FRAMEWORK_ALLOWED_ROLE])
 
 	children = frappe.get_all("Desktop Icon", filters={"parent_icon": ["in", FRAPPE_FRAMEWORK_ICON_NAMES]}, pluck="name")
 	for child in children:
@@ -228,11 +231,33 @@ def apply_logo_branding():
 			frappe.db.set_single_value(doctype, "app_logo", BRAND_LOGO_URL, update_modified=False)
 
 
+def set_desktop_icon_roles(icon_name, roles):
+	if not frappe.db.exists("Desktop Icon", icon_name):
+		return
+
+	icon = frappe.get_doc("Desktop Icon", icon_name)
+	existing_roles = [row.role for row in icon.roles]
+	if existing_roles == roles:
+		return
+
+	icon.set("roles", [])
+	for role in roles:
+		icon.append("roles", {"role": role})
+
+	icon.flags.ignore_permissions = True
+	icon.save(ignore_permissions=True)
+
+
+def can_access_dlp_framework():
+	return frappe.session.user == "Administrator" or DLP_FRAMEWORK_ALLOWED_ROLE in frappe.get_roles()
+
+
 def apply_boot_branding(bootinfo):
 	"""Brand app labels in bootinfo before the desk sidebar is rendered."""
 	app_data = bootinfo.get("app_data", [])
 	workspace_sidebar_item = bootinfo.get("workspace_sidebar_item", {})
 	module_app = bootinfo.get("module_app", {})
+	show_dlp_framework = can_access_dlp_framework()
 
 	for app in app_data:
 		app_name = app.get("app_name")
@@ -258,6 +283,7 @@ def apply_boot_branding(bootinfo):
 		elif key in PRODUCT_MODULE_APP_KEYS:
 			sidebar["app"] = PRODUCT_MODULE_APP_KEYS[key]
 
+	filtered_icons = []
 	for icon in bootinfo.get("desktop_icons", []):
 		if icon.get("parent_icon") in {ERP_NEXT_NAME, DEEPLINKERP_ICON_NAME}:
 			icon["parent_icon"] = ""
@@ -280,10 +306,19 @@ def apply_boot_branding(bootinfo):
 		elif icon.get("name") == FRAMEWORK_ICON_NAME or icon.get("label") == FRAMEWORK_ICON_NAME:
 			icon["hidden"] = 1
 		elif icon.get("name") == DLP_FRAMEWORK_NAME or icon.get("label") == DLP_FRAMEWORK_NAME:
+			if not show_dlp_framework:
+				continue
 			icon["app"] = "deeplinkerp_branding"
 			icon["hidden"] = 0
 			icon["label"] = DLP_FRAMEWORK_NAME
 			icon["logo_url"] = BRAND_LOGO_URL
+
+		if icon.get("parent_icon") == DLP_FRAMEWORK_NAME and not show_dlp_framework:
+			continue
+
+		filtered_icons.append(icon)
+
+	bootinfo["desktop_icons"] = filtered_icons
 
 
 def append_unique(values, value):
