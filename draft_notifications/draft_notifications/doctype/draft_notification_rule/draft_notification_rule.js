@@ -3,6 +3,12 @@ frappe.ui.form.on("Draft Notification Rule", {
 		toggle_dingtalk_fields(frm);
 	},
 
+	document_type(frm) {
+		if (frm.doc.company) {
+			frm.set_value("company", "");
+		}
+	},
+
 	notification_channel(frm) {
 		toggle_dingtalk_fields(frm);
 	},

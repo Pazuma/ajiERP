@@ -55,6 +55,7 @@ Test Connection,Probar conexión
 Testing connection...,Probando conexión...
 This is a test message from Draft Notifications.,Este es un mensaje de prueba de Notificaciones de borradores.
 code {0},código {0}
+Company,Empresa
 Custom Method is required.,El método personalizado es obligatorio.
 Custom Method cannot point to private modules or methods.,El método personalizado no puede apuntar a módulos o métodos privados.
 Custom Method must start with one of these prefixes: {0},El método personalizado debe comenzar con uno de estos prefijos: {0}

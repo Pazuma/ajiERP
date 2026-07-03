@@ -10,6 +10,7 @@
   "enabled",
   "rule_name",
   "document_type",
+  "company",
   "trigger_event",
   "recipient_section",
   "recipient_type",
@@ -62,6 +63,13 @@
    "label": "Document Type",
    "options": "DocType",
    "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company"
   },
   {
    "default": "After Insert",

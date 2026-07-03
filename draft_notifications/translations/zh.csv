@@ -55,6 +55,7 @@ Test Connection,测试连接
 Testing connection...,正在测试连接...
 This is a test message from Draft Notifications.,这是一条来自 Draft Notifications 的测试消息。
 code {0},错误码 {0}
+Company,公司
 Custom Method is required.,自定义方法为必填项。
 Custom Method cannot point to private modules or methods.,自定义方法不能指向私有模块或方法。
 Custom Method must start with one of these prefixes: {0},自定义方法必须以以下前缀之一开头：{0}

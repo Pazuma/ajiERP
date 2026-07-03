@@ -44,16 +44,17 @@ def handle_document_event(doc, trigger_event):
 		doctype=doc.doctype,
 		name=doc.name,
 		trigger_event=trigger_event,
+		company=doc.get("company") if hasattr(doc, "get") else None,
 	)
 
 
-def send_draft_notifications(doctype, name, trigger_event="After Insert"):
+def send_draft_notifications(doctype, name, trigger_event="After Insert", company=None):
 	if not frappe.db.exists(doctype, name) or not frappe.db.exists("DocType", RULE_DOCTYPE):
 		return
 
 	doc = frappe.get_doc(doctype, name)
 
-	for rule in get_enabled_rules(doctype, trigger_event):
+	for rule in get_enabled_rules(doctype, trigger_event, company):
 		try:
 			send_for_rule(doc, rule)
 		except Exception:
@@ -285,8 +286,8 @@ def has_enabled_rules(doctype, trigger_event="After Insert"):
 	)
 
 
-def get_enabled_rules(doctype, trigger_event="After Insert"):
-	return frappe.get_all(
+def get_enabled_rules(doctype, trigger_event="After Insert", company=None):
+	rules = frappe.get_all(
 		RULE_DOCTYPE,
 		filters={
 			"enabled": 1,
@@ -317,8 +318,10 @@ def get_enabled_rules(doctype, trigger_event="After Insert"):
 			"dingtalk_message_zh",
 			"dingtalk_message_en",
 			"dingtalk_message_es",
+			"company",
 		],
 	)
+	return [r for r in rules if not r.company or r.company == company]
 
 
 def get_candidate_users(doc, rule):
