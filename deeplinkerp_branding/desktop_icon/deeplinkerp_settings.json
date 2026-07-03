@@ -12,6 +12,10 @@
  "logo_url": "/assets/erpnext/icons/desktop_icons/solid/erpnext_settings.svg",
  "name": "Deeplinkerp Settings",
  "restrict_removal": 0,
- "roles": [],
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
  "standard": 1
 }

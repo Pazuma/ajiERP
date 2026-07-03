@@ -9,7 +9,7 @@ FRAPPE_FRAMEWORK_NAME = "Frappe Framework"
 DLP_FRAMEWORK_NAME = "DLP Framework"
 FRAMEWORK_ICON_NAME = "Framework"
 FRAPPE_FRAMEWORK_ICON_NAMES = (FRAMEWORK_ICON_NAME, FRAPPE_FRAMEWORK_NAME)
-DLP_FRAMEWORK_ALLOWED_ROLE = "System Manager"
+ADMIN_ONLY_ROLE = "System Manager"
 DLP_ERP_IDX = 0
 DLP_FRAMEWORK_IDX = -1
 SETTINGS_DOCNAME = "Deeplinkerp Settings"
@@ -29,6 +29,9 @@ PRODUCT_MODULE_APP_KEYS = {
 	"mes_integration": "mes_integration",
 	"mes integration log": "mes_integration",
 	"mes_integration_log": "mes_integration",
+}
+DESKTOP_ICON_MODULE_BY_NAME = {
+	"Accounting": "Accounts",
 }
 
 SIDEBAR_ITEM_FIELDS = (
@@ -70,6 +73,7 @@ def apply_deeplinkerp_settings_branding():
 			{"app": "deeplinkerp_branding", "label": SETTINGS_LABEL, "title": SETTINGS_LABEL},
 			update_modified=False,
 		)
+		set_doc_roles("Workspace", SETTINGS_DOCNAME, [ADMIN_ONLY_ROLE])
 
 	if frappe.db.exists("Workspace Sidebar", SETTINGS_DOCNAME):
 		frappe.db.set_value(
@@ -150,6 +154,7 @@ def apply_settings_desktop_icon_branding():
 				"link_type": "Workspace Sidebar",
 				"logo_url": SETTINGS_ICON_URL,
 				"standard": 1,
+				"roles": [{"role": ADMIN_ONLY_ROLE}],
 			}
 		)
 		icon.flags.ignore_permissions = True
@@ -171,6 +176,7 @@ def apply_settings_desktop_icon_branding():
 		},
 		update_modified=False,
 	)
+	set_desktop_icon_roles(SETTINGS_DOCNAME, [ADMIN_ONLY_ROLE])
 
 
 def apply_framework_desktop_icon_branding():
@@ -189,7 +195,7 @@ def apply_framework_desktop_icon_branding():
 				"link_type": "External",
 				"logo_url": BRAND_LOGO_URL,
 				"standard": 1,
-				"roles": [{"role": DLP_FRAMEWORK_ALLOWED_ROLE}],
+				"roles": [{"role": ADMIN_ONLY_ROLE}],
 			}
 		)
 		icon.flags.ignore_permissions = True
@@ -211,7 +217,7 @@ def apply_framework_desktop_icon_branding():
 		},
 		update_modified=False,
 	)
-	set_desktop_icon_roles(DLP_FRAMEWORK_NAME, [DLP_FRAMEWORK_ALLOWED_ROLE])
+	set_desktop_icon_roles(DLP_FRAMEWORK_NAME, [ADMIN_ONLY_ROLE])
 
 	children = frappe.get_all("Desktop Icon", filters={"parent_icon": ["in", FRAPPE_FRAMEWORK_ICON_NAMES]}, pluck="name")
 	for child in children:
@@ -231,6 +237,23 @@ def apply_logo_branding():
 			frappe.db.set_single_value(doctype, "app_logo", BRAND_LOGO_URL, update_modified=False)
 
 
+def set_doc_roles(doctype, docname, roles):
+	if not frappe.db.exists(doctype, docname):
+		return
+
+	doc = frappe.get_doc(doctype, docname)
+	existing_roles = [row.role for row in doc.roles]
+	if existing_roles == roles:
+		return
+
+	doc.set("roles", [])
+	for role in roles:
+		doc.append("roles", {"role": role})
+
+	doc.flags.ignore_permissions = True
+	doc.save(ignore_permissions=True)
+
+
 def set_desktop_icon_roles(icon_name, roles):
 	if not frappe.db.exists("Desktop Icon", icon_name):
 		return
@@ -248,8 +271,53 @@ def set_desktop_icon_roles(icon_name, roles):
 	icon.save(ignore_permissions=True)
 
 
-def can_access_dlp_framework():
-	return frappe.session.user == "Administrator" or DLP_FRAMEWORK_ALLOWED_ROLE in frappe.get_roles()
+def can_access_admin_only_icons():
+	return frappe.session.user == "Administrator" or ADMIN_ONLY_ROLE in frappe.get_roles()
+
+
+def bypass_module_filter():
+	return frappe.session.user == "Administrator" or "Workspace Manager" in frappe.get_roles()
+
+
+def get_blocked_modules_for_current_user():
+	if bypass_module_filter():
+		return set()
+
+	blocked_modules = []
+	for user in ("Administrator", frappe.session.user):
+		blocked_modules.extend(frappe.get_cached_doc("User", user).get_blocked_modules())
+
+	return set(blocked_modules)
+
+
+def is_module_blocked(module, blocked_modules):
+	return bool(module and module in blocked_modules)
+
+
+def filter_workspace_sidebar_items(workspace_sidebar_item, blocked_modules):
+	for key, sidebar in list(workspace_sidebar_item.items()):
+		if is_module_blocked(sidebar.get("module"), blocked_modules):
+			del workspace_sidebar_item[key]
+
+
+def get_desktop_icon_sidebar_keys(icon):
+	keys = []
+	for sidebar in (icon.get("link_to"), icon.get("label"), icon.get("name")):
+		if sidebar:
+			keys.append(sidebar.lower())
+	return keys
+
+
+def get_desktop_icon_module(icon):
+	return DESKTOP_ICON_MODULE_BY_NAME.get(icon.get("name")) or DESKTOP_ICON_MODULE_BY_NAME.get(icon.get("label"))
+
+
+def is_workspace_sidebar_icon_visible(icon, workspace_sidebar_item, blocked_modules):
+	if any(sidebar_key in workspace_sidebar_item for sidebar_key in get_desktop_icon_sidebar_keys(icon)):
+		return True
+
+	module = get_desktop_icon_module(icon)
+	return bool(module and not is_module_blocked(module, blocked_modules))
 
 
 def apply_boot_branding(bootinfo):
@@ -257,7 +325,8 @@ def apply_boot_branding(bootinfo):
 	app_data = bootinfo.get("app_data", [])
 	workspace_sidebar_item = bootinfo.get("workspace_sidebar_item", {})
 	module_app = bootinfo.get("module_app", {})
-	show_dlp_framework = can_access_dlp_framework()
+	show_admin_only_icons = can_access_admin_only_icons()
+	blocked_modules = get_blocked_modules_for_current_user()
 
 	for app in app_data:
 		app_name = app.get("app_name")
@@ -283,6 +352,8 @@ def apply_boot_branding(bootinfo):
 		elif key in PRODUCT_MODULE_APP_KEYS:
 			sidebar["app"] = PRODUCT_MODULE_APP_KEYS[key]
 
+	filter_workspace_sidebar_items(workspace_sidebar_item, blocked_modules)
+
 	filtered_icons = []
 	for icon in bootinfo.get("desktop_icons", []):
 		if icon.get("parent_icon") in {ERP_NEXT_NAME, DEEPLINKERP_ICON_NAME}:
@@ -303,22 +374,44 @@ def apply_boot_branding(bootinfo):
 			icon["link_type"] = "External"
 		elif icon.get("name") == "ERPNext Settings" or icon.get("label") == "ERPNext Settings":
 			icon["hidden"] = 1
+		elif icon.get("name") == SETTINGS_DOCNAME or icon.get("label") == SETTINGS_LABEL:
+			if not show_admin_only_icons:
+				continue
+			icon["app"] = "deeplinkerp_branding"
+			icon["hidden"] = 0
+			icon["label"] = SETTINGS_LABEL
+			icon["link_to"] = SETTINGS_DOCNAME
+			icon["link_type"] = "Workspace Sidebar"
 		elif icon.get("name") == FRAMEWORK_ICON_NAME or icon.get("label") == FRAMEWORK_ICON_NAME:
 			icon["hidden"] = 1
 		elif icon.get("name") == DLP_FRAMEWORK_NAME or icon.get("label") == DLP_FRAMEWORK_NAME:
-			if not show_dlp_framework:
+			if not show_admin_only_icons:
 				continue
 			icon["app"] = "deeplinkerp_branding"
 			icon["hidden"] = 0
 			icon["label"] = DLP_FRAMEWORK_NAME
 			icon["logo_url"] = BRAND_LOGO_URL
 
-		if icon.get("parent_icon") == DLP_FRAMEWORK_NAME and not show_dlp_framework:
+		if icon.get("parent_icon") == DLP_FRAMEWORK_NAME and not show_admin_only_icons:
+			continue
+
+		if icon.get("link_type") == "Workspace Sidebar" and not is_workspace_sidebar_icon_visible(
+			icon, workspace_sidebar_item, blocked_modules
+		):
 			continue
 
 		filtered_icons.append(icon)
 
-	bootinfo["desktop_icons"] = filtered_icons
+	visible_parent_labels = {
+		icon.get("label")
+		for icon in filtered_icons
+		if icon.get("label") and not icon.get("parent_icon") and icon.get("hidden") != 1
+	}
+	bootinfo["desktop_icons"] = [
+		icon
+		for icon in filtered_icons
+		if not icon.get("parent_icon") or icon.get("parent_icon") in visible_parent_labels
+	]
 
 
 def append_unique(values, value):
