@@ -11,7 +11,6 @@ source,target
 查看所有标签页,Ver todas las pestañas
 当前表单有未保存的修改，离开后可能丢失。是否继续？,El formulario actual tiene cambios sin guardar. Si sales, podrían perderse. ¿Deseas continuar?
 新建 {0},Nuevo {0}
-Sales Order,Orden de Venta
 Sales Order Shipment Details,Detalles de Envío de Orden de Venta
 No shipment records found,No se encontraron registros de envío
 No data,Sin datos
