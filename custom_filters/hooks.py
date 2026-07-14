@@ -47,6 +47,8 @@ app_include_js = "/assets/custom_filters/js/desk_tabs.js"
 doctype_js = {
 	"Material Request": "public/js/material_request.js",
 	"Stock Entry": "public/js/stock_entry.js",
+	"Sales Order": "public/js/sales_order.js",
+	"Purchase Order": "public/js/purchase_order.js",
 }
 
 doctype_list_js = {

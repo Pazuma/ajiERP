@@ -1,0 +1,42 @@
+Sales Order,Sales Order
+Sales Order Shipment Details,销售订单出货明细
+No shipment records found,暂无出货记录
+No data,暂无数据
+Fetching sales shipment details...,正在获取销售出货明细...
+Sales Shipment Details,销售出货明细
+Open full report,打开完整报表
+导出报表,导出报表
+Export report,导出报表
+Sales Order {0} is not submitted.,销售订单 {0} 未提交。
+Sales Order {0} not found.,未找到销售订单 {0}。
+Missing Sales Order read permission.,缺少 Sales Order 读取权限。
+正在获取销售出货明细...,正在获取销售出货明细...
+销售出货明细,销售出货明细
+销售出库单,销售出库单
+出货次数,出货次数
+出货日期,出货日期
+已出,已出
+未出,未出
+暂无出货记录,暂无出货记录
+Purchase Order,采购订单
+Purchase Order Delivery Details,采购订单交货详情
+Fetching purchase delivery details...,正在获取采购交货详情...
+Purchase Delivery Details,采购交货详情
+物料编码,物料编码
+物料名称,物料名称
+单位,单位
+订单数量,订单数量
+最新交期,最新交期
+交货次数,交货次数
+交货日期,交货日期
+采购收货单,采购收货单
+已交,已交
+未交,未交
+打开完整报表,打开完整报表
+暂无交货记录,暂无交货记录
+未交货,未交货
+共 {0} 次交货,共 {0} 次交货
+交货{0},交货{0}
+未找到采购订单 {0},未找到采购订单 {0}
+缺少 Purchase Order 读取权限,缺少 Purchase Order 读取权限
+采购交货详情,采购交货详情

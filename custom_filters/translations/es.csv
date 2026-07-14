@@ -11,3 +11,45 @@ source,target
 查看所有标签页,Ver todas las pestañas
 当前表单有未保存的修改，离开后可能丢失。是否继续？,El formulario actual tiene cambios sin guardar. Si sales, podrían perderse. ¿Deseas continuar?
 新建 {0},Nuevo {0}
+Sales Order,Orden de Venta
+Sales Order Shipment Details,Detalles de Envío de Orden de Venta
+No shipment records found,No se encontraron registros de envío
+No data,Sin datos
+Fetching sales shipment details...,Cargando detalles de envío...
+Sales Shipment Details,Detalles de Envío
+Open full report,Abrir informe completo
+Export report,Exportar informe
+Sales Order {0} is not submitted.,La orden de venta {0} no está enviada.
+Sales Order {0} not found.,No se encontró la orden de venta {0}.
+Missing Sales Order read permission.,Falta permiso de lectura para Orden de Venta.
+正在获取销售出货明细...,Cargando detalles de envío...
+销售出货明细,Detalles de Envío
+销售出库单,Nota de Entrega
+出货次数,Nº de envíos
+出货日期,Fecha de envío
+已出,Enviado
+未出,Pendiente
+暂无出货记录,No hay registros de envío
+Purchase Order,Orden de Compra
+Purchase Order Delivery Details,Detalles de Entrega de Orden de Compra
+Fetching purchase delivery details...,Cargando detalles de entrega...
+Purchase Delivery Details,Detalles de Entrega
+物料编码,Código de artículo
+物料名称,Nombre de artículo
+单位,Unidad
+订单数量,Cantidad ordenada
+最新交期,Fecha de entrega más reciente
+交货次数,Nº de entregas
+交货日期,Fecha de entrega
+采购收货单,Recibo de Compra
+已交,Entregado
+未交,Pendiente
+打开完整报表,Abrir informe completo
+暂无交货记录,No hay registros de entrega
+未交货,No entregado
+共 {0} 次交货,Total {0} entregas
+交货{0},Entrega {0}
+未找到采购订单 {0},No se encontró la orden de compra {0}.
+缺少 Purchase Order 读取权限,Falta permiso de lectura para Orden de Compra.
+采购交货详情,Detalles de Entrega de Compra
+导出报表,Exportar informe
