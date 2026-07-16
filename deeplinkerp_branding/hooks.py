@@ -4,9 +4,9 @@ app_publisher = "yuewei"
 app_description = "Deeplinkerp brand"
 app_email = "308642281@qq.com"
 app_license = "mit"
-app_logo_url = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=erpnext-bg-067efb"
+app_logo_url = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2"
 favicon = "/assets/deeplinkerp_branding/logo/tab_logo.png"
-splash_image = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=erpnext-bg-067efb"
+splash_image = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2"
 
 # Apps
 # ------------------
@@ -14,7 +14,7 @@ splash_image = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=
 add_to_apps_screen = [
 	{
 		"name": app_name,
-		"logo": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=erpnext-bg-067efb",
+		"logo": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
 		"title": app_title,
 		"route": "/app/deeplinkerp-settings",
 	}
@@ -119,7 +119,7 @@ boot_session = "deeplinkerp_branding.deeplinkerp_branding.branding.apply_boot_br
 after_migrate = ["deeplinkerp_branding.deeplinkerp_branding.branding.apply_deeplinkerp_settings_branding"]
 website_context = {
 	"favicon": "/assets/deeplinkerp_branding/logo/tab_logo.png",
-	"splash_image": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=erpnext-bg-067efb",
+	"splash_image": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
 }
 
 website_redirects = [
@@ -130,12 +130,12 @@ website_redirects = [
 	},
 	{
 		"source": "/apple-touch-icon.png",
-		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=erpnext-bg-067efb",
+		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
 		"redirect_http_status": 302,
 	},
 	{
 		"source": "/apple-touch-icon-precomposed.png",
-		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=erpnext-bg-067efb",
+		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
 		"redirect_http_status": 302,
 	},
 	{
