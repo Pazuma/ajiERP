@@ -4,6 +4,8 @@ import frappe
 def execute():
     """Add custom fields for sales order high-tech revenue tracking."""
     create_sales_order_custom_fields()
+    frappe.db.updatedb("Sales Order")
+    frappe.clear_cache()
 
 
 def create_sales_order_custom_fields():
@@ -23,5 +25,3 @@ def create_sales_order_custom_fields():
                 "allow_on_submit": 1,
             }
         ).insert()
-
-    frappe.clear_cache()

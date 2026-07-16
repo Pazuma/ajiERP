@@ -32,4 +32,5 @@ def execute():
         },
         update=True,
     )
+    frappe.db.updatedb("Item")
     frappe.clear_cache(doctype="Item")

@@ -192,7 +192,7 @@ def ensure_operations_management_sidebar():
     # visibility strategy for custom Pages.
     frappe.db.set_value(
         "Workspace Sidebar",
-        ICON_NAME,
+        DASHBOARD_SIDEBAR_NAME,
         {"app": "client_akivision", "module": "", "standard": 1},
         update_modified=False,
     )
