@@ -1,0 +1,251 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:serial_no",
+ "creation": "2026-07-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "serial_no",
+  "item_code",
+  "internal_model",
+  "external_model",
+  "in_qty",
+  "in_date",
+  "column_break_1",
+  "status",
+  "sub_status",
+  "warehouse",
+  "section_break_parties",
+  "customer",
+  "contact_person",
+  "phone",
+  "column_break_2",
+  "loan_or_sales_by",
+  "loan_or_sales_no",
+  "loan_or_sales_date",
+  "section_break_work",
+  "work_order_no",
+  "work_order_status",
+  "section_break_references",
+  "sample_loan_out",
+  "sales_order",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Serial No",
+   "options": "Serial No",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "serial_no.item_code",
+   "fetch_if_empty": 1,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.custom_internal_model",
+   "fetch_if_empty": 1,
+   "fieldname": "internal_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Internal Model",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.custom_external_model",
+   "fetch_if_empty": 1,
+   "fieldname": "external_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "External Model",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "in_qty",
+   "fieldtype": "Float",
+   "label": "In Qty"
+  },
+  {
+   "fieldname": "in_date",
+   "fieldtype": "Date",
+   "label": "In Date"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "\n借出样品\n样品\n销售品"
+  },
+  {
+   "fieldname": "sub_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Sub Status",
+   "options": "\n已借出\nfor-sample\n已销售\n转销售\n旧款"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "section_break_parties",
+   "fieldtype": "Section Break",
+   "label": "Parties"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loan_or_sales_by",
+   "fieldtype": "Data",
+   "label": "Loan / Sales By"
+  },
+  {
+   "fieldname": "loan_or_sales_no",
+   "fieldtype": "Data",
+   "label": "Loan / Sales No"
+  },
+  {
+   "fieldname": "loan_or_sales_date",
+   "fieldtype": "Date",
+   "label": "Loan / Sales Date"
+  },
+  {
+   "fieldname": "section_break_work",
+   "fieldtype": "Section Break",
+   "label": "Work Order"
+  },
+  {
+   "fieldname": "work_order_no",
+   "fieldtype": "Data",
+   "label": "Work Order No"
+  },
+  {
+   "fieldname": "work_order_status",
+   "fieldtype": "Data",
+   "label": "Work Order Status"
+  },
+  {
+   "fieldname": "section_break_references",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "sample_loan_out",
+   "fieldtype": "Link",
+   "label": "Sample Loan Out",
+   "options": "Sample Loan Out"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Finished Goods Status",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

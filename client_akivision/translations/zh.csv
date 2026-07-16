@@ -1,0 +1,519 @@
+Status,状态
+Status is based on the configured evaluation direction and thresholds.,状态依据配置的评估方向和预警阈值。
+Status is based on the KPI calculation rules.,状态依据指标计算规则。
+Target Progress,目标完成度
+Click to view details,点击查看明细
+No data matching the current filters.,暂无符合当前筛选条件的数据。
+Unable to load KPI data.,无法加载运营指标数据。
+Realtime Inventory,实时库存
+Delivery List,送货清单
+Supplier Performance Evaluation,供应商回顾
+Average Delay Days,平均延迟天数
+Supplier Rating,供应商评级
+Sub Status,子状态
+Serial No,序列号
+Supplier,供应商
+Customer,客户
+Sample Loan Out,客户样品借出
+Sample Loan Out Item,客户样品借出单子表
+Sample Loan Out Return,客户样品归还
+Sample Loan Out Return Item,客户样品归还单子表
+Sample Loan In,供应商样品借回
+Sample Loan In Item,供应商样品借回单子表
+Sample Loan In Return,供应商样品归还
+Sample Loan In Return Item,供应商样品归还单子表
+Finished Goods Status,成品状态
+Internal Model,内部机种
+Applicable Model,适用机种
+Summary Calculation,汇总计算
+Version,版本
+External Model,外部型号
+Loan Form,借样形式
+Loan Date,借出日期
+Expected Return Date,预计归还日期
+Contact Person,联系人
+Phone,联系电话
+Contract No,合同号
+Loaned By,借出人
+Total Qty,总数量
+Returned Qty,已归还数量
+Stock Entry Reference,库存移动单号
+Remarks,备注
+Disposition,去向
+Supplier Part No,供应商品号
+Supplier Model,供应商型号
+Internal Item Code,对应阿基型号
+Return Date,归还日期
+Return Reference,归还单号
+Return Qty,归还数量
+Customer Loan,客户借出仓
+Supplier Loan,供应商借回仓
+Loan Warehouse,借用仓库
+Source Warehouse,来源仓库
+Latest Disposition,最新去向
+Akivision Status,Akivision 状态
+In Date,入库日期
+In Qty,入库数量
+Item Code,物料编码
+Items,明细
+Loan / Sales By,借出/销售人
+Loan / Sales Date,借出/销售日期
+Loan / Sales No,借出/销售单号
+Loan In Item,借回明细
+Naming Series,编号系列
+Parties,往来方
+Qty,数量
+References,引用
+Returned,已归还
+Sales Order,销售订单
+Sales Order Reference,销售订单引用
+Sample Loan DocType,样品单据类型
+Sample Loan Document,样品单据
+Setup,设置
+Masters,主数据
+Sales Taxes and Charges Template,销售税费模板
+Totals,合计
+Warehouse,仓库
+Work Order No,工单号
+Work Order Status,工单状态
+Actions,操作
+All serial numbers are already returned or sold.,所有序列号都已归还或销售。
+Cancelled,已取消
+Cannot cancel a Sample Loan In that has returns.,已存在归还记录的供应商样品借回单不能取消。
+Cannot cancel a Sample Loan Out that has returns.,已存在归还记录的客户样品借出单不能取消。
+Company,公司
+collection_amount_monthly,月度回款金额
+production_completion_rate,生产完工率
+purchase_on_time_rate,采购到货及时率
+realtime_inventory_amount,实时库存总金额
+safety_stock_warning_count,安全库存预警物料数量
+purchase_in_transit_amount,采购在途金额
+material_over_consumption_rate,生产领料超耗率
+high_tech_revenue,高新收入总额
+total_revenue,总营收
+high_tech_ratio,高新收入占比
+rd_project_count,研发项目数量
+rd_expense_amount,研发费用金额
+rd_expense_ratio,研发费用占比
+Convert to Sales,转为销售
+Converted,已转销售
+Converted to Sales,已转销售
+Create Sales Order,创建销售订单
+Draft,草稿
+Loaned,已借出
+No items to process.,没有可处理的明细。
+Partially Returned,部分归还
+Please select at least one Serial No to convert to sales.,请至少选择一个要转为销售的序列号。
+Please select at least one Serial No.,请至少选择一个序列号。
+Row {0}: Duplicate item/serial combination.,第 {0} 行：物料/序列号重复。
+Row {0}: Item Code is required.,第 {0} 行：物料编码必填。
+Row {0}: Loan In Item has already been fully returned.,第 {0} 行：借回明细已完全归还。
+Row {0}: Loan In Item is not part of Sample Loan In {1}.,第 {0} 行：借回明细不属于供应商样品借回单 {1}。
+Row {0}: Loan In Item is required.,第 {0} 行：借回明细必填。
+Row {0}: Loan Warehouse is required.,第 {0} 行：借用仓库必填。
+Row {0}: Return qty exceeds remaining loan qty.,第 {0} 行：归还数量超过剩余借出数量。
+Row {0}: Serial No is required.,第 {0} 行：序列号必填。
+Row {0}: Serial No {1} does not belong to Item {2}.,第 {0} 行：序列号 {1} 不属于物料 {2}。
+Row {0}: Serial No {1} has already been returned.,第 {0} 行：序列号 {1} 已归还。
+Row {0}: Serial No {1} is already on loan.,第 {0} 行：序列号 {1} 已借出。
+Row {0}: Serial No {1} is duplicated.,第 {0} 行：序列号 {1} 重复。
+Row {0}: Serial No {1} is not in warehouse {2}.,第 {0} 行：序列号 {1} 不在仓库 {2} 中。
+Row {0}: Serial No {1} is not part of Sample Loan Out {2}.,第 {0} 行：序列号 {1} 不属于客户样品借出单 {2}。
+Row {0}: Serialized items must have qty = 1.,第 {0} 行：有序列号管理的物料数量必须为 1。
+Row {0}: Source Warehouse is required.,第 {0} 行：来源仓库必填。
+Sales Order {0} created.,销售订单 {0} 已创建。
+Sample Loan In is required.,供应商样品借回单必填。
+Sample Loan In {0} is not submitted.,供应商样品借回单 {0} 未提交。
+Sample Loan Out is required.,客户样品借出单必填。
+Sample Loan Out {0} is not submitted.,客户样品借出单 {0} 未提交。
+Scrapped,报废
+Selected serial numbers are not part of this loan.,所选序列号不属于本次借出。
+Serial Numbers,序列号
+Sold,已销售
+for-sample,样品
+Sample Loan Out {0} has already been fully returned.,客户样品借出单 {0} 已全部归还。
+On Loan,借出中
+Payment Entry,回款/付款记录
+Payments,收付款
+Purchase List,采购清单
+Receipt List,入库清单
+Outbound List,出库清单
+Material Issue,物料发放
+Material Receipt,物料接收
+Material Transfer,物料调拨
+Material Transfer for Manufacture,生产领料
+Manufacture,生产制造
+Repack,重新包装
+Send to Subcontractor,外发加工
+Material Consumption for Manufacture,生产消耗
+Stock Entry,物料出/入库
+Stock Entry Type,物料出/入库类型
+Stock Entry Detail,物料出/入库明细
+Sample Loan Out List,借出样品清单
+Sample Loan In List,借回样品清单
+Receipt Record,回款记录
+Purchase Payment Record,付款记录
+Other Payment,其他付款
+Accounts Setup,财务设置
+From Date,起始日期
+To Date,截止日期
+Item,物料
+Product Code,产品代码
+Purchase Order,采购订单
+Purchase Receipt,采购送货单
+Delivery Note,销售送货单
+Material Request,物料需求
+Material Planning,物料计划
+Pick List,拣货单
+Serial and Batch Bundle,序列号和批次包
+Stock Reconciliation,库存调整
+On Hold,已冻结
+In Stock,在库
+Sales Orders created: {0},销售订单已创建：{0}
+Row {0}: Customer is required before converting to sales.,第 {0} 行：转为销售前必须填写客户。
+Row {0}: Customer is required.,第 {0} 行：客户必填。
+Average delay days per shipment for the period,该期间每次发货的平均延迟天数
+Reports,报表
+Point of Sale,销售点
+Maximum Stock Limit,最高库存上限
+Max Stock Limit,最高库存上限
+Minimum Safety Stock,最低安全库存
+Safety Stock Remarks,安全库存备注
+Safety Stock Status,安全库存状态
+Item Type,物料类型
+Warning Line,安全库存预警线
+Normal,正常
+Warning,预警
+Below Safety,低于安全库存
+Over Max,超出上限
+Actual Qty,实际库存
+Projected Qty,预计结余库存（含计划收发）
+Sales Order List,销售订单清单
+High-tech Revenue,是否高新收入
+Order Completion Status,订单完成状态
+Completion Flag,完成标记
+Tax Inclusive Price,含税单价
+Order Amount,订单金额
+Customer PO No,客户订单号
+Cumulative Delivered Qty,累计送货量
+Item Completed,型号是否完成
+Order Fully Completed,整单全部型号完成
+Undelivered Qty,未送货件数
+Year,年份
+Month,月份
+Date,日期
+Model,型号
+UOM,单位
+Credit Days,帐期
+Invoice No,发票号
+Invoice Date,开票日期
+Received Amount,已收金额
+Outstanding Amount,未收金额
+Reconciliation Period,对账周期
+Due Date,约定收款日期
+Delivery Date,交货日期
+Customer Name,客户名称
+Customer Code,客户代码
+Payment Term,收款模式
+Tools,工具
+Purchase Taxes and Charges Template,采购税费模板
+To Deliver and Bill,待送货和开票
+To Bill,待开票
+To Deliver,待送货
+Completed,已完成
+Closed,已关闭
+Sales Order/Item,销售订单/物料编号
+Total,合计
+Engineering Drawing,工程图纸
+Engineering Drawing Approval,工程图纸审批
+Pending Approval,待审批
+Finalized,已定稿
+Rejected,已驳回
+Obsolete,已作废
+Submit for Approval,提交审批
+Approve and Finalize,批准并定稿
+Resume Editing,恢复编辑
+Mark Obsolete,标记作废
+Manufacturing User,生产用户
+Manufacturing Manager,生产经理
+Sales Order / Item,销售订单 / 物料
+% Cost Allocation,成本分摊比例%
+% Process Loss,制造损耗%
+Add Raw Materials,添加原材料
+Add row,添加行
+Add multiple,批量添加
+Delete row,删除行
+Duplicate row,复制行
+Allow Alternative Item,允许替代物料
+Amended From,修订自
+Amount,金额
+Amount (Company Currency),金额（公司货币）
+BOM Configuration,BOM 配置
+BOM Creator Item,BOM 创建器物料
+BOM No,BOM 编号
+Backflush Materials From WIP Warehouse,从在制品仓库反冲物料
+Base Cost Per Unit,单位基础成本
+Base Hour Rate(Company Currency),基础小时费率（公司货币）
+Based On,基于
+Basic Rate (Company Currency),基本费率（公司货币）
+Batch Size,批量大小
+Components,组件
+Connections,关联
+Consume Components,消耗组件
+Conversion Factor,换算系数
+Conversion Rate,兑换汇率
+Cost Allocation,成本分摊
+Cost Allocation / Process Loss,成本分摊 / 制造损耗
+Cost Configuration,成本配置
+Cost Per Unit,单位成本
+Costing,成本核算
+Currency,货币
+Default Source Warehouse,默认来源仓库
+Default Target Warehouse,默认目标仓库
+Default Warehouse,默认仓库
+Description,描述
+Do Not Explode,不展开
+Exploded Items,展开物料
+FG / Semi FG Item,成品 / 半成品物料
+Finished Goods Based Operating Cost,按成品计算作业成本
+Finished Goods Warehouse,成品仓库
+Finished Goods based Operating Cost,按成品计算作业成本
+Fixed Time,固定工时
+Has Variants,有变体
+Hour Rate,小时费率
+Image,图片
+Image View,图片视图
+Include Item In Manufacturing,在生产中包含该物料
+Is Active,已启用
+Is Default,设为默认
+Is Final Finished Good,最终成品
+Is Phantom BOM,虚拟 BOM
+Is Phantom Item,虚拟物料
+Is Stock Item,库存物料
+Is Sub Assembly Item,子装配物料
+Is Subcontracted,委外加工
+Item Description,物料描述
+Item Name,物料名称
+Item operation,物料工序
+Item to Manufacture,待生产物料
+More Info,更多信息
+More Information,更多信息
+Operating Cost,作业成本
+Operating Cost (Company Currency),作业成本（公司货币）
+Operating Cost Per BOM Quantity,每 BOM 数量的作业成本
+Operating Cost(Company Currency),作业成本（公司货币）
+Operation,工序
+Operation ID,工序编号
+Operation Time,工序时间
+Operations,工序
+Original Item,原始物料
+Price List,价目表
+Price List Currency,价目表货币
+Price List Exchange Rate,价目表汇率
+Process Loss Qty,制造损耗数量
+Production Item,生产物料
+Production Item Info,生产物料信息
+Project,项目
+Qty Consumed Per Unit,单位消耗数量
+Qty to Produce,待生产数量
+Quality Inspection,质量检验
+Quality Inspection Required,需要质量检验
+Quality Inspection Template,质量检验模板
+Quantity (Output Qty),数量（产出数量）
+Quantity and Rate,数量与费率
+Rate & Amount,费率与金额
+Rate Of Materials Based On,物料费率依据
+Raw Material Cost,原材料成本
+Raw Material Cost (Company Currency),原材料成本（公司货币）
+Reference,引用
+Reject,驳回
+Route,路线
+Routing,工艺路线
+Secondary Items,副产品
+Secondary Items Cost,副产品成本
+Secondary Items Cost (Company Currency),副产品成本（公司货币）
+Sequence ID,序列编号
+Set Operating Cost Based On BOM Quantity,按 BOM 数量计算作业成本
+Set rate of sub-assembly item based on BOM,按 BOM 设置子装配物料费率
+Show Items,显示物料
+Show Operations,显示工序
+Show in Website,在网站显示
+Sourced by Supplier,由供应商提供
+Stock Qty,库存数量
+Stock UOM,库存单位
+Thumbnail,缩略图
+Total Cost,总成本
+Total Cost (Company Currency),总成本（公司货币）
+Track Semi Finished Goods,跟踪半成品
+Transfer Material Against,物料转移依据
+Unit Of Measure,计量单位
+WIP Warehouse,在制品仓库
+Website,网站
+Website Description,网站描述
+Website Image,网站图片
+Website Specifications,网站规格
+With Operations,包含工序
+Workstation,工作站
+Workstation Type,工作站类型
+Valuation Rate,估价率（库存成本）
+Last Purchase Rate,最近采购价
+Operations KPI Dashboard,运营指标看板
+Operations Management,运营管理
+KPI Dashboard,指标看板
+KPI Target,运营指标目标值
+KPI Code,指标编码
+KPI Name,指标名称
+Period Type,统计周期
+Period Value,周期值
+Target Value,目标值
+Warning Threshold,预警阈值
+Danger Threshold,危险阈值
+Evaluation Direction,评估方向
+Higher Is Better,越高越好
+Lower Is Better,越低越好
+Monthly,月度
+Quarterly,季度
+Yearly,年度
+Sales Invoice,销售发票
+Posting Date,过账日期
+Purchase Orders,采购订单数
+On-time Orders,按时订单数
+Receipt Status,收款状态
+Aging Period Rule,账龄区间规则
+From Days,起始天数
+To Days,截止天数
+Risk Level,风险等级
+Enabled,启用
+Receivable Aging Analysis,应收账款账龄分析
+Purchase Delay Analysis,采购到货延迟分析
+High-tech Revenue Analysis,高新收入项目分析
+Sales Overview,销售整体指标
+Order Fulfillment,订单完成状态
+Collection and Receivables,回款与应收款指标
+Reconciliation Warning,对账预警
+Year-over-year Indicators,同比指标
+Production and Purchasing Operations,生产采购运营核心指标
+High-tech Compliance,高新收入合规核心指标
+Trends and Risks,趋势与风险
+Total Orders,总订单数
+Total Sales Amount,总销售额
+High-tech Revenue Amount,高新收入总额
+High-tech Revenue Ratio,高新收入占比
+Completed Orders,整单已完成订单数
+Pending Orders,整单未完成订单数
+Delivered Orders,已交货订单数
+Delivering Orders,交货中订单数
+Undelivered Orders,未交货订单数
+Collection Amount,已收款总额
+Receivable Amount,应收款总额
+Settled Documents,已结清单据数
+Unsettled Documents,未结清单据数
+Over 90 Days Overdue,超90天逾期应收金额
+Monthly Collection Target Completion,本月回款目标完成率
+Unfinished Orders,未完成订单总数
+Status Mismatch Count,状态不一致条数
+Prior-period Sales Amount,上年同期销售额
+Sales Growth Rate,销售同比增长率
+Receivable Growth Rate,应收款同比增长率
+Production Completion Rate,本月生产计划完工率
+Purchase On-time Rate,采购到货及时率
+Realtime Inventory Amount,实时库存总金额
+Safety Stock Warning Count,安全库存预警物料数量
+Purchase In-transit Amount,采购在途金额
+Material Over-consumption Rate,生产领料超耗率
+Total Revenue,本年总营收总额
+RD Project Count,研发项目数量
+RD Expense Amount,本年研发费用总额
+RD Expense Ratio,研发费用占比
+Receivable Aging Distribution,应收账款账龄分布
+Monthly Production Completion Trend,月度生产完工率趋势
+Top 10 Overdue Customers,逾期客户TOP10
+Top 10 Delayed Suppliers,采购到货延迟TOP10供应商
+Top 10 RD Projects,各研发项目高新收入TOP10
+3-Year High-tech Trend,近3年高新收入趋势
+Salesperson Performance,业务员业绩
+Not Set,未设置
+Target,目标
+Refresh,刷新
+Loading KPI data...,正在加载指标数据...
+No data,暂无数据
+Overdue Amount,逾期金额
+Overdue Days,逾期天数
+Delayed Orders,延迟订单数
+Delivery Count,送货条数
+Delivery Amount,送货业绩金额
+Personal Collection,个人已回款
+Personal Receivable,个人应收款
+Delivery Rate,交付率
+Collection Rate,回款率
+Invoice Amount,发票金额
+Receivable Days,应收账天数
+Aging Period,账龄区间
+Completion Rate,完成率
+Sales Person,业务员
+operations-kpi-dashboard,运营指标看板
+Evaluated Orders,已评估订单数
+Pending Evaluation Orders,待评估订单数
+Receivable Core Control Indicators,应收款核心管控指标
+Receivable Core Indicators,应收核心指标
+Receivable Balance,应收总余额
+Due Within 30 Days,30天内到期应收
+31-90 Days Overdue,31-90天逾期应收
+Metric,指标
+Amount,金额
+Ratio,占比
+Warning Status,预警状态
+Operations Core Indicators,运营核心指标
+Value,数值
+Achievement Rate,达成率
+High-tech Core Indicators,高新核心指标
+Year-to-date,本年累计
+Annual Target,年度目标
+Compliance Status,合规状态
+Key Indicator Charts,关键指标图表
+Sales Revenue Composition,销售收入构成
+Other Revenue,其他收入
+Order Fulfillment Distribution,订单履约分布
+Collection and Receivable Composition,回款与应收构成
+低风险,低风险
+中风险,中风险
+高风险,高风险
+Technical Domain,技术领域
+Project Leader,项目负责人
+RD Project List,研发项目清单
+Project Name,项目名称
+Expected Start Date,立项日期
+Expected End Date,预计结项日期
+Total Projects,研发项目总数
+Percent Complete,完成进度
+Project Type,项目类型
+Project No,项目编号
+Open,未结项
+Delivery Note No / Item Code,送货单号 / 物料编码
+Delivery Note No,送货单号
+Supplier Name,供应商名称
+Purchase Delay Risk Rule,采购延迟风险规则
+Label,标签
+Low Risk,低风险
+Medium Risk,中风险
+High Risk,高风险
+0-30 Days,0-30天
+31-90 Days,31-90天
+91+ Days,91天以上
+Leave blank for no upper limit,留空表示无上限
+To Days cannot be less than From Days.,截止天数不能小于起始天数。
+Item Group,物料类别
+Product Status,产品状态
+Development,开发
+Mass Produced,已量产
+Sampled,已打样
+Export Excel,导出 Excel
+"Please select Company, From Date and To Date.",请选择公司、开始日期和截止日期。
+KPI Overview,指标总览
+Generated At,生成时间
+Receivable Aging,应收账龄
+Period,期间
+Planned Quantity,计划数量
+Actual Quantity,实际数量
+Opening Entry,期初凭证
+Temporary Opening,期初过渡

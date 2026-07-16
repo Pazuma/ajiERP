@@ -1,0 +1,43 @@
+{
+ "add_total_row": 1,
+ "creation": "2026-07-10 00:00:00.000000",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "公司",
+   "options": "Company",
+   "mandatory": 1
+  },
+  {
+   "fieldname": "internal_model",
+   "fieldtype": "Data",
+   "label": "内部机种"
+  },
+  {
+   "fieldname": "external_model",
+   "fieldtype": "Data",
+   "label": "外部型号"
+  }
+ ],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Summary Calculation",
+ "owner": "Administrator",
+ "prepared_report": 0,
+"query": "SELECT\n    i.custom_internal_model AS \"内部机种::120\",\n    i.custom_external_model AS \"外部型号::180\",\n    COALESCE(fgs.sold_qty, 0) AS \"销售品:Int:90\",\n    COALESCE(stock.stock_qty, 0) AS \"库存品:Float:90\",\n    COALESCE(fgs.sample_qty, 0) AS \"样品:Int:80\",\n    COALESCE(loan_out.loan_qty, 0) AS \"借出样品:Float:100\",\n    COALESCE(loan_in.loan_qty, 0) AS \"借回样品:Float:100\",\n    COALESCE(wip.wip_qty, 0) AS \"在制品:Float:90\",\n    COALESCE(fgs.sold_qty, 0) + COALESCE(stock.stock_qty, 0) + COALESCE(fgs.sample_qty, 0) + COALESCE(loan_out.loan_qty, 0) + COALESCE(loan_in.loan_qty, 0) + COALESCE(wip.wip_qty, 0) AS \"总计数量:Float:100\",\n    CASE WHEN COALESCE(stock.stock_qty, 0) + COALESCE(loan_out.loan_qty, 0) + COALESCE(wip.wip_qty, 0) > 0 THEN '有库存' ELSE '无库存' END AS \"状态::90\",\n    NULL AS \"备注::180\"\nFROM `tabItem` i\nLEFT JOIN (\n    SELECT item_code,\n        SUM(CASE WHEN status = '销售品' THEN in_qty ELSE 0 END) AS sold_qty,\n        SUM(CASE WHEN status = '样品' THEN in_qty ELSE 0 END) AS sample_qty\n    FROM `tabFinished Goods Status` fgs_row\n    LEFT JOIN `tabWarehouse` fgs_warehouse ON fgs_warehouse.name = fgs_row.warehouse\n    WHERE (COALESCE(%(company)s, '') = '' OR fgs_warehouse.company = %(company)s)\n    GROUP BY item_code\n) fgs ON fgs.item_code = i.name\nLEFT JOIN (\n    SELECT item_code, SUM(actual_qty) AS stock_qty\n    FROM `tabBin` b\n    INNER JOIN `tabWarehouse` stock_warehouse ON stock_warehouse.name = b.warehouse\n    WHERE (COALESCE(%(company)s, '') = '' OR stock_warehouse.company = %(company)s)\n    GROUP BY item_code\n) stock ON stock.item_code = i.name\nLEFT JOIN (\n    SELECT item_code, COUNT(*) AS loan_qty\n    FROM `tabSample Loan Out Item` loi\n    INNER JOIN `tabSample Loan Out` lo ON lo.name = loi.parent\n    WHERE lo.docstatus = 1 AND IFNULL(loi.returned, 0) = 0\n      AND (COALESCE(%(company)s, '') = '' OR lo.company = %(company)s)\n    GROUP BY item_code\n) loan_out ON loan_out.item_code = i.name\nLEFT JOIN (\n    SELECT lii.item_code, SUM(GREATEST(lii.qty - IFNULL(lii.returned_qty, 0), 0)) AS loan_qty\n    FROM `tabSample Loan In Item` lii\n    INNER JOIN `tabSample Loan In` li ON li.name = lii.parent\n    WHERE li.docstatus = 1 AND GREATEST(lii.qty - IFNULL(lii.returned_qty, 0), 0) > 0\n      AND (COALESCE(%(company)s, '') = '' OR li.company = %(company)s)\n    GROUP BY lii.item_code\n) loan_in ON loan_in.item_code = i.name\nLEFT JOIN (\n    SELECT production_item AS item_code, SUM(GREATEST(qty - IFNULL(produced_qty, 0), 0)) AS wip_qty\n    FROM `tabWork Order`\n    WHERE docstatus = 1 AND status NOT IN ('Completed', 'Stopped', 'Cancelled')\n      AND (COALESCE(%(company)s, '') = '' OR company = %(company)s)\n    GROUP BY production_item\n) wip ON wip.item_code = i.name\nWHERE i.disabled = 0\n  AND (COALESCE(%(internal_model)s, '') = '' OR i.custom_internal_model LIKE CONCAT(CHAR(37), %(internal_model)s, CHAR(37)))\n  AND (COALESCE(%(external_model)s, '') = '' OR i.custom_external_model LIKE CONCAT(CHAR(37), %(external_model)s, CHAR(37)))\n  AND (COALESCE(fgs.sold_qty, 0) + COALESCE(stock.stock_qty, 0) + COALESCE(fgs.sample_qty, 0) + COALESCE(loan_out.loan_qty, 0) + COALESCE(loan_in.loan_qty, 0) + COALESCE(wip.wip_qty, 0)) <> 0\nORDER BY i.custom_internal_model, i.custom_external_model",
+ "ref_doctype": "Item",
+ "report_name": "Summary Calculation",
+ "report_type": "Script Report",
+ "roles": [
+  {"role": "Stock Manager"},
+  {"role": "Stock User"},
+  {"role": "System Manager"}
+ ]
+}

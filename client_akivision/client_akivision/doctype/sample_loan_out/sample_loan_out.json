@@ -1,0 +1,283 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "customer",
+  "company",
+  "loan_date",
+  "expected_return_date",
+  "column_break_1",
+  "loan_form",
+  "contract_no",
+  "loaned_by",
+  "contact_person",
+  "phone",
+  "section_break_items",
+  "items",
+  "section_break_totals",
+  "total_qty",
+  "returned_qty",
+  "column_break_2",
+  "status",
+  "section_break_references",
+  "stock_entry_reference",
+  "sales_order_reference",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "default": "AKI.YYYY.MM.DD.-.##",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "单据编号模板",
+   "options": "AKI.YYYY.MM.DD.-.##",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "默认客户（仅历史数据）",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "loan_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "借出日期",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expected_return_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "归还日期"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loan_form",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "借样形式",
+   "options": "\n书面合同\n口头协议\n免费试用\n付费借用"
+  },
+  {
+   "fieldname": "contract_no",
+   "fieldtype": "Data",
+   "description": "保存时自动生成，格式：AKIYYYYMMDD-##，例如 AKI20220527-01。该字段同时作为借出单编号。",
+   "in_list_view": 1,
+   "label": "合同号 / 借出单编号",
+   "read_only": 1
+  },
+  {
+   "fieldname": "loaned_by",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "借出人",
+   "options": "User"
+  },
+  {
+   "fetch_from": "customer.mobile_no",
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "客户联系人"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "客户电话"
+  },
+  {
+   "fieldname": "section_break_items",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Sample Loan Out Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_totals",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "借出数量",
+   "read_only": 1
+  },
+  {
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "归还数量",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "状态",
+   "options": "\nDraft\nLoaned\nPartially Returned\nReturned\nConverted to Sales\nScrapped\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_references",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "stock_entry_reference",
+   "fieldtype": "Link",
+   "label": "Stock Entry Reference",
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_order_reference",
+   "fieldtype": "Link",
+   "label": "Sales Order Reference",
+   "options": "Sales Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "备注"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-13 18:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Sample Loan Out",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Gray",
+   "title": "Draft"
+  },
+  {
+   "color": "Orange",
+   "title": "Loaned"
+  },
+  {
+   "color": "Yellow",
+   "title": "Partially Returned"
+  },
+  {
+   "color": "Green",
+   "title": "Returned"
+  },
+  {
+   "color": "Blue",
+   "title": "Converted to Sales"
+  },
+  {
+   "color": "Red",
+   "title": "Scrapped"
+  },
+  {
+   "color": "Red",
+   "title": "Cancelled"
+  }
+ ],
+ "track_changes": 1
+}

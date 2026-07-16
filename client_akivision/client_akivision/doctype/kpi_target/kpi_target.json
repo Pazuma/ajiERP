@@ -1,0 +1,31 @@
+{
+ "actions": [],
+ "autoname": "KPI-TGT-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["company", "kpi_code", "kpi_name", "period_type", "period_value", "target_value", "evaluation_direction", "warning_threshold", "danger_threshold", "remarks"],
+ "fields": [
+  {"fieldname":"company","fieldtype":"Link","label":"Company","options":"Company","reqd":1,"in_list_view":1},
+  {"fieldname":"kpi_code","fieldtype":"Select","label":"KPI Code","description":"从下拉列表选择看板指标；保存后会自动与看板匹配。","reqd":1,"in_list_view":1},
+  {"fieldname":"kpi_name","fieldtype":"Data","label":"KPI Name","read_only":1,"reqd":1,"in_list_view":1},
+  {"fieldname":"period_type","fieldtype":"Select","label":"Period Type","options":"\nMonthly\nQuarterly\nYearly","reqd":1,"default":"Monthly"},
+  {"fieldname":"period_value","fieldtype":"Data","label":"Period Value","description":"例如：2026-07、2026-Q3、2026","reqd":1,"in_list_view":1},
+  {"fieldname":"target_value","fieldtype":"Float","label":"Target Value","reqd":1},
+  {"fieldname":"evaluation_direction","fieldtype":"Select","label":"Evaluation Direction","options":"Higher Is Better\nLower Is Better","default":"Higher Is Better","reqd":1},
+  {"fieldname":"warning_threshold","fieldtype":"Float","label":"Warning Threshold"},
+  {"fieldname":"danger_threshold","fieldtype":"Float","label":"Danger Threshold"},
+  {"fieldname":"remarks","fieldtype":"Small Text","label":"Remarks"}
+ ],
+ "index_web_pages_for_search": 1,
+ "module": "Client Akivision",
+ "name": "KPI Target",
+ "naming_rule": "Expression",
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Accounts Manager","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1},
+  {"role":"Sales Manager","read":1,"report":1,"export":1,"print":1,"email":1},
+  {"role":"Stock Manager","read":1,"report":1,"export":1,"print":1,"email":1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

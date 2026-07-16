@@ -1,0 +1,1 @@
+from client_akivision.utils import supplier_scorecard

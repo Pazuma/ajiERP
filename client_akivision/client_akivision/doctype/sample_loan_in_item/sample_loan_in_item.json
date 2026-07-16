@@ -1,0 +1,132 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "supplier_part_no",
+  "supplier_model",
+  "item_code",
+  "internal_model",
+  "external_model",
+  "qty",
+  "serial_no",
+  "loan_warehouse",
+  "returned_qty",
+  "returned",
+  "return_date",
+  "return_reference",
+  "disposition"
+ ],
+ "fields": [
+  {
+   "fieldname": "supplier_part_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Supplier Part No"
+  },
+  {
+   "fieldname": "supplier_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Supplier Model"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Internal Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.custom_internal_model",
+   "fetch_if_empty": 1,
+   "fieldname": "internal_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Internal Model",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.custom_external_model",
+   "fetch_if_empty": 1,
+   "fieldname": "external_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "External Model",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "reqd": 1
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "label": "Serial No",
+   "options": "Serial No"
+  },
+  {
+   "fieldname": "loan_warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Loan Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "label": "Returned Qty",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "returned",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Returned",
+   "read_only": 1
+  },
+  {
+   "fieldname": "return_date",
+   "fieldtype": "Date",
+   "label": "Return Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "return_reference",
+   "fieldtype": "Link",
+   "label": "Return Reference",
+   "options": "Sample Loan In Return",
+   "read_only": 1
+  },
+  {
+   "fieldname": "disposition",
+   "fieldtype": "Select",
+   "label": "Disposition",
+   "options": "\nReturned\nConverted\nScrapped",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-10 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Sample Loan In Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

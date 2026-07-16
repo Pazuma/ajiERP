@@ -1,0 +1,76 @@
+{
+ "app": "client_akivision",
+ "creation": "2026-07-14 15:24:31.079976",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "chart",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "chart",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u8fd0\u8425\u6307\u6807\u770b\u677f",
+   "link_to": "operations-kpi-dashboard",
+   "link_type": "Page",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u8bbe\u7f6e",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Section Break"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u8fd0\u8425\u6307\u6807\u76ee\u6807\u503c",
+   "link_to": "KPI Target",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u8d26\u9f84\u533a\u95f4\u89c4\u5219",
+   "link_to": "Aging Period Rule",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Purchase Delay Risk Rule",
+   "link_to": "Purchase Delay Risk Rule",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-07-16 15:38:19.090583",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "KPI Dashboard",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "KPI Dashboard"
+}

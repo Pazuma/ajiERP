@@ -1,0 +1,1 @@
+from client_akivision.patches.v0_0_1.upgrade_payment_entry_sidebar_to_records import execute

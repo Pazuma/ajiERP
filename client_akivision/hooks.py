@@ -26,7 +26,10 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/client_akivision/css/client_akivision.css"
-# app_include_js = "/assets/client_akivision/js/client_akivision.js"
+app_include_js = [
+	"/assets/client_akivision/js/stock_settings_naming.js",
+	"/assets/client_akivision/js/desktop_icon_logo.js",
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/client_akivision/css/client_akivision.css"
@@ -43,8 +46,24 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_js = {
+	"Supplier Scorecard": "public/js/supplier_scorecard.js",
+	"Stock Entry": "public/js/stock_entry.js",
+}
+doctype_list_js = {
+	"Supplier": "public/js/supplier_list.js",
+	"Customer": "public/js/customer_list.js",
+	"Purchase Receipt": "public/js/purchase_receipt_list.js",
+	"Finished Goods Status": "public/js/finished_goods_status_list.js",
+}
+
+# Keep the Selling workspace configuration in the database, but limit what is
+# returned in the sidebar payload sent to desk users.
+boot_session = "client_akivision.utils.workspace_sidebar.hide_selling_pos_and_non_delivery_reports"
+after_migrate = [
+	"client_akivision.utils.operations_management.sync_operations_management_desktop_icon",
+	"client_akivision.utils.selling_sidebar.sync_selling_sidebar_entries",
+]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -138,13 +157,40 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Stock Entry": {
+		"on_submit": [
+			"client_akivision.utils.sample_loan.on_stock_entry_submit",
+			"client_akivision.utils.sample_loan.on_stock_entry_submit_for_fgs",
+		],
+		"on_cancel": [
+			"client_akivision.utils.sample_loan.on_stock_entry_cancel",
+		],
+	},
+	"Purchase Receipt": {
+		"on_submit": "client_akivision.utils.sample_loan.on_purchase_receipt_submit",
+		"validate": "client_akivision.utils.purchase_receipt.set_purchase_order_from_items",
+	},
+	"Supplier Scorecard": {
+		"on_update": "client_akivision.utils.supplier_scorecard.update_supplier_rating",
+	},
+	"Supplier Scorecard Period": {
+		"on_submit": "client_akivision.utils.supplier_scorecard.refresh_supplier_rating_from_period",
+		"on_cancel": "client_akivision.utils.supplier_scorecard.refresh_supplier_rating_from_period",
+	},
+	"BOM": {
+		"validate": "client_akivision.utils.engineering_drawing.validate_bom_drawing",
+	},
+	"Material Request": {
+		"validate": "client_akivision.utils.engineering_drawing.set_material_request_drawing_reference",
+	},
+	"Work Order": {
+		"validate": "client_akivision.utils.engineering_drawing.set_work_order_drawing_reference",
+	},
+	"Supplier": {
+		"after_insert": "client_akivision.utils.supplier_scorecard.create_supplier_scorecard",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
@@ -255,4 +301,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

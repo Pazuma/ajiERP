@@ -1,0 +1,24 @@
+{
+ "actions": [],
+ "autoname": "field:label",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["label", "from_days", "to_days", "risk_level", "enabled"],
+ "fields": [
+  {"fieldname":"label","fieldtype":"Data","label":"Label","reqd":1,"in_list_view":1},
+  {"fieldname":"from_days","fieldtype":"Int","label":"From Days","reqd":1,"in_list_view":1},
+  {"fieldname":"to_days","fieldtype":"Int","label":"To Days","description":"留空表示无上限"},
+  {"fieldname":"risk_level","fieldtype":"Select","label":"Risk Level","options":"\n低风险\n中风险\n高风险","reqd":1,"default":"低风险","in_list_view":1},
+  {"fieldname":"enabled","fieldtype":"Check","label":"Enabled","default":"1","in_list_view":1}
+ ],
+ "module": "Client Akivision",
+ "name": "Aging Period Rule",
+ "naming_rule": "By fieldname",
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Accounts Manager","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1},
+  {"role":"Sales Manager","read":1,"report":1,"export":1,"print":1,"email":1}
+ ],
+ "sort_field": "from_days",
+ "sort_order": "ASC"
+}

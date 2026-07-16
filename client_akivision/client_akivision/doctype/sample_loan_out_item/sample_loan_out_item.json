@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "serial_no",
+  "item_code",
+  "internal_model",
+  "external_model",
+  "qty",
+  "status",
+  "return_date",
+  "loaned_by",
+  "contact_person",
+  "phone",
+  "loan_form",
+  "source_warehouse",
+  "loan_warehouse",
+  "returned",
+  "return_reference",
+  "disposition"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "客户",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "序列号",
+   "options": "Serial No",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "serial_no.item_code",
+   "fetch_if_empty": 1,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "物料编码",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.custom_internal_model",
+   "fetch_if_empty": 1,
+   "fieldname": "internal_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "机种",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.custom_external_model",
+   "fetch_if_empty": 1,
+   "fieldname": "external_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "型号",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "借出数量",
+   "read_only": 1
+  },
+  {
+   "default": "借出中",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "状态",
+   "options": "借出中\n已归还\n已转销售\n已报废",
+   "read_only": 1
+  },
+  {
+   "fieldname": "return_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "归还日期",
+   "read_only": 1
+  },
+  {
+   "fieldname": "loaned_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "借出人",
+   "options": "User"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "客户联系人"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "客户电话"
+  },
+  {
+   "fieldname": "loan_form",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "借样形式",
+   "options": "\n书面合同\n口头协议\n免费试用\n付费借用"
+  },
+  {
+   "fetch_from": "serial_no.warehouse",
+   "fetch_if_empty": 1,
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "来源仓库",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "loan_warehouse",
+   "fieldtype": "Link",
+   "label": "借出仓库",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "returned",
+   "fieldtype": "Check",
+   "label": "已归还",
+   "read_only": 1
+  },
+  {
+   "fieldname": "return_reference",
+   "fieldtype": "Link",
+   "label": "归还单据",
+   "options": "Sample Loan Out Return",
+   "read_only": 1
+  },
+  {
+   "fieldname": "disposition",
+   "fieldtype": "Select",
+   "label": "处理结果",
+   "options": "\nReturned\nSold\nScrapped",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-13 17:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Sample Loan Out Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
