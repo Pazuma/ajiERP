@@ -1,8 +1,9 @@
 (function () {
 	if (window.__custom_filters_desk_tabs_loaded) return;
 	window.__custom_filters_desk_tabs_loaded = true;
-	window.__custom_filters_desk_tabs_version = "overflow-close-fix-20260703-11";
 
+	const DESK_TABS_VERSION = "2026.07.16.2";
+	const AUTO_PIN_MIGRATION_VERSION = 2;
 	const MAX_TABS = 20;
 	const VISIBLE_TAB_LIMIT = 7;
 	const STORAGE_VERSION = 1;
@@ -78,7 +79,7 @@
 		const translated_doctype = translate(doctype || "Document");
 
 		if (docname && docname.startsWith("new-")) {
-			return translate("新建 {0}", [translated_doctype]);
+			return translate("New {0}", [translated_doctype]);
 		}
 
 		if (window.cur_frm && cur_frm.doctype === doctype && cur_frm.docname === docname) {
@@ -122,7 +123,7 @@
 		if (!current_form_dirty()) return Promise.resolve(true);
 		return new Promise(function (resolve) {
 			frappe.confirm(
-				translate("当前表单有未保存的修改，离开后可能丢失。是否继续？"),
+				translate("The current form has unsaved changes that may be lost. Do you want to continue?"),
 				function () { resolve(true); },
 				function () { resolve(false); }
 			);
@@ -194,7 +195,10 @@
 			this.overflow_menu = null;
 			this.last_route_key = null;
 			this.navigating = false;
+			this.navigation_timer = null;
 			this.route_frame = null;
+			this.menu_trigger = null;
+			this.overflow_trigger = null;
 			this.bound = false;
 			this.save_state = frappe.utils.debounce(() => this.persist(), 300);
 		}
@@ -212,6 +216,7 @@
 			this.on_route_change();
 			this.render();
 			document.body.classList.add(LOADED_CLASS);
+			console.info(`[custom_filters desk_tabs] version ${DESK_TABS_VERSION}`);
 		}
 
 		ensure_container() {
@@ -283,14 +288,39 @@
 				const item = event.target.closest(".custom-filters-desk-tab");
 				if (!item) return;
 				event.preventDefault();
-				this.open_menu(item.dataset.routeKey, event.clientX, event.clientY);
+				this.open_menu(item.dataset.routeKey, event.clientX, event.clientY, item);
 			});
 
 			this.container.addEventListener("keydown", (event) => {
 				const overflow_toggle = event.target.closest(".custom-filters-desk-tabs-overflow-toggle");
-				if (!overflow_toggle || !["Enter", " "].includes(event.key)) return;
+				if (overflow_toggle && ["Enter", " "].includes(event.key)) {
+					event.preventDefault();
+					this.toggle_overflow_menu(overflow_toggle);
+					return;
+				}
+
+				const item = event.target.closest(".custom-filters-desk-tab");
+				if (!item) return;
+
+				if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
+					event.preventDefault();
+					const rect = item.getBoundingClientRect();
+					this.open_menu(item.dataset.routeKey, rect.left, rect.bottom, item);
+					return;
+				}
+
+				if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
 				event.preventDefault();
-				this.toggle_overflow_menu(overflow_toggle);
+				const tabs = [...this.container.querySelectorAll(".custom-filters-desk-tab")];
+				const current_index = tabs.indexOf(item);
+				if (current_index < 0 || !tabs.length) return;
+
+				let target_index = current_index;
+				if (event.key === "ArrowLeft") target_index = (current_index - 1 + tabs.length) % tabs.length;
+				if (event.key === "ArrowRight") target_index = (current_index + 1) % tabs.length;
+				if (event.key === "Home") target_index = 0;
+				if (event.key === "End") target_index = tabs.length - 1;
+				tabs[target_index].focus();
 			});
 
 			this.menu.addEventListener("click", async (event) => {
@@ -302,6 +332,10 @@
 				await this.handle_menu_action(key, action.dataset.action);
 			});
 
+			this.menu.addEventListener("keydown", (event) => {
+				this.handle_menu_keydown(this.menu, event);
+			});
+
 			this.overflow_menu.addEventListener("click", async (event) => {
 				const item = event.target.closest(".custom-filters-desk-tabs-overflow-item");
 				if (!item) return;
@@ -311,13 +345,17 @@
 				await this.activate_tab(key);
 			});
 
-			this.overflow_menu.addEventListener("keydown", async (event) => {
-				const item = event.target.closest(".custom-filters-desk-tabs-overflow-item");
-				if (!item || !["Enter", " "].includes(event.key)) return;
+			this.overflow_menu.addEventListener("keydown", (event) => {
+				if (["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+					this.handle_menu_keydown(this.overflow_menu, event);
+				}
+			});
+
+			document.addEventListener("keydown", (event) => {
+				if (event.key !== "Escape") return;
+				if (!this.menu.classList.contains("show") && !this.overflow_menu.classList.contains("show")) return;
 				event.preventDefault();
-				const key = item.dataset.routeKey;
-				this.close_overflow_menu();
-				await this.activate_tab(key);
+				this.close_menus(true);
 			});
 
 			document.addEventListener("click", (event) => {
@@ -352,29 +390,40 @@
 		}
 
 		on_route_change() {
+			this.clear_navigation_lock();
 			const route = normalize_route(frappe.get_route());
 			if (is_ignored_route(route)) return;
 
 			const key = route_key(route);
 			if (!key || key === this.last_route_key) return;
 
+			const previous_active_key = this.state.active_route_key;
+			const previous_active_tab = this.find_tab(previous_active_key);
 			this.last_route_key = key;
 			this.state.active_route_key = key;
 			this.container = this.ensure_container();
 			this.close_menus();
 
 			let tab = this.find_tab(key);
-			if (!tab) {
+			const can_upgrade_draft = previous_active_tab
+				&& previous_active_tab.route_key !== key
+				&& previous_active_tab.type === "form_new"
+				&& route[0] === "Form"
+				&& route[2]
+				&& !route[2].startsWith("new-")
+				&& previous_active_tab.doctype === route[1];
+
+			if (can_upgrade_draft && tab) {
+				this.state.tabs = this.state.tabs.filter((item) => item.route_key !== previous_active_key);
+				this.update_tab_from_route(tab, route, true);
+			} else if (can_upgrade_draft) {
+				tab = previous_active_tab;
+				this.update_tab_from_route(tab, route, false);
+			} else if (!tab) {
 				tab = make_tab(route);
-				tab.pinned = this.state.tabs.length === 0;
 				this.state.tabs.push(tab);
 			} else {
-				tab.route = route;
-				tab.title = resolve_title(route);
-				tab.type = classify_route(route);
-				tab.doctype = get_doctype(route);
-				tab.docname = get_docname(route);
-				tab.last_accessed = Date.now();
+				this.update_tab_from_route(tab, route, true);
 			}
 
 			this.trim_tabs();
@@ -386,6 +435,19 @@
 			return this.state.tabs.find(function (tab) {
 				return tab.route_key === key;
 			});
+		}
+
+		update_tab_from_route(tab, route, refresh_accessed) {
+			const normalized = normalize_route(route);
+			const key = route_key(normalized);
+			tab.id = key;
+			tab.route = normalized;
+			tab.route_key = key;
+			tab.title = resolve_title(normalized);
+			tab.type = classify_route(normalized);
+			tab.doctype = get_doctype(normalized);
+			tab.docname = get_docname(normalized);
+			if (refresh_accessed) tab.last_accessed = Date.now();
 		}
 
 		async activate_tab(key) {
@@ -409,13 +471,18 @@
 				if (!ok) return false;
 			}
 
+			const closing_index = this.state.tabs.findIndex((item) => item.route_key === key);
 			this.state.tabs = this.state.tabs.filter(function (item) {
 				return item.route_key !== key;
 			});
 
 			if (is_current) {
-				const next = this.get_next_tab();
-				if (next) this.navigate(next.route);
+				const next = this.get_adjacent_tab(closing_index);
+				if (next) {
+					this.state.active_route_key = next.route_key;
+					this.navigate(next.route);
+				}
+				else this.ensure_desktop_tab();
 			}
 
 			this.render();
@@ -426,6 +493,7 @@
 		async close_tabs(keys) {
 			const current_key = route_key(frappe.get_route());
 			const includes_current = keys.includes(current_key);
+			const current_index = this.state.tabs.findIndex((tab) => tab.route_key === current_key);
 			if (includes_current) {
 				const ok = await confirm_leave_if_dirty();
 				if (!ok) return;
@@ -437,18 +505,40 @@
 			});
 
 			if (includes_current) {
-				const next = this.get_next_tab();
-				if (next) this.navigate(next.route);
+				const next = this.get_adjacent_tab(current_index);
+				if (next) {
+					this.state.active_route_key = next.route_key;
+					this.navigate(next.route);
+				}
+				else this.ensure_desktop_tab();
 			}
 
 			this.render();
 			this.save_state();
 		}
 
-		get_next_tab() {
-			return [...this.state.tabs].sort(function (a, b) {
-				return (b.last_accessed || 0) - (a.last_accessed || 0);
-			})[0];
+		get_adjacent_tab(previous_index) {
+			if (!this.state.tabs.length) return null;
+			return this.state.tabs[previous_index] || this.state.tabs[previous_index - 1] || null;
+		}
+
+		ensure_desktop_tab() {
+			const route = ["desktop"];
+			const key = route_key(route);
+			let tab = this.find_tab(key);
+			if (!tab) {
+				tab = make_tab(route);
+				this.state.tabs.push(tab);
+			}
+			this.state.active_route_key = key;
+
+			if (is_same_route(route, frappe.get_route())) {
+				this.last_route_key = key;
+				return;
+			}
+
+			this.last_route_key = null;
+			this.navigate(route);
 		}
 
 		navigate(route) {
@@ -456,11 +546,15 @@
 			if (!target.length || is_same_route(target, frappe.get_route()) || this.navigating) return;
 
 			this.navigating = true;
-			frappe.set_route(target).finally(() => {
-				window.setTimeout(() => {
-					this.navigating = false;
-				}, 100);
-			});
+			window.clearTimeout(this.navigation_timer);
+			this.navigation_timer = window.setTimeout(() => this.clear_navigation_lock(), 3000);
+			Promise.resolve(frappe.set_route(target)).catch(() => this.clear_navigation_lock());
+		}
+
+		clear_navigation_lock() {
+			this.navigating = false;
+			if (this.navigation_timer) window.clearTimeout(this.navigation_timer);
+			this.navigation_timer = null;
 		}
 
 		trim_tabs() {
@@ -543,6 +637,7 @@
 			item.title = tab.title;
 			item.setAttribute("role", "tab");
 			item.setAttribute("aria-selected", tab.route_key === this.state.active_route_key ? "true" : "false");
+			item.setAttribute("tabindex", tab.route_key === this.state.active_route_key ? "0" : "-1");
 
 			if (tab.pinned) {
 				const pin = document.createElement("span");
@@ -572,69 +667,48 @@
 		make_overflow_button(hidden_count) {
 			const button = document.createElement("div");
 			button.className = "custom-filters-desk-tabs-overflow-toggle";
-			button.title = translate("查看所有标签页");
+			button.title = translate("View All Tabs");
 			button.setAttribute("role", "button");
 			button.setAttribute("tabindex", "0");
 			button.setAttribute("aria-haspopup", "menu");
-			button.setAttribute("aria-label", translate("查看所有标签页"));
-			Object.assign(button.style, {
-				display: "inline-flex",
-				alignItems: "center",
-				justifyContent: "center",
-				gap: "3px",
-				flex: "0 0 auto",
-				height: "26px",
-				minWidth: "42px",
-				maxWidth: "58px",
-				margin: "2px 0 2px 4px",
-				padding: "0 8px",
-				borderRadius: "13px",
-				background: "var(--control-bg, #ffffff)",
-				boxShadow: "inset 0 0 0 1px var(--border-color, #dfe3e8)",
-				color: "var(--text-muted, #6b7280)",
-				fontSize: "12px",
-				fontWeight: "500",
-				lineHeight: "26px",
-				whiteSpace: "nowrap",
-				cursor: "pointer",
-				userSelect: "none",
-			});
+			button.setAttribute("aria-expanded", "false");
+			button.setAttribute("aria-label", translate("View All Tabs"));
 
 			const count = document.createElement("span");
 			count.className = "custom-filters-desk-tabs-overflow-count";
 			count.textContent = `+${hidden_count}`;
-			Object.assign(count.style, { display: "inline-block", lineHeight: "26px" });
 			button.appendChild(count);
 
 			const caret = document.createElement("span");
 			caret.className = "custom-filters-desk-tabs-overflow-caret";
 			caret.textContent = "▾";
-			Object.assign(caret.style, { display: "inline-block", fontSize: "10px", lineHeight: "26px", transform: "translateY(-1px)" });
 			button.appendChild(caret);
 
 			return button;
 		}
 
-		open_menu(key, x, y) {
+		open_menu(key, x, y, trigger) {
 			const tab = this.find_tab(key);
 			if (!tab) return;
 
 			this.menu.dataset.routeKey = key;
+			this.menu_trigger = trigger || null;
 			this.menu.replaceChildren();
 
 			const actions = [
-				{ action: "close", label: translate("关闭"), disabled: tab.pinned },
-				{ action: "close_others", label: translate("关闭其他") },
-				{ action: "close_right", label: translate("关闭右侧") },
-				{ action: "close_all", label: translate("关闭全部") },
-				{ action: "toggle_pin", label: tab.pinned ? translate("取消固定") : translate("固定") },
-				{ action: "copy_link", label: translate("复制链接") },
+				{ action: "close", label: translate("Close"), disabled: tab.pinned },
+				{ action: "close_others", label: translate("Close Others") },
+				{ action: "close_right", label: translate("Close Tabs to the Right") },
+				{ action: "close_all", label: translate("Close All Unpinned") },
+				{ action: "toggle_pin", label: tab.pinned ? translate("Unpin Tab") : translate("Pin Tab") },
+				{ action: "copy_link", label: translate("Copy Link") },
 			];
 
 			actions.forEach((item) => {
 				const button = document.createElement("button");
 				button.type = "button";
 				button.className = "custom-filters-desk-tabs-menu-item";
+				button.setAttribute("role", "menuitem");
 				button.dataset.action = item.action;
 				button.textContent = item.label;
 				button.disabled = !!item.disabled;
@@ -644,28 +718,52 @@
 			this.menu.classList.add("show");
 			this.menu.style.left = `${Math.min(x, window.innerWidth - 180)}px`;
 			this.menu.style.top = `${Math.min(y, window.innerHeight - 220)}px`;
-		}
-
-		close_menu() {
-			if (!this.menu) return;
-			this.menu.classList.remove("show");
-			delete this.menu.dataset.routeKey;
-		}
-
-		close_overflow_menu() {
-			if (!this.overflow_menu) return;
-			this.overflow_menu.classList.remove("show");
-			Object.assign(this.overflow_menu.style, {
-				display: "none",
-				left: "",
-				right: "",
-				top: "",
+			window.requestAnimationFrame(() => {
+				const first_item = this.menu.querySelector(".custom-filters-desk-tabs-menu-item:not(:disabled)");
+				if (first_item) first_item.focus();
 			});
 		}
 
-		close_menus() {
-			this.close_menu();
-			this.close_overflow_menu();
+		close_menu(restore_focus) {
+			if (!this.menu) return;
+			this.menu.classList.remove("show");
+			delete this.menu.dataset.routeKey;
+			if (restore_focus && this.menu_trigger && document.contains(this.menu_trigger)) this.menu_trigger.focus();
+			this.menu_trigger = null;
+		}
+
+		close_overflow_menu(restore_focus) {
+			if (!this.overflow_menu) return;
+			this.overflow_menu.classList.remove("show");
+			if (this.overflow_trigger) this.overflow_trigger.setAttribute("aria-expanded", "false");
+			Object.assign(this.overflow_menu.style, {
+				left: "",
+				right: "",
+				top: "",
+				width: "",
+				maxHeight: "",
+			});
+			if (restore_focus && this.overflow_trigger && document.contains(this.overflow_trigger)) this.overflow_trigger.focus();
+			this.overflow_trigger = null;
+		}
+
+		close_menus(restore_focus) {
+			this.close_menu(restore_focus);
+			this.close_overflow_menu(restore_focus);
+		}
+
+		handle_menu_keydown(menu, event) {
+			if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+			const items = [...menu.querySelectorAll('[role="menuitem"]:not(:disabled)')];
+			if (!items.length) return;
+			event.preventDefault();
+			const current_index = Math.max(0, items.indexOf(document.activeElement));
+			let target_index = current_index;
+			if (event.key === "ArrowUp") target_index = (current_index - 1 + items.length) % items.length;
+			if (event.key === "ArrowDown") target_index = (current_index + 1) % items.length;
+			if (event.key === "Home") target_index = 0;
+			if (event.key === "End") target_index = items.length - 1;
+			items[target_index].focus();
 		}
 
 		toggle_overflow_menu(button) {
@@ -675,6 +773,8 @@
 			}
 
 			this.render_overflow_menu();
+			this.overflow_trigger = button;
+			button.setAttribute("aria-expanded", "true");
 			const rect = button.getBoundingClientRect();
 			const menu_width = Math.min(240, window.innerWidth - 16);
 			const left = Math.max(8, Math.min(rect.left, window.innerWidth - menu_width - 8));
@@ -682,20 +782,15 @@
 			const max_height = Math.max(120, Math.min(320, available_below - 4));
 			this.overflow_menu.classList.add("show");
 			Object.assign(this.overflow_menu.style, {
-				position: "fixed",
-				display: "block",
 				left: `${left}px`,
 				right: "auto",
 				top: `${rect.bottom + 4}px`,
 				width: `${menu_width}px`,
 				maxHeight: `${max_height}px`,
-				overflowY: "auto",
-				padding: "4px",
-				border: "1px solid var(--border-color, #dfe3e8)",
-				borderRadius: "6px",
-				background: "var(--card-bg, #ffffff)",
-				boxShadow: "0 8px 24px rgba(0, 0, 0, 0.14)",
-				zIndex: "9999",
+			});
+			window.requestAnimationFrame(() => {
+				const first_item = this.overflow_menu.querySelector(".custom-filters-desk-tabs-overflow-item");
+				if (first_item) first_item.focus();
 			});
 		}
 
@@ -708,15 +803,13 @@
 			}
 
 			hidden_tabs.forEach((tab) => {
-				const item = document.createElement("div");
+				const item = document.createElement("button");
+				item.type = "button";
 				item.className = "custom-filters-desk-tabs-overflow-item";
 				item.dataset.routeKey = tab.route_key;
 				item.title = tab.title;
 				item.setAttribute("role", "menuitem");
-				item.setAttribute("tabindex", "0");
-				item.style.width = "100%";
-				item.style.display = "flex";
-				item.style.alignItems = "center";
+				item.setAttribute("tabindex", "-1");
 
 				const title = document.createElement("span");
 				title.className = "custom-filters-desk-tabs-overflow-title";
@@ -772,10 +865,10 @@
 				const path = frappe.router.make_url ? frappe.router.make_url(app_route) : `/app/${tab.route.join("/")}`;
 				const url = new URL(path, window.location.origin).toString();
 				await copy_text(url);
-				frappe.show_alert({ message: translate("链接已复制"), indicator: "green" }, 3);
+				frappe.show_alert({ message: translate("Link copied"), indicator: "green" }, 3);
 			} catch (error) {
 				console.warn("[custom_filters desk_tabs] copy link failed", error);
-				frappe.show_alert({ message: translate("复制链接失败"), indicator: "red" }, 3);
+				frappe.show_alert({ message: translate("Failed to copy link"), indicator: "red" }, 3);
 			}
 		}
 
@@ -783,6 +876,7 @@
 			try {
 				localStorage.setItem(storage_key(), JSON.stringify({
 					version: STORAGE_VERSION,
+					auto_pin_migration_version: AUTO_PIN_MIGRATION_VERSION,
 					active_route_key: this.state.active_route_key,
 					tabs: this.state.tabs.map(compact_tab),
 				}));
@@ -803,15 +897,15 @@
 					.filter(function (tab) {
 						return tab && Array.isArray(tab.route) && tab.route_key && !is_ignored_route(tab.route);
 					})
-					.slice(-(MAX_TABS + 1))
 					.map(function (tab) {
 						const normalized = normalize_route(tab.route);
+						const type = tab.type || classify_route(normalized);
 						return {
 							id: route_key(normalized),
 							route: normalized,
 							route_key: route_key(normalized),
-							title: tab.title || resolve_title(normalized),
-							type: tab.type || classify_route(normalized),
+							title: type === "form" || type === "form_new" ? tab.title || resolve_title(normalized) : resolve_title(normalized),
+							type,
 							doctype: tab.doctype || get_doctype(normalized),
 							docname: tab.docname || get_docname(normalized),
 							pinned: !!tab.pinned,
@@ -820,6 +914,11 @@
 					});
 
 				this.state.active_route_key = data.active_route_key || null;
+				if (data.auto_pin_migration_version !== AUTO_PIN_MIGRATION_VERSION) {
+					const legacy_auto_pinned_tab = this.state.tabs.find((tab) => tab.pinned);
+					if (legacy_auto_pinned_tab) legacy_auto_pinned_tab.pinned = false;
+				}
+				this.trim_tabs();
 			} catch (error) {
 				localStorage.removeItem(storage_key());
 			}
@@ -836,6 +935,8 @@
 		window.CustomFiltersDeskTabs = new DeskTabsController();
 		window.CustomFiltersDeskTabs.init();
 	}
+
+	window.__custom_filters_desk_tabs_version = DESK_TABS_VERSION;
 
 	if (document.readyState === "loading") {
 		document.addEventListener("DOMContentLoaded", boot, { once: true });

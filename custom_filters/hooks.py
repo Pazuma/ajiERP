@@ -26,7 +26,10 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 app_include_css = "/assets/custom_filters/css/desk_tabs.css"
-app_include_js = "/assets/custom_filters/js/desk_tabs.js"
+app_include_js = [
+	"/assets/custom_filters/js/desk_tabs.js",
+	"/assets/custom_filters/js/desktop_user_menu.js",
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/custom_filters/css/custom_filters.css"
@@ -266,4 +269,3 @@ doctype_list_js = {
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

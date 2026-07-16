@@ -39,3 +39,435 @@ Purchase Delivery Details,采购交货详情
 未找到采购订单 {0},未找到采购订单 {0}
 缺少 Purchase Order 读取权限,缺少 Purchase Order 读取权限
 采购交货详情,采购交货详情
+Negative Stock,负库存
+Allow negative stock,允许负库存
+Quantity Tolerance,数量容差
+Over Picking Allowance (%),允许超量拣货(%)
+Display & Data Formatting,显示与数据格式
+Show barcode field in stock transactions,在库存单据中显示条码字段
+Convert Item description to clean HTML in transactions,在单据中将物料描述转换为纯HTML
+Internal Transfer Rules,内部调拨规则
+Allow internal transfers at user-defined rate,允许内部调拨使用自定义价格
+Validate Material Transfer warehouses,校验物料调拨仓库
+This can be enabled at specific Item level as well,也可以在具体物料上单独启用
+"If enabled, the item rate won't adjust to the valuation rate during internal transfers, but accounting will still use the valuation rate. This will allow the user to specify a different rate for printing or taxation purposes.",启用后，内部调拨时物料价格不会调整为库存估值价，但会计核算仍使用库存估值价。这允许用户为打印或税务目的指定不同的价格。
+"If enabled, the source and target warehouse in the Material Transfer Stock Entry must be different else an error will be thrown. If inventory dimensions are present, same source and target warehouse can be allowed but atleast any one of the inventory dimension fields must be different.",启用后，物料调拨库存单据中的源仓库与目标仓库必须不同，否则将报错。如果存在库存维度，则允许源仓库与目标仓库相同，但至少有一个库存维度字段必须不同。
+Defaults,默认值
+UOM Defaults,计量单位默认值
+Warehouse Defaults,仓库默认值
+Document Naming,单据命名
+Serial Item settings,序列号物料设置
+Batch Item settings,批次物料设置
+Naming Series options,编号规则选项
+Configure Series,配置编号规则
+Auto insert Item Price if missing,物料价格缺失时自动插入
+Update existing Price List Rate,更新现有价格表价格
+Update Price List based on,价格表更新依据
+Allow to edit stock UOM qty for Sales documents,允许编辑销售单据中的库存单位数量
+Allow to edit stock UOM qty for Purchase documents,允许编辑采购单据中的库存单位数量
+Allow to edit stock UOM qty for Stock Entry,允许编辑库存单据中的库存单位数量
+Allow UOM with conversion rate defined in Item,仅允许使用物料中已定义换算率的计量单位
+Activate Serial / Batch No for Item,启用物料序列号/批号
+Disable Serial No and Batch selector,禁用序列号和批次选择器
+Use Serial / Batch fields,使用序列号/批次字段
+Do not update Serial / Batch on creation of auto bundle,自动创建批次包时不更新序列号/批次
+Do not use Batch-wise Valuation,不按批次计算成本价
+Have default Naming Series for Batch ID?,批次ID使用默认编号规则？
+Allow negative stock for Batch,允许批次负库存
+Auto create Serial and Batch Bundle for outward,出库时自动创建序列号和批次包
+Enable stock reservation,启用库存预留
+Auto reserve stock,自动预留库存
+Allow partial reservation,允许部分预留
+Auto reserve Stock for Sales Order on Purchase,采购时自动为销售订单预留库存
+Auto reserve Serial and Batch Nos,自动预留序列号和批号
+Allow to make Quality Inspection after Purchase / Delivery,允许在采购/交付后进行质量检验
+Action if Quality Inspection is rejected,质量检验不合格时的操作
+Action if Quality Inspection is not submitted,未提交质量检验时的操作
+Raise Material Request when stock reaches re-order level,库存达到再订货点时自动创建物料需求
+Notify by email on creation of automatic Material Request,自动创建物料需求时发送邮件通知
+Stock frozen up to,库存冻结至
+Freeze stocks older than (days),冻结超过（天）的库存
+Role allowed to edit frozen stock,允许编辑冻结库存的角色
+Role allowed to create/edit back-dated transactions,允许创建/编辑补录历史单据的角色
+This option is useful if you want to ensure a constant supply of raw materials/products and avoid shortage. A Material Request will be raised automatically when stock reached the re-order level defined in the Item form.,如果您希望确保原材料/产品的持续供应并避免缺货，此选项非常有用。当库存达到物料表单中定义的再订货点时，系统将自动创建物料需求。
+An email will be sent to notify the User with the role 'Purchase Manager' when an automatic Material Request is created.,"当自动创建物料需求时，系统将发送邮件通知具有""采购经理""角色的用户。"
+This will be applied if no naming series is configured in Item master,如果物料主数据中未配置编号规则，将应用此设置
+"If enabled, users must enter Serial No. / Batch data manually instead of using the selector dialog.",启用后，用户必须手动输入序列号/批次数据，而不能使用选择器对话框。
+"If enabled, do not update serial / batch values in the stock transactions on creation of auto Serial 
+ / Batch Bundle. ",启用后，自动创建序列号/批次包时，不更新库存单据中的序列号/批次值。
+"If enabled, the system will allow negative stock entries for the batch. But, this may lead to incorrect valuation rates, so it is recommended to avoid using this option. The system will permit negative stock only when it is caused by backdated entries and will validate and block negative stock in all other cases.",启用后，系统将允许该批次出现负库存。但这可能导致成本价计算不正确，建议避免使用此选项。系统仅允许由补录历史单据导致的负库存，其他所有情况下都会校验并阻止负库存。
+Check Availability in Warehouse,库存检查仓库
+Request for,补货仓库
+Serial Nos / Batches,序列号/批次
+Enable Parallel Reposting,启用并行追溯调整
+No of Parallel Reposting (Per Item),并行追溯调整数量（每个物料）
+Enable Separate Reposting for GL,启用总账单独追溯调整
+Do not fetch incoming rate from Serial No,不从序列号获取入库成本价
+"For legacy serial nos, do not fetch incoming rate from serial no and calculate it based on the inward transaction",对于旧版序列号，不从序列号获取入库成本价，而是根据入库交易计算
+Auto Created (Reorder),自动创建（重订货）
+Auto create assets on purchase,采购时自动创建资产
+Purchase Tax Withholding Category,采购预扣税类别
+Sales Tax Withholding Category,销售预扣税类别
+Inventory Valuation,库存计价
+Item Attributes,物料属性
+Disabled items cannot be selected in any transaction.,禁用的物料不能在任何单据中选择。
+Allow substituting this item with an alternative from the Item Alternative list when stock is unavailable.,"库存不足时，允许用""替代物料""列表中的替代物料替换此物料。"
+ERPNext will make a stock ledger entry for each transaction of this item. Keep unchecked for non-stock or service items.,ERPNext 将为此物料的每笔交易生成库存台账分录。非库存物料或服务类物料请保持未勾选。
+Enable for raw material items used in BOM. Uncheck for additional services like 'washing' used in manufacturing.,"用于 BOM 中的原材料物料请勾选。制造过程中使用的附加服务（如""清洗""）请取消勾选。"
+Used to create an opening Stock Entry with the Valuation Rate when the item is saved,保存物料时，按成本价创建期初库存单据
+Creates an Item Price automatically when the item is saved,保存物料时自动创建物料价格
+Enable if this item is a company asset like machinery or furniture.,如果此物料是公司资产（如机器设备或家具），请勾选。
+Defines the date after which the item can no longer be used in transactions or manufacturing,定义此日期之后物料不能再用于交易或生产
+Track this item in batches. Cannot be changed after a stock transaction exists.,按批次跟踪此物料。存在库存交易后不可更改。
+Batch number will be auto-created in format AAAA.00001 if not specified in transactions. Leave blank to always enter batch numbers manually.,如果交易中未指定批号，将按 AAAA.00001 格式自动创建。留空则始终手动输入批号。
+Batch number will be created based on expiry date. Expiry dates can be set in the Batch master.,批号将根据失效日期创建。失效日期可在批次主数据中设置。
+Enable to reserve a small sample from each batch for any analysis arising ahead,启用后，从每个批次中预留少量样品，以备后续分析使用
+Track each unit with a unique serial number for warranty and return tracking. Cannot be changed after a stock transaction exists.,使用唯一序列号跟踪每件产品，用于保修和退货跟踪。存在库存交易后不可更改。
+"Example: ABCD.#####
+If series is set and Serial No is not mentioned in transactions, then automatic serial number will be created based on this series. If you always want to explicitly mention Serial Nos for this item. leave this blank.","示例：ABCD.#####
+如果设置了编号规则，且交易中未指定序列号，则根据此规则自动创建序列号。如果您希望始终为此物料明确指定序列号，请留空。"
+Allow this item to be used in purchase transactions.,允许此物料用于采购交易。
+"Minimum quantity should be as per Stock UOM
+
+","最小数量应按库存单位计算
+
+"
+Minimum stock level to maintain as a buffer. Used to calculate recommended reorder level: Reorder Level = Safety Stock + (Average Daily Consumption × Lead Time).,作为缓冲维持的最低库存水平。用于计算建议再订货点：再订货点 = 安全库存 +（平均日耗用量 × 交期）。
+The rate at which this item was last purchased via a Purchase Invoice. Auto-updated by the system.,此物料最近一次通过采购发票采购的价格。由系统自动更新。
+Enable if this item is provided by a customer and received via Stock Entry.,如果此物料由客户提供并通过库存单据入库，请勾选。
+Enable for drop shipping - supplier delivers directly to the customer without passing through your warehouse.,启用直运 - 供应商直接交货给客户，不经过您的仓库。
+Allow this item to be used in sales transactions.,允许此物料用于销售交易。
+"Maximum discount % allowed when selling this item. Eg: if set to 20%, a discount greater than 20% cannot be applied in sales transactions.",销售此物料时允许的最大折扣%。例如：设置为 20% 时，销售交易中不能应用超过 20% 的折扣。
+Expense for this item will be recognized over a period of months. Eg: prepaid insurance or annual software license,此物料的费用将在若干个月内分期确认。例如：预付保险费或年度软件许可费
+Income from this item will be recognized over a period of months instead of all at once. Eg: annual subscription paid upfront.,此物料的收入将在若干个月内分期确认，而不是一次性确认。例如：预付的年度订阅费。
+A quality inspection must be completed before generating a Purchase Receipt for this item.,此物料必须先完成质量检验，才能生成采购收货单。
+A quality inspection must be completed before generating a Delivery Note for this item.,此物料必须先完成质量检验，才能生成交货单。
+Enable if a vendor manufactures this item for you. You can choose to provide them raw materials using the default BOM.,如果供应商为您代工生产此物料，请勾选。您可以选择使用默认 BOM 向其提供原材料。
+"Percentage by which over-delivery or over-receipt is allowed against a Sales/Purchase Order for this item. If not set, value from Stock Settings will be used.",此物料相对于销售/采购订单允许超交或超收的百分比。如果未设置，将使用库存设置中的值。
+"Percentage by which over-billing is allowed against a Sales/Purchase Order for this item. If not set, value from Accounts Settings will be used.",此物料相对于销售/采购订单允许超额开票的百分比。如果未设置，将使用会计设置中的值。
+"If enabled, sales from this item will be included in Sales Person and Sales Partner commission calculations",启用后，此物料的销售额将计入销售员和销售合作伙伴的佣金计算
+Creates a single grouped asset instead of individual assets when purchased in bulk.,批量采购时创建单个组合资产，而不是多个单独资产。
+"Allow stock to go below zero for this item, even if negative stock is disabled in Stock Settings.",允许此物料库存低于零，即使库存设置中已禁用负库存。
+UOM Conversion Details,计量单位换算明细
+"<div style=""margin-bottom:10px; color: var(--gray-500) !important;"">Define alternate units for this item. Eg: 1 Box = 12 Nos, set conversion factor as 12. (Will also apply for variants) <a href=""https://docs.frappe.io/erpnext/uom"" target=""_blank"">Learn more &#8594;</a></div>","<div style=""margin-bottom:10px; color: var(--gray-500) !important;"">为此物料定义备用计量单位。例如：1 箱 = 12 个，换算系数设为 12。（同样适用于多规格物料）<a href=""https://docs.frappe.io/erpnext/uom"" target=""_blank"">了解更多 &#8594;</a></div>"
+Determine Address Tax Category from,地址税类别的判定依据
+Role allowed to bypass credit limit,允许绕过信用额度的角色
+Check Supplier invoice number uniqueness,检查供应商发票号的唯一性
+Unlink Payment on cancellation of invoice,发票取消时解除付款关联
+Unlink Advance Payment on cancellation of order,订单取消时解除预付款关联
+Book Asset Depreciation entry automatically,自动生成资产折旧分录
+Automatically add Taxes and Charges from Item Tax Template,自动从物料税模板添加税费
+Show inclusive tax in print,打印时显示价内税
+Show Payment Schedule in print,打印时显示付款计划
+Automatically fetch Payment Terms from Order/Quotation,自动从订单/报价单获取付款条款
+Automatically process deferred Accounting entry,自动处理递延会计分录
+Book deferred entries via Journal Entry,通过日记账凭证登记递延分录
+Submit Journal entries,提交日记账凭证
+Book Deferred entries based on,递延分录登记依据
+Delete Accounting and Stock Ledger entries on deletion of transaction,删除单据时同时删除会计和库存台账分录
+Role Allowed to over bill ,允许超额开票的角色
+Show balances in Chart of Accounts,在科目表中显示余额
+Book tax loss on early payment discount,提前付款折扣登记税收损失
+Merge similar Account Heads,合并相似科目
+Auto reconcile Payments,自动对账
+Show taxes as table in print,打印时以表格形式显示税费
+Ignore Account closing balance,忽略科目期末余额
+Round tax amount row-wise,按行舍入税额
+General Ledger remarks length,总账备注长度
+Accounts Receivable / Payable remarks length,应收/应付备注长度
+Create payment requests in Draft status,以草稿状态创建付款请求
+Payment Requests made from Sales / Purchase Invoice will be put in Draft explicitly,从销售/采购发票创建的付款请求将明确置为草稿状态
+Auto Reconciliation job trigger,自动对账任务触发方式
+Reconciliation queue size,对账队列大小
+Posting Date inheritance for exchange gain / loss,汇兑损益的过账日期继承
+Data fetch method,数据获取方式
+Maintain same rate throughout internal Transaction,内部交易中保持相同价格
+Action if same rate is not maintained throughout internal transaction,内部交易价格不一致时的操作
+Role allowed to override stop action,"允许覆盖""停止""操作的角色"
+"System will do an implicit conversion using the pegged currency. <br>
+Ex: Instead of AED -&gt; INR, system will do AED -&gt; USD -&gt; INR using the pegged exchange rate of AED against USD.","系统将使用挂钩货币进行隐式换算。<br>
+例如：系统将使用 AED 对 USD 的挂钩汇率，按 AED -&gt; USD -&gt; INR 换算，而不是直接 AED -&gt; INR。"
+Automatically add taxes from Taxes and Charges Template,自动从税费模板添加税
+Fetch valuation rate for internal Transaction,获取内部交易的成本价
+Use legacy Budget Controller,使用旧版预算控制器
+Enable this if you are experiencing issues with the new budget controller. Uses the older budget validation logic,如果新版预算控制器出现问题，请启用此项。启用后将使用旧的预算校验逻辑
+Use legacy controller for Period Closing Voucher,期间结账凭证使用旧版控制器
+Role to Notify on Depreciation Failure,折旧失败时通知的角色
+Users with this role will be notified if the asset depreciation gets failed,资产折旧失败时，将通知具有此角色的用户
+Default Ageing Range,默认账龄区间
+Analytical Accounting,分析会计
+Enable Discounts and Margin,启用折扣和利润
+Apply discounts and margins on products,对产品应用折扣和利润
+Payment Options,付款选项
+Enable Loyalty Point Program,启用忠诚度积分计划
+Enable Accounting Dimensions,启用会计维度
+"Enable cost center, projects and other custom accounting dimensions",启用成本中心、项目和其他自定义会计维度
+Enable Subscription,启用订阅
+Enable Subscription tracking in invoice,在发票中启用订阅跟踪
+Fetch Payment Schedule in Payment Request,在付款请求中获取付款计划
+Match transfers within 'N' days,匹配 N 天内的转账
+Number of days to consider for matching transfers across bank accounts,跨银行账户匹配转账时考虑的天数
+Automatically run rules on unreconciled transactions,自动对未对账交易运行规则
+"If enabled, rule matching algorithm will run every hour",启用后，规则匹配算法将每小时运行一次
+Repost,追溯重过账
+Allowed DocTypes,允许的单据类型
+"Changing the account in any transaction of the DocTypes listed below will trigger a repost. To prevent reposting, remove the relevant DocType from the list.",修改下列单据类型中任何交易的科目都会触发追溯重过账。如需避免重过账，请从列表中移除相应的单据类型。
+"<h3>Currency Exchange Settings Help</h3>
+<p>There are 3 variables that could be used within the endpoint, result key and in values of the parameter.</p>
+<p>Exchange rate between {from_currency} and {to_currency} on {transaction_date} is fetched by the API.</p>
+<p>Example: If your endpoint is exchange.com/2021-08-01, then, you will have to input exchange.com/{transaction_date}</p>","<h3>汇率设置帮助</h3>
+<p>端点、结果键和参数值中可以使用 3 个变量。</p>
+<p>{from_currency} 与 {to_currency} 在 {transaction_date} 的汇率由 API 获取。</p>
+<p>示例：如果您的端点是 exchange.com/2021-08-01，则应输入 exchange.com/{transaction_date}</p>"
+Is Purchase Order required for Purchase Invoice & Receipt creation?,创建采购发票和收货单时是否必须有采购订单？
+Is Purchase Receipt required for Purchase Invoice creation?,创建采购发票时是否必须有采购收货单？
+Maintain same rate throughout the purchase  cycle,整个采购周期保持相同价格
+Warn or stop if Item rate is changed in Purchase Invoice or Purchase Receipt generated from a Purchase Order.,如果从采购订单生成的采购发票或采购收货单中更改了物料价格，则警告或停止。
+Allow Item to be added multiple times in a transaction,允许同一物料在单据中多次添加
+Backflush raw materials of subcontract based on,外包原材料倒冲依据
+Action if same rate is not maintained,价格不一致时的操作
+Bill for rejected quantity in Purchase Invoice,采购发票中对拒收数量开票
+Disable last purchase rate,禁用最近采购价
+Prevents the system from automatically using the rate from the last purchase transaction when creating new purchase orders or transactions.,阻止系统在创建新采购订单或交易时自动使用最近采购交易的价格。
+Show pay button in Purchase Order portal,在采购订单门户中显示付款按钮
+Auto create Subcontracting Order,自动创建外包订单
+Auto create Purchase Receipt,自动创建采购收货单
+How often should project be updated of Total Purchase Cost ?,项目总采购成本的更新频率？
+Set valuation rate for rejected Materials,为拒收物料设置成本价
+Validate consumed quantity (as per BOM),校验消耗数量（按 BOM）
+Raw materials consumed qty will be validated based on FG BOM required qty,原材料消耗数量将按成品 BOM 所需数量校验
+Allow negative rates for Items,允许物料使用负价格
+Supplier Defaults,供应商默认值
+Blanket Orders,一揽子订单
+Zero-Quantity Line Items,零数量行项目
+Purchase Invoice Settings,采购发票设置
+Over Order Allowance (%),允许超量订购(%)
+"The percentage by which you are allowed to order more on a Purchase Order than the quantity requested on the originating Material Request. For example, if the Material Request has 100 units and the allowance is 10%, you can order up to 110 units",允许采购订单数量超过源物料需求数量的百分比。例如：物料需求为 100 个单位，容差为 10%，则最多可订购 110 个单位
+"Leave blank for home.
+This is relative to site URL, for example ""about"" will redirect to ""https://yoursitename.com/about""","留空则跳转到首页。
+这是相对于站点 URL 的路径，例如 ""about"" 将跳转到 ""https://yoursitename.com/about"""
+Enable Opportunity Creation from Contact Us,"启用从""联系我们""创建商机"
+Allow Editing of Items and Quantities in Work Order,允许编辑工单中的物料和数量
+"If enabled, the system will allow users to edit the raw materials and their quantities in the Work Order. The system will not reset the quantities as per the BOM, if the user has changed them.",启用后，系统允许用户编辑工单中的原材料及其数量。如果用户修改过数量，系统将不再按 BOM 重置。
+Set Operating Cost / Secondary Items From Sub-assemblies,从子装配件设置加工费/副产品
+"To include sub-assembly costs and secondary items in Finished Goods on a work order without using a job card, when the 'Use Multi-Level BOM' option is enabled.","启用""使用多层 BOM""选项时，可在不使用工序卡的情况下，将子装配件成本和副产品计入工单中的成品。"
+Is Sales Order required to create Sales Invoice/Delivery Note?,创建销售发票/交货单时是否必须有销售订单？
+Is Delivery Note required to create Sales Invoice?,创建销售发票时是否必须有交货单？
+How often should sales data be updated in Company/Project?,公司/项目中的销售数据更新频率？
+The frequency at which project progress and company transaction details will be updated. Set it to daily or monthly if you post a lot of transactions.,项目进度和公司交易明细的更新频率。如果交易量较大，建议设置为每日或每月。
+Maintain same rate throughout sales cycle,整个销售周期保持相同价格
+Warn or stop if Item rate is changed in Delivery Notes and Sales Invoices generated from a Sales Order.,如果从销售订单生成的交货单和销售发票中更改了物料价格，则警告或停止。
+Allow editing Price List rate in transactions,允许在交易中编辑价格表价格
+Allow same Item to be added multiple times in a transaction,允许同一物料在单据中多次添加
+Allow multiple Sales Orders against a customer's Purchase Order,允许一个客户采购订单对应多个销售订单
+Validate selling price for Item against purchase or valuation rate,根据采购价或成本价校验物料售价
+Enable this to block transactions where the selling price is less than the purchase or valuation rate,启用后，将阻止售价低于采购价或成本价的交易
+Hide Customer's Tax ID from sales transactions,在销售交易中隐藏客户税号
+Most Customers have a unique Tax ID that is fetched into selling transactions. Enable this setting if you do not want Customer Tax IDs to appear in sales transactions.,大多数客户有唯一的税号，会被带入销售交易。如果不希望客户税号出现在销售交易中，请启用此设置。
+Action if same rate is not maintained throughout sales cycle,销售周期价格不一致时的操作
+Calculate Product Bundle price based on child Item's rates,根据子物料价格计算产品套装价格
+"Enabling this will do the following:
+<ul style=""padding-left:16px"">
+<li>Make the rate column of all Packed/Bundle Items tables editable.</li>
+<li>Calculate the prices of all <a href=""/desk/product-bundle"" rel=""noopener noreferrer"">Product Bundles</a> in the Items table, based on the prices of its child Items, specified in the Packed/Bundle Items table. </li>
+</ul>
+Note: If this is enabled, updating the rate of the Product Bundle in the Items table will not change its price. It will get reset to the price based on its Child Items on saving the doc.","启用后将产生以下效果：
+<ul style=""padding-left:16px"">
+<li>所有套装/打包物料表格中的价格列将变为可编辑。</li>
+<li>根据套装/打包物料表格中指定的子物料价格，计算物料表格中所有<a href=""/desk/product-bundle"" rel=""noopener noreferrer"">产品套装</a>的价格。</li>
+</ul>
+注意：启用后，在物料表格中更新产品套装的价格不会改变其金额，保存单据时将重置为按子物料计算的价格。"
+Enable discount accounting for selling,启用销售折扣核算
+Allow Sales Order creation for expired Quotation,允许为过期报价单创建销售订单
+"This allows creation of sales orders from quotations that have passed their expiration date, providing flexibility in processing orders despite outdated quotes.",允许根据已过有效期的报价单创建销售订单，在报价过期的情况下仍能灵活处理订单。
+Don't reserve Sales Order qty on sales return,销售退货时不预留销售订单数量
+Prevents the automatic reservation of stock quantities from sales orders when processing sales returns.,处理销售退货时，阻止自动预留销售订单的库存数量。
+"Enable this option to permit the use of negative rates for items in sales transactions. This setting is useful for applying substantial discounts, processing refunds or returns, and handling special promotional pricing.",启用此选项后，允许在销售交易中对物料使用负价格。此设置适用于大额折扣、退款或退货处理以及特殊促销定价。
+Enable cut-off date on creating bulk Delivery Notes,批量创建交货单时启用截止日期
+"When enabled, it adds a cutoff date filter to Delivery Notes created in bulk from Sales Orders. This allows you to process orders only with a transaction date up to the specified cutoff date, which is useful for period-end processing and batch fulfillment.",启用后，从销售订单批量创建交货单时将增加截止日期筛选。您可以只处理交易日期在指定截止日期之前的订单，适用于期末处理和批量交付。
+Allow Sales Order with zero quantity,允许零数量的销售订单
+Allow Quotation with zero quantity,允许零数量的报价单
+Allow delivery of overproduced quantity,允许交付超产数量
+Use prices from Default Price List as fallback,无价格时回退使用默认价格表
+"If no Item Price is found for an item in the Price List set in the transaction, prices from the Default Price List will be fetched.",如果交易中设置的价格表里没有找到物料价格，将获取默认价格表中的价格。
+Set incoming rate as zero for expired Batch,过期批次的入库价设为零
+"If enabled, system will set incoming rate as zero for stand-alone credit notes with expired batch item.",启用后，对于包含过期批次物料的独立贷记凭证，系统将入库价设为零。
+Enable tracking sales commissions,启用销售佣金跟踪
+Manage sales partner's and sales team's commissions,管理销售合作伙伴和销售团队的佣金
+Enable UTM,启用 UTM
+"Enable Urchin Tracking Module parameters in Quotation, Sales Order, Sales Invoice, POS Invoice, Lead,  and Delivery Note.",在报价单、销售订单、销售发票、POS 发票、线索和交货单中启用 UTM（Urchin 跟踪模块）参数。
+Deliver secondary Items,交付副产品
+"If enabled, the Secondary Items generated against a Finished Good will also be added in the Stock Entry when delivering that Finished Good.",启用后，交付成品时，该成品产生的副产品也将添加到库存单据中。
+Advanced Features,高级功能
+Allow sales transactions with zero quantities if the rate is fixed but the quantities are not. e.g. Rate Contracts,当价格固定但数量不定时，允许零数量的销售交易。例如：价格合同
+Set this value to 0 to disable the feature.,将此值设为 0 可禁用该功能。
+"<div class=""well"">
+    Edit list of Series in the box. Rules:
+    <ul>
+        <li>Each Series Prefix on a new line.</li>
+        <li>Allowed special characters are ""/"" and ""-""</li>
+        <li>
+            Optionally, set the number of digits in the series using dot (.)
+            followed by hashes (#). For example, "".####"" means that the series
+            will have four digits. Default is five digits.
+        </li>
+        <li>
+            You can also use variables in the series name by putting them
+            between (.) dots
+            <br>
+            Supported Variables:
+            <ul>
+                <li><code>.YYYY.</code> - Year in 4 digits</li>
+                <li><code>.YY.</code> - Year in 2 digits</li>
+                <li><code>.MM.</code> - Month</li>
+                <li><code>.DD.</code> - Day of month</li>
+                <li><code>.WW.</code> - Week of the year</li>
+                <li>
+                    <code>.{fieldname}.</code> - fieldname on the document e.g.
+                    <code>branch</code>
+                </li>
+                <li><code>.FY.</code> - Fiscal Year (requires ERPNext to be installed)</li>
+                <li><code>.ABBR.</code> - Company Abbreviation (requires ERPNext to be installed)</li>
+            </ul>
+        </li>
+    </ul>
+    Examples:
+    <ul>
+        <li>INV-</li>
+        <li>INV-10-</li>
+        <li>INVK-</li>
+        <li>INV-.YYYY.-.{branch}.-.MM.-.####</li>
+    </ul>
+</div>
+<br>
+","<div class=""well"">
+    在下方框中编辑编号规则列表。规则：
+    <ul>
+        <li>每个编号前缀单独一行。</li>
+        <li>允许的特殊字符为 ""/"" 和 ""-""</li>
+        <li>
+            可选：使用点号（.）加井号（#）设置编号位数。例如 "".####"" 表示编号为四位数。默认为五位数。
+        </li>
+        <li>
+            您还可以在编号名称中使用变量，将变量放在点号（.）之间
+            <br>
+            支持的变量：
+            <ul>
+                <li><code>.YYYY.</code> - 四位数年份</li>
+                <li><code>.YY.</code> - 两位数年份</li>
+                <li><code>.MM.</code> - 月份</li>
+                <li><code>.DD.</code> - 日期</li>
+                <li><code>.WW.</code> - 一年中的第几周</li>
+                <li>
+                    <code>.{fieldname}.</code> - 单据上的字段名，例如 <code>branch</code>
+                </li>
+                <li><code>.FY.</code> - 会计年度（需要安装 ERPNext）</li>
+                <li><code>.ABBR.</code> - 公司缩写（需要安装 ERPNext）</li>
+            </ul>
+        </li>
+    </ul>
+    示例：
+    <ul>
+        <li>INV-</li>
+        <li>INV-10-</li>
+        <li>INVK-</li>
+        <li>INV-.YYYY.-.{branch}.-.MM.-.####</li>
+    </ul>
+</div>
+<br>
+"
+"Change the starting / current sequence number of an existing series. <br>
+
+Warning: Incorrectly updating counters can prevent documents from getting created.","更改现有编号规则的起始/当前序号。<br>
+
+警告：错误地更新计数器可能导致单据无法创建。"
+"Configure how amended documents will be named.<br>
+
+Default behaviour is to follow an amend counter which adds a number to the end of the original name indicating the amended version. <br>
+
+Default Naming will make the amended document to behave same as new documents.","配置修订单据的命名方式。<br>
+
+默认行为是使用修订计数器，在原名称末尾添加数字以表示修订版本。<br>
+
+选择""默认命名""将使修订单据与新单据采用相同的命名方式。"
+Expires,过期时间
+Date after which this security.txt should be considered stale. Expires timestamp is converted to UTC.,超过此日期后，此 security.txt 将被视为过期。过期时间戳会转换为 UTC。
+"Website, email or phone where vulnerabilities can be reported. Defaults to `https://security.frappe.io`",用于报告漏洞的网站、邮箱或电话。默认为 `https://security.frappe.io`
+Preferred Language,首选语言
+Defaults to `en`,默认为 `en`
+Policy,安全策略
+Guidelines and policies on vulnerability reporting. Defaults to `https://frappe.io/security`,漏洞报告的准则和策略。默认为 `https://frappe.io/security`
+"0 - too guessable: risky password.
+<br>
+1 - very guessable: protection from throttled online attacks. 
+<br>
+2 - somewhat guessable: protection from unthrottled online attacks.
+<br>
+3 - safely unguessable: moderate protection from offline slow-hash scenario.
+<br>
+4 - very unguessable: strong protection from offline slow-hash scenario.","0 - 太容易猜：高风险密码。
+<br>
+1 - 很容易猜：可抵御受限的在线攻击。
+<br>
+2 - 比较容易猜：可抵御不受限的在线攻击。
+<br>
+3 - 较难猜到：可中等程度抵御离线慢哈希破解。
+<br>
+4 - 很难猜到：可强力抵御离线慢哈希破解。"
+OTP SMS Template,OTP 短信模板
+OTP placeholder should be defined as <code>{{ otp }}</code> ,OTP 占位符应定义为 <code>{{ otp }}</code> 
+Disable Product Suggestion,禁用产品建议
+Only allow System Managers to upload public files,仅允许系统管理员上传公开文件
+"If enabled, only System Managers can upload public files. Other users can't see the checkbox <i>Is Private</i> in the upload dialog.",启用后，仅系统管理员可以上传公开文件。其他用户在上传对话框中看不到 <i>Is Private</i>（是否私有）复选框。
+Allow Clearing Link Fields,允许清除链接字段
+"Adds a clear (×) button to Link fields, allowing users to quickly remove the selected value.",在链接字段上添加清除（×）按钮，允许用户快速移除已选值。
+Allowed Doctypes for Guest Uploads,允许游客上传的单据类型
+"Provide a list of allowed Doctypes for file uploads. Each line should contain one allowed Doctype. If unset, uploads to all doctypes are allowed. Example: <br>User<br>Item<br>Quotation",提供允许上传文件的单据类型列表，每行一个。如果不设置，则允许上传到所有单据类型。示例：<br>User<br>Item<br>Quotation
+Icon Style,图标样式
+Subtle,淡雅
+Solid,实心
+"The Client ID obtained from the Google Cloud Console under <a href=""https://console.cloud.google.com/apis/credentials"">
+""APIs &amp; Services"" &gt; ""Credentials""
+</a>","从 Google Cloud Console 的 <a href=""https://console.cloud.google.com/apis/credentials"">
+""APIs &amp; Services"" &gt; ""Credentials""（API 和服务 &gt; 凭据）</a> 获取的客户端 ID"
+"The browser API key obtained from the Google Cloud Console under <a href=""https://console.cloud.google.com/apis/credentials"">
+""APIs &amp; Services"" &gt; ""Credentials""
+</a>","从 Google Cloud Console 的 <a href=""https://console.cloud.google.com/apis/credentials"">
+""APIs &amp; Services"" &gt; ""Credentials""（API 和服务 &gt; 凭据）</a> 获取的浏览器 API 密钥"
+"The project number obtained from Google Cloud Console under <a href=""https://console.cloud.google.com/iam-admin/settings"">
+""IAM &amp; Admin"" &gt; ""Settings""
+</a>","从 Google Cloud Console 的 <a href=""https://console.cloud.google.com/iam-admin/settings"">
+""IAM &amp; Admin"" &gt; ""Settings""（IAM 和管理 &gt; 设置）</a> 获取的项目编号"
+"New line separated list of allowed public client URLs (eg <code>https://frappe.io</code>), or <code>*</code> to accept all.
+<br>
+Public clients are restricted by default.","允许的公共客户端 URL 列表，每行一个（例如 <code>https://frappe.io</code>），或使用 <code>*</code> 接受全部。
+<br>
+公共客户端默认受限。"
+"Brand is what appears on the top-left of the toolbar. If it is an image, make sure it
+has a transparent background and use the &lt;img /&gt; tag. Keep size as 200px x 30px",品牌显示在工具栏左上角。如果使用图片，请确保背景透明，并使用 &lt;img /&gt; 标签。尺寸保持为 200px x 30px
+Registers,台账
+Customer Ledger,客户台账
+Supplier Ledger,供应商台账
+AR Summary,应收账款汇总
+AP Summary,应付账款汇总
+Consolidated Report,合并财务报表
+Custom Financial Statement,自定义财务报表
+Financial Report Template,财务报表模板
+Bank Reconciliation,银行对账工具
+Reconciliation Statement,银行对账单
+Budget Variance,预算差异报表
+Inward Order,来料加工订单
+Outward Order,委外加工订单
+Item-wise sales Register,物料销售台账
+New {0},新建{0}
+The current form has unsaved changes that may be lost. Do you want to continue?,当前表单有未保存的修改，离开后可能丢失。是否继续？
+View All Tabs,查看所有标签页
+Close,关闭
+Close Others,关闭其他标签页
+Close Tabs to the Right,关闭右侧标签页
+Close All Unpinned,关闭全部未固定标签页
+Pin Tab,固定标签页
+Unpin Tab,取消固定标签页
+Copy Link,复制链接
+Link copied,链接已复制
+Failed to copy link,复制链接失败
