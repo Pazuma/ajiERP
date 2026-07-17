@@ -64,6 +64,7 @@ after_migrate = [
 	"client_akivision.utils.operations_management.sync_operations_management_desktop_icon",
 	"client_akivision.utils.selling_sidebar.sync_selling_sidebar_entries",
 	"client_akivision.utils.buying_sidebar.sync_buying_sidebar_entries",
+	"client_akivision.utils.stock_sidebar.sync_stock_sidebar_entries",
 	"client_akivision.utils.report_sidebar.sync_report_sidebar_entries",
 ]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}

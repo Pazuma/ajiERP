@@ -32,6 +32,16 @@ def sync_buying_sidebar_entries():
 		child=0,
 	)
 	items = _move_after(items, purchase_receipt.name, "Purchase Order")
+
+	purchase_taxes_template = _ensure_single_link(
+		items,
+		link_type="DocType",
+		link_to="Purchase Taxes and Charges Template",
+		label="Purchase Taxes and Charges Template",
+		icon="",
+		child=1,
+	)
+	items = _move_before_section(items, purchase_taxes_template.name, {"Reports", "报表"})
 	_reindex(items)
 
 	frappe.cache.delete_key("bootinfo")
@@ -128,6 +138,25 @@ def _move_after(items, item_name, anchor_link_to):
 	if anchor_index is None:
 		return items
 	ordered.insert(anchor_index + 1, target)
+	return ordered
+
+
+def _move_before_section(items, item_name, section_labels):
+	target = next(item for item in items if item.name == item_name)
+	ordered = [item for item in items if item.name != item_name]
+	section_types = {"Section Break", "Card Break", "Sidebar Item Group"}
+	section_index = next(
+		(
+			index
+			for index, item in enumerate(ordered)
+			if item.type in section_types and item.label in section_labels
+		),
+		None,
+	)
+	if section_index is None:
+		ordered.append(target)
+	else:
+		ordered.insert(section_index, target)
 	return ordered
 
 
