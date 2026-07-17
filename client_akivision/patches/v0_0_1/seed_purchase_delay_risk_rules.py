@@ -10,7 +10,7 @@ RULES = (
 
 def execute():
     """Add initial purchase delay risk rules only when none have been configured."""
-    if frappe.db.exists("Purchase Delay Risk Rule"):
+    if frappe.db.count("Purchase Delay Risk Rule"):
         return
     for label, from_days, to_days, risk_level in RULES:
         frappe.get_doc(

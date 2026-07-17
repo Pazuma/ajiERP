@@ -12,7 +12,7 @@ RULES = (
 
 def execute():
     """Add initial aging rules only when the administrator has not configured them."""
-    if frappe.db.exists("Aging Period Rule"):
+    if frappe.db.count("Aging Period Rule"):
         return
     for label, from_days, to_days, risk_level in RULES:
         frappe.get_doc(
