@@ -9,7 +9,7 @@ def hide_selling_pos_and_non_delivery_reports(bootinfo):
 
     filter_sidebar_reports(
         sidebars.get("selling"),
-        {"Delivery List", "Sales Order List", "High-tech Revenue Analysis"},
+        {"Delivery List", "Sales Order List"},
         hide_pos=True,
     )
     hide_sidebar_links_in_sections(

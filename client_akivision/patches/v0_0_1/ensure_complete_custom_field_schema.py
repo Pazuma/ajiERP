@@ -2,4 +2,5 @@ from client_akivision.utils.custom_field_schema import sync_standard_custom_fiel
 
 
 def execute():
-    sync_standard_custom_fields()
+	sync_standard_custom_fields()
+

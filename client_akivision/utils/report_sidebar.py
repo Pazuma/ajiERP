@@ -8,13 +8,12 @@ SIDEBAR_LINKS = {
 		"reports": (
 			("Report", "Delivery List", "送货清单", "delivery_list"),
 			("Report", "Sales Order List", "销售订单清单", "sales_order_list"),
-			("Report", "High-tech Revenue Analysis", "高新收入分析", "high_tech_revenue_analysis"),
 		),
 	},
 	"Buying": {
 		"reports": (
 			("Report", "Purchase List", "采购清单", "purchase_list"),
-			("Report", "Supplier Performance Evaluation", "供应商绩效评估", "supplier_performance_evaluation"),
+			("Report", "Supplier Performance Evaluation", "供应商回顾", "supplier_performance_evaluation"),
 			("Report", "Purchase Delay Analysis", "采购到货延迟分析", "purchase_delay_analysis"),
 		),
 	},
@@ -63,6 +62,10 @@ SIDEBAR_LINKS = {
 	},
 }
 
+HIDDEN_SIDEBAR_LINKS = {
+	"Selling": {("Report", "High-tech Revenue Analysis")},
+}
+
 SECTION_DEFS = {
 	"records": {"labels": {"Records", "记录", "Tools", "工具"}, "label": "Records", "icon": "folder"},
 	"reports": {"labels": {"Reports", "报表"}, "label": "Reports", "icon": "sheet"},
@@ -71,6 +74,9 @@ SECTION_DEFS = {
 
 def sync_report_sidebar_entries():
 	"""Restore report and custom DocType sidebar links after every migrate."""
+	for sidebar_name, links in HIDDEN_SIDEBAR_LINKS.items():
+		_remove_links(sidebar_name, links)
+
 	for sidebar_name, sections in SIDEBAR_LINKS.items():
 		if not frappe.db.exists("Workspace Sidebar", sidebar_name):
 			continue
@@ -79,6 +85,15 @@ def sync_report_sidebar_entries():
 
 	frappe.cache.delete_key("bootinfo")
 	frappe.clear_cache()
+
+
+def _remove_links(sidebar_name, targets):
+	items = _get_items(sidebar_name)
+	for item in items:
+		if (item.link_type, item.link_to) in targets:
+			frappe.delete_doc("Workspace Sidebar Item", item.name, force=True, ignore_permissions=True)
+
+	_reindex(_get_items(sidebar_name))
 
 
 def _sync_section(sidebar_name, section_key, links):

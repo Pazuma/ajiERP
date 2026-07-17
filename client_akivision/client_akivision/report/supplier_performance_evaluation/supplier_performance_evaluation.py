@@ -43,8 +43,13 @@ def get_columns():
 
 
 def get_data(from_date, to_date, company, supplier):
+    supplier_rating = (
+        "s.custom_supplier_rating"
+        if frappe.db.has_column("Supplier", "custom_supplier_rating")
+        else "NULL"
+    )
     return frappe.db.sql(
-        """
+        f"""
         SELECT
             s.name AS supplier,
             COUNT(*) AS purchase_order_count,
@@ -52,7 +57,7 @@ def get_data(from_date, to_date, company, supplier):
             ROUND(SUM(CASE WHEN po_status.max_delay_days = 0 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 2) AS on_time_rate,
             SUM(CASE WHEN po_status.max_delay_days > 0 THEN 1 ELSE 0 END) AS delayed_order_count,
             ROUND(AVG(CASE WHEN po_status.max_delay_days > 0 THEN po_status.max_delay_days END), 2) AS average_delay_days,
-            s.custom_supplier_rating AS supplier_rating
+            {supplier_rating} AS supplier_rating
         FROM `tabSupplier` s
         INNER JOIN (
             SELECT
@@ -87,7 +92,7 @@ def get_data(from_date, to_date, company, supplier):
               AND (%(supplier)s IS NULL OR po.supplier = %(supplier)s)
             GROUP BY po.name, po.supplier
         ) po_status ON po_status.supplier = s.name
-        GROUP BY s.name, s.supplier_name, s.custom_supplier_rating
+        GROUP BY s.name, s.supplier_name, {supplier_rating}
         ORDER BY s.supplier_name
         """,
         {

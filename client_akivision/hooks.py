@@ -61,6 +61,7 @@ doctype_list_js = {
 # returned in the sidebar payload sent to desk users.
 boot_session = "client_akivision.utils.workspace_sidebar.hide_selling_pos_and_non_delivery_reports"
 after_migrate = [
+	"client_akivision.utils.custom_field_schema.sync_standard_custom_fields",
 	"client_akivision.utils.operations_management.sync_operations_management_desktop_icon",
 	"client_akivision.utils.selling_sidebar.sync_selling_sidebar_entries",
 	"client_akivision.utils.buying_sidebar.sync_buying_sidebar_entries",
