@@ -412,6 +412,8 @@ def get_completion_status(delivered_qty, order_qty):
 def get_credit_days(payment_terms_template):
 	if not payment_terms_template:
 		return 0
+	if not frappe.get_meta("Payment Terms Template").has_field("custom_credit_days"):
+		return 0
 	return flt(frappe.db.get_value("Payment Terms Template", payment_terms_template, "custom_credit_days")) or 0
 
 

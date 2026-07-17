@@ -37,11 +37,9 @@ SIDEBAR_LINKS = {
 			("Report", "Summary Calculation", "汇总计算", "summary_calculation"),
 		),
 	},
-	"Accounts": {
+	"Financial Reports": {
 		"reports": (
 			("Report", "Receivable Aging Analysis", "应收账龄分析", "receivable_aging_analysis"),
-			("Report", "Receipt Record", "回款记录", "receipt_record"),
-			("Report", "Purchase Payment Record", "付款记录", "purchase_payment_record"),
 		),
 	},
 	"Payments": {
@@ -146,7 +144,8 @@ def _get_items(sidebar_name):
 
 
 def _find_section(items, labels):
-	return next((item for item in items if item.type in ("Section Break", "Card Break") and item.label in labels), None)
+	section_types = {"Section Break", "Card Break", "Sidebar Item Group"}
+	return next((item for item in items if item.type in section_types and item.label in labels), None)
 
 
 def _create_item(sidebar_name, values):

@@ -7,7 +7,11 @@ def hide_selling_pos_and_non_delivery_reports(bootinfo):
 
     ensure_operations_management_sidebar(sidebars)
 
-    filter_sidebar_reports(sidebars.get("selling"), {"Delivery List", "Sales Order List"}, hide_pos=True)
+    filter_sidebar_reports(
+        sidebars.get("selling"),
+        {"Delivery List", "Sales Order List", "High-tech Revenue Analysis"},
+        hide_pos=True,
+    )
     hide_sidebar_links_in_sections(
         sidebars.get("selling"),
         {"Items & Pricing", "Items and Pricing", "物料与价格"},
