@@ -33,6 +33,16 @@ def sync_buying_sidebar_entries():
 	)
 	items = _move_after(items, purchase_receipt.name, "Purchase Order")
 
+	supplier_quote_import = _ensure_single_link(
+		items,
+		link_type="DocType",
+		link_to="Supplier Quote Import",
+		label="Supplier Quote Import",
+		icon="import",
+		child=0,
+	)
+	items = _move_after(items, supplier_quote_import.name, "Supplier Quotation")
+
 	purchase_taxes_template = _ensure_single_link(
 		items,
 		link_type="DocType",

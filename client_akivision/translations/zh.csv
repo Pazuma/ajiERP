@@ -133,7 +133,7 @@ Sold,已销售
 for-sample,样品
 Sample Loan Out {0} has already been fully returned.,客户样品借出单 {0} 已全部归还。
 On Loan,借出中
-Payment Entry,回款/付款记录
+Payment Entry,回款/付款凭证
 Payments,收付款
 Purchase List,采购清单
 Receipt List,入库清单
@@ -517,3 +517,69 @@ Planned Quantity,计划数量
 Actual Quantity,实际数量
 Opening Entry,期初凭证
 Temporary Opening,期初过渡
+Supplier Quote Import,供应商报价导入
+Quote File,报价文件
+Header Row,表头行
+Column Mapping,列映射
+Quote Items,报价明细
+Result,生成结果
+Valid,有效
+Notes,备注
+Quote Date,报价日期
+Mapping Settings,映射设置
+Parse to Items,解析到明细
+Generate Supplier Quotation,生成供应商报价单
+Open Supplier Quotation,打开供应商报价单
+Map Quote Columns,映射报价列
+Item Code Column,物料编码列
+Supplier Part No Column,供应商料号列
+Qty Column,数量列
+Rate Column,单价列
+Currency Column,币种列
+Data rows start right below this row.,数据行从该行下方开始。
+{0} data rows detected.,检测到 {0} 行数据。
+Parsed {0} rows into Items.,已解析 {0} 行到明细。
+Create a Supplier Quotation draft from the valid items?,确认用有效明细行生成供应商报价单草稿吗？
+Supplier Quotation {0} created.,供应商报价单 {0} 已创建。
+Please map at least the Rate column before parsing.,解析前请至少映射单价列。
+Please map the Rate column.,请映射单价列。
+LLM quote parsing is not enabled yet.,LLM 报价解析尚未启用。
+Quote Column Mapping,报价列映射
+Missing rate; skipped.,缺少单价，已跳过。
+Item not matched; please select.,未匹配到物料，请手工选择。
+A Supplier Quotation has already been generated: {0},已生成过供应商报价单：{0}
+No valid rows to generate. Parse the file and review the items first.,没有可生成的有效行，请先解析文件并核对明细。
+Failed to create the Supplier Quotation. The error has been logged.,创建供应商报价单失败，错误已记录。
+Please attach a quote file first.,请先上传报价文件。
+The quote file appears to be empty.,报价文件似乎为空。
+Header row {0} is beyond the number of rows in the file.,表头行 {0} 超出了文件行数。
+No data rows were parsed. Check the header row and column mapping.,未解析到数据行，请检查表头行与列映射。
+Remember Mapping,记忆对照
+Save this supplier part number -> Item mapping for future imports.,保存该供应商料号到物料的对照，供后续导入使用。
+Quote Item Mapping,报价料号对照
+Best,最优
+Price Source,价格来源
+Demanded Qty,需求数量
+Recommended Qty,推荐下单量
+Direct Rate,直购单价
+Direct Total,直购总价
+Recommended Rate,命中单价
+Recommended Total,推荐总价
+Savings,节省金额
+MOQ,起订量
+Last PO Rate,最近成交价
+Quote Valid Till,报价有效期
+Lead Time (Days),交期(天)
+Payment Terms,付款条款
+Note,备注
+Pricing Rule,阶梯价
+Supplier Quotation,供应商报价单
+Item Price,物料价格
+Group-level pricing rule,供应商组级阶梯价
+Demand matches no price tier,需求量未命中任何价格档
+Quote expired,报价已过期
+Non-default currency quote not compared,非本位币报价未参与比价
+Best Supplier,最优供应商
+Suppliers Compared,参与比价供应商数
+No quotations or pricing rules found for this item.,该物料暂无有效报价或阶梯价。
+Please select an Item and enter a demanded quantity.,请选择物料并输入需求数量。

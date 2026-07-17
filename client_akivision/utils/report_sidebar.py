@@ -15,6 +15,7 @@ SIDEBAR_LINKS = {
 			("Report", "Purchase List", "采购清单", "purchase_list"),
 			("Report", "Supplier Performance Evaluation", "供应商回顾", "supplier_performance_evaluation"),
 			("Report", "Purchase Delay Analysis", "采购到货延迟分析", "purchase_delay_analysis"),
+			("Report", "Purchase Recommendation", "采购推荐分析", "purchase_recommendation"),
 		),
 	},
 	"Stock": {
@@ -42,7 +43,7 @@ SIDEBAR_LINKS = {
 		),
 	},
 	"Payments": {
-		"records": (
+		"payments": (
 			("DocType", "Payment Entry", "Payment Entry"),
 		),
 		"reports": (
@@ -66,8 +67,13 @@ HIDDEN_SIDEBAR_LINKS = {
 	"Selling": {("Report", "High-tech Revenue Analysis")},
 }
 
+OBSOLETE_EMPTY_SECTIONS = {
+	"Payments": {"Records", "记录"},
+}
+
 SECTION_DEFS = {
 	"records": {"labels": {"Records", "记录", "Tools", "工具"}, "label": "Records", "icon": "folder"},
+	"payments": {"labels": {"Payments", "收付款", "付款"}, "label": "Payments", "icon": "credit-card"},
 	"reports": {"labels": {"Reports", "报表"}, "label": "Reports", "icon": "sheet"},
 }
 
@@ -83,6 +89,9 @@ def sync_report_sidebar_entries():
 		for section_key, links in sections.items():
 			_sync_section(sidebar_name, section_key, links)
 
+	for sidebar_name, labels in OBSOLETE_EMPTY_SECTIONS.items():
+		_remove_empty_sections(sidebar_name, labels)
+
 	frappe.cache.delete_key("bootinfo")
 	frappe.clear_cache()
 
@@ -91,6 +100,23 @@ def _remove_links(sidebar_name, targets):
 	items = _get_items(sidebar_name)
 	for item in items:
 		if (item.link_type, item.link_to) in targets:
+			frappe.delete_doc("Workspace Sidebar Item", item.name, force=True, ignore_permissions=True)
+
+	_reindex(_get_items(sidebar_name))
+
+
+def _remove_empty_sections(sidebar_name, labels):
+	items = _get_items(sidebar_name)
+	section_types = {"Section Break", "Card Break", "Sidebar Item Group"}
+	for index, item in enumerate(items):
+		if item.type not in section_types or item.label not in labels:
+			continue
+		section_items = []
+		for following_item in items[index + 1 :]:
+			if following_item.type in section_types:
+				break
+			section_items.append(following_item)
+		if not section_items:
 			frappe.delete_doc("Workspace Sidebar Item", item.name, force=True, ignore_permissions=True)
 
 	_reindex(_get_items(sidebar_name))

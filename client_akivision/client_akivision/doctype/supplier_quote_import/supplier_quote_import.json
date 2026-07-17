@@ -1,0 +1,184 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-16 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "supplier",
+  "company",
+  "column_break_basic",
+  "quote_date",
+  "valid_till",
+  "currency",
+  "quote_file",
+  "section_break_mapping",
+  "header_row",
+  "column_break_mapping",
+  "mapping_json",
+  "section_break_items",
+  "items",
+  "section_break_result",
+  "supplier_quotation",
+  "status",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SQI-.YY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Supplier",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "quote_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Quote Date"
+  },
+  {
+   "fieldname": "valid_till",
+   "fieldtype": "Date",
+   "label": "Valid Till"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "quote_file",
+   "fieldtype": "Attach",
+   "label": "Quote File",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_mapping",
+   "fieldtype": "Section Break",
+   "label": "Mapping Settings"
+  },
+  {
+   "default": "1",
+   "fieldname": "header_row",
+   "fieldtype": "Int",
+   "label": "Header Row"
+  },
+  {
+   "fieldname": "column_break_mapping",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mapping_json",
+   "fieldtype": "JSON",
+   "hidden": 1,
+   "label": "Column Mapping"
+  },
+  {
+   "fieldname": "section_break_items",
+   "fieldtype": "Section Break",
+   "label": "Quote Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Supplier Quote Import Item"
+  },
+  {
+   "fieldname": "section_break_result",
+   "fieldtype": "Section Break",
+   "label": "Result"
+  },
+  {
+   "fieldname": "supplier_quotation",
+   "fieldtype": "Link",
+   "label": "Supplier Quotation",
+   "options": "Supplier Quotation",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nDraft\nParsed\nGenerated",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Supplier Quote Import",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Purchase Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -28,6 +28,7 @@ def hide_selling_pos_and_non_delivery_reports(bootinfo):
             "Purchase List",
             "Supplier Performance Evaluation",
             "Purchase Delay Analysis",
+            "Purchase Recommendation",
             "Purchase Order Delivery Details",
         },
     )

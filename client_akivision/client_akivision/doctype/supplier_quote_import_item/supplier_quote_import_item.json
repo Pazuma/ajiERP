@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-16 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "supplier_part_no",
+  "item_code",
+  "item_name",
+  "qty",
+  "uom",
+  "rate",
+  "currency",
+  "valid",
+  "remember_mapping",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "supplier_part_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Supplier Part No"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fetch_if_empty": 1,
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.stock_uom",
+   "fetch_if_empty": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate",
+   "reqd": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "default": "1",
+   "fieldname": "valid",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Valid"
+  },
+  {
+   "default": "1",
+   "description": "Save this supplier part number -> Item mapping for future imports.",
+   "fieldname": "remember_mapping",
+   "fieldtype": "Check",
+   "label": "Remember Mapping"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Data",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "Supplier Quote Import Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

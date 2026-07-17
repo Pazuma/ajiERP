@@ -27,7 +27,7 @@ REQUIRED_FIELDS = {
 		"custom_akivision_sample_loan_doctype",
 		"custom_akivision_sample_loan_doc",
 	),
-	"Supplier": ("custom_supplier_rating",),
+	"Supplier": ("custom_supplier_rating", "custom_quote_column_mapping", "custom_quote_item_mapping"),
 	"Sales Order": ("custom_is_high_tech_revenue", "custom_remarks"),
 	"Delivery Note": ("custom_remarks",),
 	"Purchase Receipt": ("custom_purchase_order",),
@@ -67,12 +67,16 @@ def sync_standard_custom_fields():
 		add_sales_order_high_tech_field,
 		add_sample_loan_in_custom_fields,
 		add_sample_management_custom_fields,
+		add_supplier_quote_column_mapping_field,
+		add_supplier_quote_item_mapping_field,
 		add_supplier_rating_field,
 		ensure_item_report_fields,
 	)
 
 	ensure_item_report_fields.execute()
 	add_item_product_status_and_remarks.execute()
+	add_supplier_quote_column_mapping_field.execute()
+	add_supplier_quote_item_mapping_field.execute()
 	add_safety_stock_custom_fields.create_item_reorder_custom_fields()
 	add_safety_stock_custom_fields.create_item_custom_fields()
 	add_sales_order_high_tech_field.create_sales_order_custom_fields()
