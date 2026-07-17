@@ -2,7 +2,7 @@
 	if (window.__custom_filters_desk_tabs_loaded) return;
 	window.__custom_filters_desk_tabs_loaded = true;
 
-	const DESK_TABS_VERSION = "2026.07.16.2";
+	const DESK_TABS_VERSION = "2026.07.17.2";
 	const AUTO_PIN_MIGRATION_VERSION = 2;
 	const MAX_TABS = 20;
 	const VISIBLE_TAB_LIMIT = 7;
@@ -200,6 +200,14 @@
 			this.menu_trigger = null;
 			this.overflow_trigger = null;
 			this.bound = false;
+			this.pill = null;
+			this.pill_frame = null;
+			this.entering_key = null;
+			this.drag = null;
+			this.suppress_click = false;
+			this.reduced_motion = window.matchMedia
+				? window.matchMedia("(prefers-reduced-motion: reduce)")
+				: { matches: false };
 			this.save_state = frappe.utils.debounce(() => this.persist(), 300);
 		}
 
@@ -226,6 +234,12 @@
 				el.id = BAR_ID;
 				el.className = "custom-filters-desk-tabs-bar";
 				el.setAttribute("role", "tablist");
+			}
+
+			if (!this.pill) {
+				this.pill = document.createElement("div");
+				this.pill.className = "custom-filters-desk-tabs-pill";
+				this.pill.setAttribute("aria-hidden", "true");
 			}
 
 			const body = document.querySelector("#body") || document.body;
@@ -262,6 +276,13 @@
 
 		bind_events() {
 			this.container.addEventListener("click", async (event) => {
+				if (this.suppress_click) {
+					this.suppress_click = false;
+					event.preventDefault();
+					event.stopPropagation();
+					return;
+				}
+
 				const overflow_toggle = event.target.closest(".custom-filters-desk-tabs-overflow-toggle");
 				if (overflow_toggle) {
 					event.preventDefault();
@@ -290,6 +311,24 @@
 				event.preventDefault();
 				this.open_menu(item.dataset.routeKey, event.clientX, event.clientY, item);
 			});
+
+			this.container.addEventListener("auxclick", (event) => {
+				if (event.button !== 1) return;
+				const item = event.target.closest(".custom-filters-desk-tab");
+				if (!item) return;
+				event.preventDefault();
+				this.close_tab(item.dataset.routeKey);
+			});
+
+			this.container.addEventListener("pointerdown", (event) => this.on_tab_pointerdown(event));
+
+			this.container.addEventListener("wheel", (event) => {
+				if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+				if (this.container.scrollWidth <= this.container.clientWidth) return;
+				event.preventDefault();
+				const unit = event.deltaMode === 1 ? 16 : 1;
+				this.container.scrollLeft += event.deltaY * unit;
+			}, { passive: false });
 
 			this.container.addEventListener("keydown", (event) => {
 				const overflow_toggle = event.target.closest(".custom-filters-desk-tabs-overflow-toggle");
@@ -353,6 +392,11 @@
 
 			document.addEventListener("keydown", (event) => {
 				if (event.key !== "Escape") return;
+				if (this.drag) {
+					event.preventDefault();
+					this.finish_drag(false);
+					return;
+				}
 				if (!this.menu.classList.contains("show") && !this.overflow_menu.classList.contains("show")) return;
 				event.preventDefault();
 				this.close_menus(true);
@@ -368,7 +412,10 @@
 				if (this.menu.contains(event.target) || this.overflow_menu.contains(event.target)) return;
 				this.close_menus();
 			}, true);
-			window.addEventListener("resize", () => this.close_menus());
+			window.addEventListener("resize", () => {
+				this.close_menus();
+				this.schedule_pill_update();
+			});
 		}
 
 		bind_route() {
@@ -422,6 +469,7 @@
 			} else if (!tab) {
 				tab = make_tab(route);
 				this.state.tabs.push(tab);
+				this.entering_key = tab.route_key;
 			} else {
 				this.update_tab_from_route(tab, route, true);
 			}
@@ -471,6 +519,8 @@
 				if (!ok) return false;
 			}
 
+			await this.animate_tabs_out([key]);
+
 			const closing_index = this.state.tabs.findIndex((item) => item.route_key === key);
 			this.state.tabs = this.state.tabs.filter(function (item) {
 				return item.route_key !== key;
@@ -498,6 +548,11 @@
 				const ok = await confirm_leave_if_dirty();
 				if (!ok) return;
 			}
+
+			const closing_keys = this.state.tabs
+				.filter((tab) => !tab.pinned && keys.includes(tab.route_key))
+				.map((tab) => tab.route_key);
+			await this.animate_tabs_out(closing_keys);
 
 			const key_set = new Set(keys);
 			this.state.tabs = this.state.tabs.filter(function (tab) {
@@ -579,6 +634,8 @@
 			const visible_tabs = this.get_visible_tabs();
 			const hidden_tabs = this.get_hidden_tabs(visible_tabs);
 
+			if (this.pill) fragment.appendChild(this.pill);
+
 			visible_tabs.forEach((tab) => {
 				fragment.appendChild(this.make_tab_element(tab));
 			});
@@ -588,6 +645,242 @@
 			}
 
 			this.container.replaceChildren(fragment);
+			this.schedule_pill_update();
+			this.scroll_active_into_view();
+			this.finish_entering_tab();
+		}
+
+		schedule_pill_update() {
+			if (this.pill_frame) return;
+			this.pill_frame = window.requestAnimationFrame(() => {
+				this.pill_frame = null;
+				this.update_pill();
+			});
+		}
+
+		update_pill() {
+			if (!this.pill || !this.container) return;
+			const active = this.container.querySelector(".custom-filters-desk-tab.active");
+			if (!active || active.classList.contains("is-entering") || active.classList.contains("is-closing")) {
+				this.pill.style.opacity = "0";
+				return;
+			}
+
+			this.pill.style.width = `${active.offsetWidth}px`;
+			this.pill.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+			this.pill.style.opacity = "1";
+
+			if (!this.pill.classList.contains("is-ready")) {
+				// 首帧定位完成后再启用过渡，避免滑块从原点飞入
+				window.requestAnimationFrame(() => this.pill.classList.add("is-ready"));
+			}
+		}
+
+		scroll_active_into_view() {
+			if (!this.container) return;
+			const active = this.container.querySelector(".custom-filters-desk-tab.active");
+			if (!active) return;
+			active.scrollIntoView({
+				behavior: this.reduced_motion.matches ? "auto" : "smooth",
+				inline: "nearest",
+				block: "nearest",
+			});
+		}
+
+		finish_entering_tab() {
+			if (!this.entering_key || !this.container) return;
+			const entering = this.container.querySelector(".custom-filters-desk-tab.is-entering");
+			this.entering_key = null;
+			if (!entering) return;
+			window.requestAnimationFrame(() => {
+				entering.classList.remove("is-entering");
+				window.setTimeout(() => this.schedule_pill_update(), 200);
+			});
+		}
+
+		animate_tabs_out(keys) {
+			if (!this.container || !keys.length || this.reduced_motion.matches) return Promise.resolve();
+
+			const key_set = new Set(keys);
+			const elements = [...this.container.querySelectorAll(".custom-filters-desk-tab")]
+				.filter((el) => key_set.has(el.dataset.routeKey));
+			if (!elements.length) return Promise.resolve();
+
+			if (this.pill && elements.some((el) => el.classList.contains("active"))) {
+				this.pill.style.opacity = "0";
+			}
+			elements.forEach((el) => el.classList.add("is-closing"));
+
+			return new Promise((resolve) => window.setTimeout(resolve, 220));
+		}
+
+		on_tab_pointerdown(event) {
+			if (event.button !== 0 || event.pointerType !== "mouse" || this.drag) return;
+			const item = event.target.closest(".custom-filters-desk-tab");
+			if (!item || event.target.closest(".custom-filters-desk-tab-close")) return;
+			if (item.classList.contains("is-closing")) return;
+
+			const slots = [...this.container.querySelectorAll(".custom-filters-desk-tab")]
+				.map((el) => ({
+					key: el.dataset.routeKey,
+					el,
+					left: el.offsetLeft,
+					width: el.offsetWidth,
+				}))
+				.sort((a, b) => a.left - b.left);
+			if (slots.length < 2) return;
+
+			const key = item.dataset.routeKey;
+			const from_index = slots.findIndex((slot) => slot.key === key);
+			if (from_index < 0) return;
+
+			const bar_left = this.container.getBoundingClientRect().left;
+			const slot = slots[from_index];
+			const abort = new AbortController();
+			this.drag = {
+				key,
+				element: item,
+				pointer_id: event.pointerId,
+				start_client_x: event.clientX,
+				last_client_x: event.clientX,
+				pointer_start_x: event.clientX - bar_left + this.container.scrollLeft,
+				start_left: slot.left,
+				width: slot.width,
+				min_left: slots[0].left,
+				max_left: slots[slots.length - 1].left + slots[slots.length - 1].width - slot.width,
+				slots,
+				from_index,
+				new_index: from_index,
+				moved: false,
+				scroll_velocity: 0,
+				autoscroll_frame: null,
+				abort,
+			};
+
+			const opts = { signal: abort.signal };
+			window.addEventListener("pointermove", (e) => this.on_drag_pointermove(e), opts);
+			window.addEventListener("pointerup", (e) => this.on_drag_pointerup(e), opts);
+			window.addEventListener("pointercancel", (e) => this.on_drag_pointercancel(e), opts);
+		}
+
+		on_drag_pointermove(event) {
+			const drag = this.drag;
+			if (!drag || event.pointerId !== drag.pointer_id) return;
+			drag.last_client_x = event.clientX;
+
+			if (!drag.moved) {
+				if (Math.abs(event.clientX - drag.start_client_x) < 5) return;
+				drag.moved = true;
+				this.container.classList.add("is-dragging");
+				drag.element.classList.add("is-drag-source");
+				if (drag.element.classList.contains("active") && this.pill) {
+					this.pill.style.opacity = "0";
+				}
+				try { drag.element.setPointerCapture(drag.pointer_id); } catch (error) { /* 忽略 */ }
+				drag.autoscroll_frame = window.requestAnimationFrame(() => this.drag_autoscroll_tick());
+			}
+
+			const rect = this.container.getBoundingClientRect();
+			const edge = 28;
+			drag.scroll_velocity = 0;
+			if (this.container.scrollWidth > this.container.clientWidth) {
+				const dist_left = event.clientX - rect.left;
+				const dist_right = rect.right - event.clientX;
+				if (dist_left < edge) drag.scroll_velocity = -Math.ceil(((edge - dist_left) / edge) * 10);
+				else if (dist_right < edge) drag.scroll_velocity = Math.ceil(((edge - dist_right) / edge) * 10);
+			}
+
+			this.update_drag_position(event.clientX);
+		}
+
+		on_drag_pointerup(event) {
+			if (!this.drag || event.pointerId !== this.drag.pointer_id) return;
+			this.finish_drag(true);
+		}
+
+		on_drag_pointercancel(event) {
+			if (!this.drag || event.pointerId !== this.drag.pointer_id) return;
+			this.finish_drag(false);
+		}
+
+		drag_autoscroll_tick() {
+			const drag = this.drag;
+			if (!drag) return;
+			if (drag.scroll_velocity) {
+				this.container.scrollLeft += drag.scroll_velocity;
+				this.update_drag_position(drag.last_client_x);
+			}
+			drag.autoscroll_frame = window.requestAnimationFrame(() => this.drag_autoscroll_tick());
+		}
+
+		update_drag_position(client_x) {
+			const drag = this.drag;
+			if (!drag || !drag.moved) return;
+
+			const bar_left = this.container.getBoundingClientRect().left;
+			const pointer_x = client_x - bar_left + this.container.scrollLeft;
+			let target_left = drag.start_left + (pointer_x - drag.pointer_start_x);
+			target_left = Math.max(drag.min_left, Math.min(drag.max_left, target_left));
+			drag.element.style.transform = `translateX(${target_left - drag.start_left}px)`;
+
+			const center = target_left + drag.width / 2;
+			let new_index = 0;
+			drag.slots.forEach((slot) => {
+				if (slot.key !== drag.key && slot.left + slot.width / 2 < center) new_index += 1;
+			});
+
+			if (new_index !== drag.new_index) {
+				drag.new_index = new_index;
+				this.layout_drag_siblings();
+			}
+		}
+
+		layout_drag_siblings() {
+			const drag = this.drag;
+			if (!drag) return;
+			drag.slots.forEach((slot, index) => {
+				if (slot.key === drag.key) return;
+				let target = index;
+				if (drag.from_index < drag.new_index && index > drag.from_index && index <= drag.new_index) {
+					target = index - 1;
+				} else if (drag.new_index < drag.from_index && index >= drag.new_index && index < drag.from_index) {
+					target = index + 1;
+				}
+				const shift = drag.slots[target].left - slot.left;
+				slot.el.style.transform = shift ? `translateX(${shift}px)` : "";
+			});
+		}
+
+		finish_drag(commit) {
+			const drag = this.drag;
+			if (!drag) return;
+			this.drag = null;
+			drag.abort.abort();
+			if (drag.autoscroll_frame) window.cancelAnimationFrame(drag.autoscroll_frame);
+
+			if (!drag.moved) return;
+
+			try { drag.element.releasePointerCapture(drag.pointer_id); } catch (error) { /* 忽略 */ }
+			this.container.classList.remove("is-dragging");
+
+			if (commit && drag.new_index !== drag.from_index) {
+				const visible_keys = drag.slots.map((slot) => slot.key);
+				const order = visible_keys.filter((key) => key !== drag.key);
+				order.splice(drag.new_index, 0, drag.key);
+
+				const visible_set = new Set(visible_keys);
+				const by_key = new Map(this.state.tabs.map((tab) => [tab.route_key, tab]));
+				const ordered = order.map((key) => by_key.get(key)).filter(Boolean);
+				let slot_pos = 0;
+				this.state.tabs = this.state.tabs.map((tab) =>
+					visible_set.has(tab.route_key) ? ordered[slot_pos++] || tab : tab
+				);
+				this.save_state();
+			}
+
+			this.suppress_click = true;
+			window.setTimeout(() => { this.suppress_click = false; }, 0);
+			this.render();
 		}
 
 		get_visible_tabs() {
@@ -633,6 +926,7 @@
 			item.className = "custom-filters-desk-tab";
 			if (tab.route_key === this.state.active_route_key) item.classList.add("active");
 			if (tab.pinned) item.classList.add("pinned");
+			if (tab.route_key === this.entering_key) item.classList.add("is-entering");
 			item.dataset.routeKey = tab.route_key;
 			item.title = tab.title;
 			item.setAttribute("role", "tab");
