@@ -8,13 +8,13 @@
 	"theme_color": "#ffffff",
 	"icons": [
 		{
-			"src": "/assets/deeplinkerp_branding/logo/tab_logo.png",
+			"src": "/assets/deeplinkerp_branding/logo/tab_logo.svg?v=0.0.6",
 			"sizes": "any",
-			"type": "image/png",
+			"type": "image/svg+xml",
 			"purpose": "any maskable"
 		},
 		{
-			"src": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
+			"src": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6",
 			"sizes": "any",
 			"type": "image/png",
 			"purpose": "any maskable"

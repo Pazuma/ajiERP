@@ -4,9 +4,9 @@ app_publisher = "yuewei"
 app_description = "Deeplinkerp brand"
 app_email = "308642281@qq.com"
 app_license = "mit"
-app_logo_url = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2"
-favicon = "/assets/deeplinkerp_branding/logo/tab_logo.png"
-splash_image = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2"
+app_logo_url = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6"
+favicon = "/assets/deeplinkerp_branding/logo/tab_logo.svg?v=0.0.6"
+splash_image = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6"
 
 # Apps
 # ------------------
@@ -14,7 +14,7 @@ splash_image = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=
 add_to_apps_screen = [
 	{
 		"name": app_name,
-		"logo": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
+		"logo": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6",
 		"title": app_title,
 		"route": "/app/deeplinkerp-settings",
 	}
@@ -25,7 +25,7 @@ add_to_apps_screen = [
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/deeplinkerp_branding/css/deeplinkerp_branding.css"
-app_include_js = "/assets/deeplinkerp_branding/js/deeplinkerp_branding.js"
+app_include_js = "/assets/deeplinkerp_branding/js/deeplinkerp_branding.js?v=0.0.6"
 
 # include js, css files in header of web template
 web_include_css = "/assets/deeplinkerp_branding/css/deeplinkerp_branding.css"
@@ -118,24 +118,24 @@ boot_session = "deeplinkerp_branding.deeplinkerp_branding.branding.apply_boot_br
 # after_build = "deeplinkerp_branding.build.after_build"
 after_migrate = ["deeplinkerp_branding.deeplinkerp_branding.branding.apply_deeplinkerp_settings_branding"]
 website_context = {
-	"favicon": "/assets/deeplinkerp_branding/logo/tab_logo.png",
-	"splash_image": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
+	"favicon": "/assets/deeplinkerp_branding/logo/tab_logo.svg?v=0.0.6",
+	"splash_image": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6",
 }
 
 website_redirects = [
 	{
 		"source": "/favicon.ico",
-		"target": "/assets/deeplinkerp_branding/logo/tab_logo.png",
+		"target": "/assets/deeplinkerp_branding/logo/tab_logo.svg?v=0.0.6",
 		"redirect_http_status": 302,
 	},
 	{
 		"source": "/apple-touch-icon.png",
-		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
+		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6",
 		"redirect_http_status": 302,
 	},
 	{
 		"source": "/apple-touch-icon-precomposed.png",
-		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2",
+		"target": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6",
 		"redirect_http_status": 302,
 	},
 	{

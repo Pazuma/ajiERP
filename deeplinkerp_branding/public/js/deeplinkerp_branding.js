@@ -12,7 +12,26 @@
 	const getBrandName = () => translate(DeeplinkERPBrandName);
 	const getSettingsName = () => translate(DeeplinkERPSettingsName);
 	const getFrameworkName = () => translate(DLPFrameworkName);
+	const FaviconURL = "/assets/deeplinkerp_branding/logo/tab_logo.svg?v=0.0.6";
 	let eventsBound = false;
+
+	function setFavicon() {
+		document
+			.querySelectorAll("link[rel~='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']")
+			.forEach((link) => link.remove());
+
+		const favicon = document.createElement("link");
+		favicon.rel = "icon";
+		favicon.type = "image/svg+xml";
+		favicon.href = FaviconURL;
+		document.head.appendChild(favicon);
+
+		const shortcut = document.createElement("link");
+		shortcut.rel = "shortcut icon";
+		shortcut.type = "image/svg+xml";
+		shortcut.href = FaviconURL;
+		document.head.appendChild(shortcut);
+	}
 
 	function replaceERPNextAppTitle() {
 		if (!window.frappe?.boot) return;
@@ -165,6 +184,7 @@
 
 	function applyBranding() {
 		try {
+			setFavicon();
 			replaceERPNextAppTitle();
 			replaceBootLabels();
 			replaceVisibleBranding();

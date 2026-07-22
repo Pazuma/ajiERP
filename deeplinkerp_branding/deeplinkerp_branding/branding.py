@@ -2,7 +2,7 @@ import frappe
 
 
 BRAND_NAME = "Deeplinkerp"
-BRAND_LOGO_URL = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.2"
+BRAND_LOGO_URL = "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6"
 ERP_NEXT_NAME = "ERPNext"
 DEEPLINKERP_ICON_NAME = "Deeplinkerp"
 FRAPPE_FRAMEWORK_NAME = "Frappe Framework"
@@ -65,6 +65,18 @@ def apply_deeplinkerp_settings_branding():
 	apply_settings_desktop_icon_branding()
 
 	copy_erpnext_settings_sidebar_items()
+
+	# Keep the native sidebar as the source of truth, but remove its Workspace
+	# after copying so Setup cannot show both the native and branded entries.
+	# ERPNext may restore this standard Workspace during migrate; this
+	# after_migrate hook removes it again without touching the native sidebar.
+	if frappe.db.exists("Workspace", "ERPNext Settings"):
+		frappe.delete_doc(
+			"Workspace",
+			"ERPNext Settings",
+			force=True,
+			ignore_permissions=True,
+		)
 
 	if frappe.db.exists("Workspace", SETTINGS_DOCNAME):
 		frappe.db.set_value(
