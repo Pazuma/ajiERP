@@ -471,3 +471,15 @@ Unpin Tab,取消固定标签页
 Copy Link,复制链接
 Link copied,链接已复制
 Failed to copy link,复制链接失败
+Dr,借方
+Source of Funds (Liabilities),负债
+Total Outgoing Bills,销售发票总额
+Total Incoming Bills,采购发票总额
+Total Incoming Payment,收款总额
+Total Outgoing Payment,付款总额
+Incoming Bills (Purchase Invoice),采购发票
+Outgoing Bills (Sales Invoice),销售发票
+Accounts Receivable Ageing,应收账款账龄
+Accounts Payable Ageing,应付账款账龄
+Issue a debit note against an existing Sales Invoice to adjust the rate. The quantity will be retained from the original invoice.,针对现有销售发票开具借项通知单以调整价格。数量将沿用原发票上的数量。
+Is customer exempted from sales tax?,客户是否免征销售税？

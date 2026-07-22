@@ -2,7 +2,7 @@
 	if (window.__custom_filters_right_sidebar_loaded) return;
 	window.__custom_filters_right_sidebar_loaded = true;
 
-	const RIGHT_SIDEBAR_VERSION = "2026.07.17.3";
+	const RIGHT_SIDEBAR_VERSION = "2026.07.22.1";
 	const BAR_ID = "custom-filters-right-sidebar";
 	const FLYOUT_ID = "custom-filters-right-sidebar-flyout";
 	const FLYOUT_CLOSE_DELAY = 200;
@@ -237,6 +237,14 @@
 			if (/^https?:\/\//i.test(route)) {
 				window.open(route, "_blank", "noopener");
 				return;
+			}
+			// Workspace Sidebar icons jump straight to the sidebar's first link
+			// (e.g. Balance Sheet) and bypass the workspace page, so core's sidebar
+			// resolver keeps the previous workspace. Hand the target sidebar to core
+			// via route_options (consumed by frappe.app.sidebar on route change).
+			const sidebar = frappe.boot.workspace_sidebar_item[(icon.label || "").toLowerCase()];
+			if (icon.link_type === "Workspace Sidebar" && sidebar) {
+				frappe.route_options = Object.assign({}, frappe.route_options, { sidebar: icon.label });
 			}
 			frappe.set_route(route.replace(/^\/+/, ""));
 		}

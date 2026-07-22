@@ -2,7 +2,7 @@
 	if (window.__custom_filters_desk_tabs_loaded) return;
 	window.__custom_filters_desk_tabs_loaded = true;
 
-	const DESK_TABS_VERSION = "2026.07.17.2";
+	const DESK_TABS_VERSION = "2026.07.21.1";
 	const AUTO_PIN_MIGRATION_VERSION = 2;
 	const MAX_TABS = 20;
 	const VISIBLE_TAB_LIMIT = 7;
@@ -12,6 +12,7 @@
 	const OVERFLOW_MENU_ID = "custom-filters-desk-tabs-overflow-menu";
 	const LOADED_CLASS = "custom-filters-desk-tabs-ready";
 	const LIST_VIEWS = ["List", "Kanban", "Report", "Tree", "Calendar", "Gantt", "Dashboard", "Image", "Inbox", "Map"];
+	const USER_EDITED_FORM = "__custom_filters_user_edited";
 
 	function translate(text, args) {
 		if (typeof __ === "function") return __(text, args);
@@ -95,6 +96,19 @@
 		return `${translated_doctype} ${docname || ""}`.trim();
 	}
 
+	function resolve_page_title(route) {
+		const page_name = route[route.length - 1];
+		const page_info = window.frappe && frappe.boot && frappe.boot.page_info && frappe.boot.page_info[page_name];
+		const page_doc = window.locals && locals.Page && locals.Page[page_name];
+		const loaded_page = window.frappe && frappe.pages && frappe.pages[page_name];
+		const title = (page_info && page_info.title)
+			|| (page_doc && page_doc.title)
+			|| (loaded_page && loaded_page.label)
+			|| page_name
+			|| "Page";
+		return translate(title);
+	}
+
 	function resolve_title(route) {
 		const view = route[0];
 		const doctype = route[1];
@@ -110,13 +124,38 @@
 		}
 
 		if (view === "app" || view === "desk") return translate(name || doctype || view);
-		return translate(route[route.length - 1] || view || "Page");
+		return resolve_page_title(route);
 	}
 
+	function current_route_form() {
+		const route = normalize_route();
+		if (route[0] !== "Form" || !window.cur_frm || cur_frm.doctype !== route[1]) return null;
+
+		const route_docname = route[2] || "";
+		const form_docname = cur_frm.docname || (cur_frm.doc && cur_frm.doc.name) || "";
+		if (route_docname && !route_docname.startsWith("new-") && route_docname !== form_docname) return null;
+		return cur_frm;
+	}
+
+	function mark_current_form_edited(event) {
+		if (!event.isTrusted || !event.target || !event.target.closest(".form-page")) return;
+		const frm = current_route_form();
+		if (frm) frm[USER_EDITED_FORM] = true;
+	}
+
+	document.addEventListener("input", mark_current_form_edited, true);
+	document.addEventListener("change", mark_current_form_edited, true);
+
 	function current_form_dirty() {
-		if (!window.cur_frm) return false;
-		if (typeof cur_frm.is_dirty === "function") return !!cur_frm.is_dirty();
-		return !!cur_frm.dirty;
+		const frm = current_route_form();
+		if (!frm) return false;
+		const dirty = typeof frm.is_dirty === "function" ? !!frm.is_dirty() : !!frm.dirty;
+		if (!dirty) return false;
+
+		const is_new = typeof frm.is_new === "function"
+			? frm.is_new()
+			: !!(frm.doc && frm.doc.__islocal);
+		return !is_new || !!frm[USER_EDITED_FORM];
 	}
 
 	function confirm_leave_if_dirty() {
