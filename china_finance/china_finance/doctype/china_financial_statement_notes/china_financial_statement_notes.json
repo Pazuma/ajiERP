@@ -1,0 +1,41 @@
+{
+ "actions":[], "autoname":"naming_series:", "creation":"2026-07-20 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["naming_series","notes_key","company","accounting_standard","from_date","to_date","version","basis_of_preparation","policies_json","statement_data_json","disclosure_section","significant_accounting_policies","significant_estimates","policy_changes","estimate_changes","prior_period_errors","tax_disclosures","receivables_disclosures","inventory_disclosures","fixed_asset_disclosures","intangible_rd_disclosures","major_non_cash_transactions","related_party_disclosures","commitments_contingencies","subsequent_events","other_disclosures","approval_section","approved_by","approved_on"],
+ "fields":[
+  {"default":"CFN-.YYYY.-.#####","fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CFN-.YYYY.-.#####","reqd":1},
+  {"fieldname":"notes_key","fieldtype":"Data","hidden":1,"label":"附注唯一键","length":500,"read_only":1,"reqd":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"accounting_standard","fieldtype":"Select","in_list_view":1,"label":"会计准则","options":"企业会计准则\n小企业会计准则","reqd":1},
+  {"fieldname":"from_date","fieldtype":"Date","label":"报告期起始日期","reqd":1},
+  {"fieldname":"to_date","fieldtype":"Date","in_list_view":1,"label":"报告期截止日期","reqd":1},
+  {"default":"1","fieldname":"version","fieldtype":"Int","label":"版本","reqd":1},
+  {"fieldname":"basis_of_preparation","fieldtype":"Text Editor","label":"编制基础及持续经营说明","reqd":1},
+  {"fieldname":"policies_json","fieldtype":"Code","hidden":1,"label":"生效会计政策快照","options":"JSON","read_only":1},
+  {"fieldname":"statement_data_json","fieldtype":"Code","hidden":1,"label":"报表重要项目及现金流补充资料快照","options":"JSON","read_only":1},
+  {"fieldname":"disclosure_section","fieldtype":"Section Break","label":"重要披露"},
+  {"fieldname":"significant_accounting_policies","fieldtype":"Text Editor","label":"重要会计政策摘要","reqd":1},
+  {"fieldname":"significant_estimates","fieldtype":"Text Editor","label":"重要会计估计和判断"},
+  {"fieldname":"policy_changes","fieldtype":"Text Editor","label":"会计政策变更"},
+  {"fieldname":"estimate_changes","fieldtype":"Text Editor","label":"会计估计变更"},
+  {"fieldname":"prior_period_errors","fieldtype":"Text Editor","label":"前期差错更正"},
+  {"fieldname":"tax_disclosures","fieldtype":"Text Editor","label":"税项说明"},
+  {"fieldname":"receivables_disclosures","fieldtype":"Text Editor","label":"应收款项及信用减值说明"},
+  {"fieldname":"inventory_disclosures","fieldtype":"Text Editor","label":"存货说明"},
+  {"fieldname":"fixed_asset_disclosures","fieldtype":"Text Editor","label":"固定资产及在建工程说明"},
+  {"fieldname":"intangible_rd_disclosures","fieldtype":"Text Editor","label":"无形资产及研发支出说明"},
+  {"fieldname":"major_non_cash_transactions","fieldtype":"Text Editor","label":"重大非现金投资和筹资事项"},
+  {"fieldname":"related_party_disclosures","fieldtype":"Text Editor","label":"关联方及关联交易"},
+  {"fieldname":"commitments_contingencies","fieldtype":"Text Editor","label":"承诺及或有事项"},
+  {"fieldname":"subsequent_events","fieldtype":"Text Editor","label":"资产负债表日后事项"},
+  {"fieldname":"other_disclosures","fieldtype":"Text Editor","label":"其他重要事项"},
+  {"fieldname":"approval_section","fieldtype":"Section Break","label":"审批记录"},
+  {"fieldname":"approved_by","fieldtype":"Link","label":"批准人","options":"User","read_only":1},
+  {"fieldname":"approved_on","fieldtype":"Datetime","label":"批准时间","read_only":1}
+ ],
+ "is_submittable":1, "modified":"2026-07-20 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Financial Statement Notes", "naming_rule":"By \"Naming Series\" field", "owner":"Administrator",
+ "permissions":[
+  {"create":1,"delete":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager","submit":1,"write":1},
+  {"create":1,"delete":1,"export":1,"print":1,"read":1,"report":1,"role":"China Finance Manager","submit":1,"write":1},
+  {"export":1,"print":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ], "sort_field":"to_date", "sort_order":"DESC", "track_changes":1
+}

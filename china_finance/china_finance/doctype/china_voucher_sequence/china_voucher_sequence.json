@@ -1,0 +1,29 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-07-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["sequence_key","company","fiscal_year","accounting_period","voucher_word","current_value"],
+ "fields": [
+  {"fieldname":"sequence_key","fieldtype":"Data","label":"序列键","length":300,"read_only":1,"reqd":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","read_only":1,"reqd":1},
+  {"fieldname":"fiscal_year","fieldtype":"Data","label":"会计年度","read_only":1,"reqd":1},
+  {"fieldname":"accounting_period","fieldtype":"Data","label":"会计期间","read_only":1},
+  {"fieldname":"voucher_word","fieldtype":"Data","label":"凭证字","read_only":1,"reqd":1},
+  {"default":"0","fieldname":"current_value","fieldtype":"Int","label":"当前流水号","read_only":1}
+ ],
+ "modified": "2026-07-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "China Finance",
+ "name": "China Voucher Sequence",
+ "owner": "Administrator",
+ "permissions": [
+  {"read":1,"report":1,"role":"System Manager"},
+  {"read":1,"report":1,"role":"China Finance Manager"},
+  {"read":1,"report":1,"role":"China Finance Auditor"}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

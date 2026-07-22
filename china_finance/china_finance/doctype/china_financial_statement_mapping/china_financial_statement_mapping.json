@@ -1,0 +1,32 @@
+{
+ "actions":[], "autoname":"hash", "creation":"2026-07-17 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["mapping_key","company","template","row_code","account","account_number_snapshot","mapping_basis","mapping_rule_version","cash_flow_section","cash_inflow_row_code","cash_outflow_row_code","sign_multiplier","effective_from","effective_to","mapping_source","reviewed","reviewed_by","reviewed_on","review_notes"],
+ "fields":[
+  {"fieldname":"mapping_key","fieldtype":"Data","hidden":1,"label":"映射唯一键","length":500,"read_only":1,"reqd":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"template","fieldtype":"Link","in_list_view":1,"label":"报表模板","options":"China Financial Statement Template","reqd":1},
+  {"fieldname":"row_code","fieldtype":"Autocomplete","in_list_view":1,"label":"归入报表项目","reqd":1,"description":"选择“行编码 | 项目名称”。项目名称用于日常复核，行编码由系统保存。"},
+  {"fieldname":"account","fieldtype":"Link","in_list_view":1,"label":"会计科目","options":"Account","reqd":1},
+  {"fieldname":"account_number_snapshot","fieldtype":"Data","label":"科目编号快照","read_only":1},
+  {"fieldname":"mapping_basis","fieldtype":"Select","label":"映射依据","options":"\nAccount Number\nParent Inheritance\nAttribute Fallback\nManual","read_only":1},
+  {"fieldname":"mapping_rule_version","fieldtype":"Data","label":"映射规则版本","read_only":1},
+  {"fieldname":"cash_flow_section","fieldtype":"Section Break","label":"现金流量归类","depends_on":"eval:doc.template && doc.template.includes('Cash Flow')"},
+  {"fieldname":"cash_inflow_row_code","fieldtype":"Autocomplete","label":"收到现金时归入","description":"选择“行编码 | 项目名称”。现金或银行科目增加时使用。"},
+  {"fieldname":"cash_outflow_row_code","fieldtype":"Autocomplete","label":"支付现金时归入","description":"选择“行编码 | 项目名称”。现金或银行科目减少时使用。"},
+  {"default":"1","fieldname":"sign_multiplier","fieldtype":"Select","label":"金额乘数","options":"1\n-1","reqd":1},
+  {"fieldname":"effective_from","fieldtype":"Date","label":"生效日期","reqd":1},
+  {"fieldname":"effective_to","fieldtype":"Date","label":"失效日期"},
+  {"default":"Manual","fieldname":"mapping_source","fieldtype":"Select","label":"映射来源","options":"Manual\nAutomatic","read_only":1},
+  {"default":"0","fieldname":"reviewed","fieldtype":"Check","label":"已复核","read_only":1},
+  {"fieldname":"reviewed_by","fieldtype":"Link","label":"复核人","options":"User","read_only":1},
+  {"fieldname":"reviewed_on","fieldtype":"Datetime","label":"复核时间","read_only":1},
+  {"fieldname":"review_notes","fieldtype":"Small Text","label":"复核说明","read_only":1}
+ ],
+ "modified":"2026-07-17 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Financial Statement Mapping", "owner":"Administrator",
+ "permissions":[
+  {"create":1,"delete":1,"export":1,"read":1,"report":1,"role":"System Manager","write":1},
+  {"create":1,"delete":1,"export":1,"read":1,"report":1,"role":"China Finance Manager","write":1},
+  {"export":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ],
+ "sort_field":"modified", "sort_order":"DESC", "track_changes":1
+}

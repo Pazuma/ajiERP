@@ -1,0 +1,16 @@
+{
+ "actions": [], "doctype": "DocType", "editable_grid": 1, "engine": "InnoDB", "istable": 1, "module": "China Finance", "name": "China Tax Invoice Request Item",
+ "field_order": ["sales_invoice", "sales_invoice_item", "item_code", "item_name", "quantity", "uom", "net_amount", "tax_rate", "tax_amount", "gross_amount"],
+ "fields": [
+  {"fieldname":"sales_invoice","fieldtype":"Link","label":"销售发票","options":"Sales Invoice","reqd":1,"in_list_view":1},
+  {"fieldname":"sales_invoice_item","fieldtype":"Data","label":"销售发票行 ID","read_only":1},
+  {"fieldname":"item_code","fieldtype":"Link","label":"物料编码","options":"Item","read_only":1},
+  {"fieldname":"item_name","fieldtype":"Data","label":"货物或服务名称","reqd":1},
+  {"fieldname":"quantity","fieldtype":"Float","label":"数量","reqd":1},
+  {"fieldname":"uom","fieldtype":"Link","label":"单位","options":"UOM"},
+  {"fieldname":"net_amount","fieldtype":"Currency","label":"不含税金额","reqd":1,"in_list_view":1},
+  {"fieldname":"tax_rate","fieldtype":"Percent","label":"税率"},
+  {"fieldname":"tax_amount","fieldtype":"Currency","label":"税额","reqd":1,"in_list_view":1},
+  {"fieldname":"gross_amount","fieldtype":"Currency","label":"价税合计","read_only":1,"in_list_view":1}
+ ]
+}

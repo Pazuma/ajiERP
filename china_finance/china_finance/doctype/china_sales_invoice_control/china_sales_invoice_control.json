@@ -1,0 +1,18 @@
+{
+ "actions": [], "autoname": "field:sales_invoice", "doctype": "DocType", "engine": "InnoDB", "module": "China Finance", "name": "China Sales Invoice Control", "track_changes": 1,
+ "field_order": ["sales_invoice", "company", "customer", "requirement", "reason", "set_by", "set_on"],
+ "fields": [
+  {"fieldname":"sales_invoice","fieldtype":"Link","label":"销售发票","options":"Sales Invoice","reqd":1,"unique":1,"in_list_view":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"customer","fieldtype":"Link","label":"客户","options":"Customer","read_only":1,"in_list_view":1},
+  {"fieldname":"requirement","fieldtype":"Select","label":"开票要求","options":"Required\nNot Required\nManual","reqd":1,"in_list_view":1},
+  {"fieldname":"reason","fieldtype":"Small Text","label":"覆盖原因","reqd":1},
+  {"fieldname":"set_by","fieldtype":"Link","label":"设置人","options":"User","read_only":1},
+  {"fieldname":"set_on","fieldtype":"Datetime","label":"设置时间","read_only":1}
+ ],
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Auditor","read":1,"report":1,"export":1,"print":1}
+ ]
+}

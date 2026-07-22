@@ -1,0 +1,142 @@
+import hashlib
+import io
+import json
+import mimetypes
+import zipfile
+from pathlib import Path
+
+import frappe
+from frappe.utils import add_years, getdate, now_datetime
+from frappe.utils.file_manager import save_file
+
+
+def get_file_doc(file_url):
+	name = frappe.db.get_value("File", {"file_url": file_url}, "name")
+	if not name:
+		frappe.throw(f"File not found: {file_url}")
+	return frappe.get_doc("File", name)
+
+
+def get_file_bytes(file_url):
+	content = get_file_doc(file_url).get_content()
+	return content.encode("utf-8") if isinstance(content, str) else content
+
+
+def calculate_file_hash(file_url):
+	return hashlib.sha256(get_file_bytes(file_url)).hexdigest()
+
+
+def populate_archive_metadata(doc):
+	file_doc = get_file_doc(doc.file)
+	content = get_file_bytes(doc.file)
+	doc.file_name = file_doc.file_name or Path(doc.file).name
+	doc.mime_type = mimetypes.guess_type(doc.file_name)[0] or "application/octet-stream"
+	doc.file_size = len(content)
+	doc.sha256 = hashlib.sha256(content).hexdigest()
+	doc.archived_on = doc.archived_on or now_datetime()
+	doc.archived_by = doc.archived_by or frappe.session.user
+	settings = frappe.db.get_value(
+		"China Finance Settings", {"company": doc.company, "enabled": 1}, ["archive_retention_years"], as_dict=True
+	)
+	years = settings.archive_retention_years if settings else 30
+	doc.retention_until = doc.retention_until or add_years(getdate(doc.archived_on), years)
+	doc.verification_result = "SHA-256 verified"
+
+
+def create_archive_record(company, reference_doctype, reference_name, category, file_url):
+	file_hash = calculate_file_hash(file_url)
+	existing = frappe.db.get_value(
+		"China Electronic Document",
+		{"reference_doctype": reference_doctype, "reference_name": reference_name, "sha256": file_hash},
+		"name",
+	)
+	if existing:
+		return existing
+	doc = frappe.get_doc(
+		{
+			"doctype": "China Electronic Document",
+			"company": company,
+			"document_category": category,
+			"reference_doctype": reference_doctype,
+			"reference_name": reference_name,
+			"file": file_url,
+		}
+	)
+	doc.insert(ignore_permissions=True)
+	return doc.name
+
+
+def create_archive_package(company, reference_doctype, reference_name, closing_run=None):
+	documents = frappe.get_all(
+		"China Electronic Document",
+		filters={"company": company, "status": "Archived"},
+		fields=[
+			"name", "document_category", "reference_doctype", "reference_name", "file",
+			"file_name", "mime_type", "file_size", "sha256", "archived_on", "retention_until",
+		],
+		order_by="archived_on, name",
+	)
+	snapshots = []
+	if closing_run:
+		snapshots = frappe.get_all(
+			"China Report Snapshot",
+			filters={"closing_run": closing_run},
+			fields=["name", "statement_type", "template", "from_date", "to_date", "data_json", "sha256"],
+			order_by="statement_type",
+		)
+
+	index = {
+		"schema_version": "1.0",
+		"company": company,
+		"generated_on": str(now_datetime()),
+		"reference_doctype": reference_doctype,
+		"reference_name": reference_name,
+		"documents": [dict(row) for row in documents],
+		"report_snapshots": [
+			{k: v for k, v in dict(row).items() if k != "data_json"}
+			for row in snapshots
+		],
+	}
+	buffer = io.BytesIO()
+	with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+		archive.writestr("index.json", json.dumps(index, ensure_ascii=False, indent=2, default=str))
+		for row in documents:
+			try:
+				archive.writestr(f"documents/{row.name}-{Path(row.file_name).name}", get_file_bytes(row.file))
+			except Exception as exc:
+				frappe.log_error(str(exc), f"China Finance archive file missing: {row.name}")
+				raise
+		for row in snapshots:
+			archive.writestr(f"reports/{row.statement_type}.json", row.data_json)
+
+	filename = f"china-finance-archive-{reference_name}-{now_datetime().strftime('%Y%m%d%H%M%S')}.zip"
+	file_doc = save_file(filename, buffer.getvalue(), reference_doctype, reference_name, is_private=1)
+	archive_name = create_archive_record(
+		company, reference_doctype, reference_name, "Closing Package", file_doc.file_url
+	)
+	return {
+		"file_url": file_doc.file_url,
+		"archive_record": archive_name,
+		"sha256": calculate_file_hash(file_doc.file_url),
+		"document_count": len(documents),
+		"snapshot_count": len(snapshots),
+	}
+
+
+@frappe.whitelist()
+def verify_archive(name):
+	doc = frappe.get_doc("China Electronic Document", name)
+	doc.check_permission("read")
+	actual = calculate_file_hash(doc.file)
+	return {"valid": actual == doc.sha256, "expected": doc.sha256, "actual": actual}
+
+
+@frappe.whitelist()
+def export_archive_package(company, reference_doctype="Company", reference_name=None, closing_run=None):
+	frappe.only_for(("System Manager", "China Archive User", "China Finance Auditor"))
+	return create_archive_package(
+		company,
+		reference_doctype,
+		reference_name or company,
+		closing_run=closing_run,
+	)

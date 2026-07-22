@@ -1,0 +1,35 @@
+{
+ "actions":[], "autoname":"hash", "creation":"2026-07-17 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["company","closing_run","statement_type","template","template_version","report_status","from_date","to_date","comparison_from_date","comparison_to_date","amount_unit","approved_by","approved_on","notes","notes_sha256","mapping_sha256","cash_scope_sha256","validation_json","data_json","sha256","created_on","created_by"],
+ "fields":[
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"closing_run","fieldtype":"Link","label":"结账运行单","options":"China Closing Run","reqd":1},
+  {"fieldname":"statement_type","fieldtype":"Select","in_list_view":1,"label":"报表类型","options":"Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity","reqd":1},
+  {"fieldname":"template","fieldtype":"Link","label":"报表模板","options":"China Financial Statement Template","reqd":1},
+  {"fieldname":"template_version","fieldtype":"Data","label":"模板版本","read_only":1},
+  {"default":"正式","fieldname":"report_status","fieldtype":"Select","label":"编制状态","options":"草表\n正式","read_only":1},
+  {"fieldname":"from_date","fieldtype":"Date","label":"起始日期"},
+  {"fieldname":"to_date","fieldtype":"Date","in_list_view":1,"label":"截止日期","reqd":1},
+  {"fieldname":"comparison_from_date","fieldtype":"Date","label":"比较期起始日期","read_only":1},
+  {"fieldname":"comparison_to_date","fieldtype":"Date","label":"比较期截止日期","read_only":1},
+  {"fieldname":"amount_unit","fieldtype":"Data","label":"金额单位","read_only":1},
+  {"fieldname":"approved_by","fieldtype":"Link","label":"批准人","options":"User","read_only":1},
+  {"fieldname":"approved_on","fieldtype":"Datetime","label":"批准时间","read_only":1},
+  {"fieldname":"notes","fieldtype":"Link","label":"财务报表附注","options":"China Financial Statement Notes","read_only":1},
+  {"fieldname":"notes_sha256","fieldtype":"Data","label":"附注快照 SHA-256","read_only":1},
+  {"fieldname":"mapping_sha256","fieldtype":"Data","label":"映射版本 SHA-256","read_only":1},
+  {"fieldname":"cash_scope_sha256","fieldtype":"Data","label":"现金范围 SHA-256","read_only":1},
+  {"fieldname":"validation_json","fieldtype":"Code","label":"校验结果","options":"JSON","read_only":1},
+  {"fieldname":"data_json","fieldtype":"Code","label":"快照数据","options":"JSON","read_only":1,"reqd":1},
+  {"fieldname":"sha256","fieldtype":"Data","in_list_view":1,"label":"SHA-256","read_only":1,"reqd":1},
+  {"fieldname":"created_on","fieldtype":"Datetime","label":"生成时间","read_only":1},
+  {"fieldname":"created_by","fieldtype":"Link","label":"生成人","options":"User","read_only":1}
+ ],
+ "modified":"2026-07-17 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Report Snapshot", "owner":"Administrator",
+ "permissions":[
+  {"create":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager"},
+  {"create":1,"export":1,"print":1,"read":1,"report":1,"role":"China Finance Manager"},
+  {"export":1,"print":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ],
+ "sort_field":"created_on", "sort_order":"DESC", "track_changes":1
+}

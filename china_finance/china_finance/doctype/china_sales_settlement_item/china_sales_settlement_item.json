@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["delivery_note", "delivery_note_item", "sales_order", "item_code", "item_name", "uom", "delivery_date", "delivered_qty", "already_settled_qty", "remaining_qty", "settlement_qty", "original_rate", "settlement_rate", "discount_amount", "net_amount", "tax_rate", "tax_amount", "settlement_amount", "adjustment_reason", "sales_invoice_item"],
+ "fields": [
+  {"fieldname":"delivery_note","fieldtype":"Link","label":"销售出库单","options":"Delivery Note","read_only":1,"in_list_view":1},
+  {"fieldname":"delivery_note_item","fieldtype":"Data","label":"销售出库明细","read_only":1,"in_list_view":1},
+  {"fieldname":"sales_order","fieldtype":"Link","label":"销售订单","options":"Sales Order","read_only":1},
+  {"fieldname":"item_code","fieldtype":"Link","label":"物料编码","options":"Item","read_only":1,"in_list_view":1},
+  {"fieldname":"item_name","fieldtype":"Data","label":"物料名称","read_only":1},
+  {"fieldname":"uom","fieldtype":"Link","label":"单位","options":"UOM","read_only":1},
+  {"fieldname":"delivery_date","fieldtype":"Date","label":"出库日期","read_only":1},
+  {"fieldname":"delivered_qty","fieldtype":"Float","label":"出库数量","read_only":1},
+  {"fieldname":"already_settled_qty","fieldtype":"Float","label":"已结算数量","read_only":1},
+  {"fieldname":"remaining_qty","fieldtype":"Float","label":"剩余可结算数量","read_only":1},
+  {"fieldname":"settlement_qty","fieldtype":"Float","label":"本次结算数量","reqd":1,"in_list_view":1},
+  {"fieldname":"original_rate","fieldtype":"Currency","label":"出库单价","read_only":1},
+  {"fieldname":"settlement_rate","fieldtype":"Currency","label":"结算单价","reqd":1,"in_list_view":1},
+  {"default":"0","fieldname":"discount_amount","fieldtype":"Currency","label":"折扣/扣款"},
+  {"fieldname":"net_amount","fieldtype":"Currency","label":"不含税金额","read_only":1},
+  {"fieldname":"tax_rate","fieldtype":"Percent","label":"税率","read_only":1},
+  {"fieldname":"tax_amount","fieldtype":"Currency","label":"预计税额","read_only":1},
+  {"fieldname":"settlement_amount","fieldtype":"Currency","label":"价税合计","read_only":1},
+  {"fieldname":"adjustment_reason","fieldtype":"Small Text","label":"调整原因"},
+  {"fieldname":"sales_invoice_item","fieldtype":"Data","label":"正式应收明细","read_only":1}
+ ],
+ "istable": 1,
+ "module": "China Finance",
+ "name": "China Sales Settlement Item"
+}

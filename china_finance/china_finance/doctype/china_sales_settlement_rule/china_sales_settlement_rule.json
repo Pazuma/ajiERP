@@ -1,0 +1,30 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["rule_key", "company", "customer", "enabled", "settlement_mode", "confirmation_method", "effective_from", "effective_to", "notes"],
+ "fields": [
+  {"fieldname":"rule_key","fieldtype":"Data","label":"规则键","read_only":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"in_list_view":1},
+  {"fieldname":"customer","fieldtype":"Link","label":"客户","options":"Customer","reqd":1,"in_list_view":1},
+  {"default":"1","fieldname":"enabled","fieldtype":"Check","label":"启用","in_list_view":1},
+  {"default":"对账结算后确认应收","fieldname":"settlement_mode","fieldtype":"Select","label":"销售结算模式","options":"直接确认应收\n对账结算后确认应收","reqd":1,"in_list_view":1},
+  {"default":"外部客户确认","fieldname":"confirmation_method","fieldtype":"Select","label":"确认方式","options":"外部客户确认\n内部复核","reqd":1},
+  {"fieldname":"effective_from","fieldtype":"Date","label":"生效日期","reqd":1,"in_list_view":1},
+  {"fieldname":"effective_to","fieldtype":"Date","label":"失效日期"},
+  {"fieldname":"notes","fieldtype":"Small Text","label":"备注"}
+ ],
+ "istable": 0,
+ "module": "China Finance",
+ "name": "China Sales Settlement Rule",
+ "permissions": [
+  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager","share":1,"write":1},
+  {"create":1,"email":1,"export":1,"print":1,"read":1,"report":1,"role":"Accounts Manager","share":1,"write":1},
+  {"create":1,"email":1,"export":1,"print":1,"read":1,"report":1,"role":"China Finance Manager","share":1,"write":1},
+  {"export":1,"print":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

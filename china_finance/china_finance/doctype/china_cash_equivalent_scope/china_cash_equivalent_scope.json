@@ -1,0 +1,27 @@
+{
+ "actions":[], "autoname":"hash", "creation":"2026-07-22 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["scope_key","company","account","classification","included","restricted","restriction_reason","policy_basis","effective_from","effective_to","reviewed","reviewed_by","reviewed_on","review_notes"],
+ "fields":[
+  {"fieldname":"scope_key","fieldtype":"Data","hidden":1,"label":"范围版本键","length":500,"read_only":1,"reqd":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"account","fieldtype":"Link","in_list_view":1,"label":"会计科目","options":"Account","reqd":1},
+  {"fieldname":"classification","fieldtype":"Select","in_list_view":1,"label":"现金分类","options":"库存现金\n随时可用存款\n现金等价物\n排除项","reqd":1},
+  {"default":"1","fieldname":"included","fieldtype":"Check","label":"纳入现金及现金等价物"},
+  {"default":"0","fieldname":"restricted","fieldtype":"Check","label":"受限资金"},
+  {"depends_on":"eval:doc.restricted","fieldname":"restriction_reason","fieldtype":"Small Text","label":"受限原因","mandatory_depends_on":"eval:doc.restricted"},
+  {"fieldname":"policy_basis","fieldtype":"Small Text","label":"政策依据","reqd":1},
+  {"fieldname":"effective_from","fieldtype":"Date","in_list_view":1,"label":"生效日期","reqd":1},
+  {"fieldname":"effective_to","fieldtype":"Date","label":"失效日期"},
+  {"default":"0","fieldname":"reviewed","fieldtype":"Check","in_list_view":1,"label":"已复核","read_only":1},
+  {"fieldname":"reviewed_by","fieldtype":"Link","label":"复核人","options":"User","read_only":1},
+  {"fieldname":"reviewed_on","fieldtype":"Datetime","label":"复核时间","read_only":1},
+  {"fieldname":"review_notes","fieldtype":"Small Text","label":"复核说明","read_only":1}
+ ],
+ "modified":"2026-07-22 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Cash Equivalent Scope", "owner":"Administrator",
+ "permissions":[
+  {"create":1,"delete":1,"export":1,"read":1,"report":1,"role":"System Manager","write":1},
+  {"create":1,"delete":1,"export":1,"read":1,"report":1,"role":"China Finance Manager","write":1},
+  {"export":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ],
+ "sort_field":"effective_from", "sort_order":"DESC", "track_changes":1
+}

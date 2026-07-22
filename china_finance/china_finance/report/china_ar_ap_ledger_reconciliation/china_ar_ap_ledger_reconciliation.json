@@ -1,0 +1,12 @@
+{
+ "add_total_row": 1, "doctype": "Report", "module": "China Finance", "name": "China AR AP Ledger Reconciliation", "report_name": "China AR AP Ledger Reconciliation", "report_type": "Script Report", "is_standard": "Yes", "ref_doctype": "GL Entry", "prepared_report": 0, "disabled": 0,
+ "filters": [
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","mandatory":1},
+  {"fieldname":"to_date","fieldtype":"Date","label":"截止日期","mandatory":1},
+  {"fieldname":"account","fieldtype":"Link","label":"应收应付科目","options":"Account"},
+  {"fieldname":"party_type","fieldtype":"Select","label":"往来类型","options":"\nCustomer\nSupplier"},
+  {"fieldname":"party","fieldtype":"Dynamic Link","label":"往来单位","options":"party_type"},
+  {"fieldname":"reconciliation_status","fieldtype":"Select","label":"状态","options":"\nReady\nBlocked"}
+ ],
+ "roles": [{"role":"Accounts Manager"},{"role":"Accounts User"},{"role":"China Finance Manager"},{"role":"China Finance Auditor"}]
+}

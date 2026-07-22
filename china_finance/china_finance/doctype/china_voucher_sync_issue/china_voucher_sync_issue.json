@@ -1,0 +1,34 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["naming_series", "company", "posting_date", "status", "source_doctype", "source_name", "issue_key", "cancellation_voucher", "retry_count", "last_attempted_on", "resolved_on", "last_error"],
+ "fields": [
+  {"fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CVSI-.YYYY.-.#####","default":"CVSI-.YYYY.-.#####","reqd":1,"hidden":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"posting_date","fieldtype":"Date","label":"来源日期","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"status","fieldtype":"Select","label":"状态","options":"Pending\nResolved","default":"Pending","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"source_doctype","fieldtype":"Link","label":"来源单据类型","options":"DocType","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"source_name","fieldtype":"Dynamic Link","label":"来源单据","options":"source_doctype","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"issue_key","fieldtype":"Data","label":"异常唯一键","reqd":1,"read_only":1,"unique":1,"hidden":1},
+  {"fieldname":"cancellation_voucher","fieldtype":"Link","label":"冲销审计快照","options":"China Accounting Voucher","read_only":1,"in_list_view":1},
+  {"fieldname":"retry_count","fieldtype":"Int","label":"重试次数","default":"0","read_only":1,"in_list_view":1},
+  {"fieldname":"last_attempted_on","fieldtype":"Datetime","label":"最后尝试时间","read_only":1},
+  {"fieldname":"resolved_on","fieldtype":"Datetime","label":"解决时间","read_only":1},
+  {"fieldname":"last_error","fieldtype":"Long Text","label":"最后错误","read_only":1}
+ ],
+ "index_web_pages_for_search": 1,
+ "module": "China Finance",
+ "name": "China Voucher Sync Issue",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {"role":"System Manager","read":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Manager","read":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Auditor","read":1,"report":1,"export":1,"print":1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -1,0 +1,20 @@
+import frappe
+from frappe import _
+from frappe.model.document import Document
+from frappe.utils import getdate
+
+
+class ChinaFinanceSettings(Document):
+	def validate(self):
+		if self.activation_date:
+			self.activation_date = getdate(self.activation_date)
+		if self.archive_retention_years and self.archive_retention_years < 10:
+			frappe.throw(_("电子会计档案保管年限不能少于 10 年"))
+		if self.reconciliation_tolerance is not None and self.reconciliation_tolerance <= 0:
+			frappe.throw(_("对账金额容差必须大于零"))
+		if self.sales_settlement_mode == "对账结算后确认应收" and not self.sales_settlement_activation_date:
+			frappe.throw(_("启用对账结算后确认应收时必须设置切换生效日期"))
+		for fieldname in ("profit_loss_account", "retained_earnings_account"):
+			account = self.get(fieldname)
+			if account and frappe.db.get_value("Account", account, "company") != self.company:
+				frappe.throw(_("{0} 必须属于公司 {1}").format(self.meta.get_label(fieldname), self.company))

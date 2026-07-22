@@ -1,0 +1,177 @@
+China Finance,中国财务
+China Accounting Voucher,中国会计凭证
+China Accounting Voucher Entry,中国会计凭证分录
+China Voucher Sync Issue,凭证快照同步异常
+China Closing Check,中国结账检查
+China Closing Run,中国结账运行单
+China Electronic Document,电子会计档案
+China Finance Settings,中国财务设置
+China Financial Statement Mapping,财务报表科目映射
+China Financial Statement Row,财务报表行
+China Financial Statement Template,财务报表模板
+China Accounting Policy,中国会计政策
+China Financial Statement Notes,财务报表附注
+China Reconciliation Line,对账明细
+China Reconciliation Statement,对账单
+China Reconciliation Scope,对账范围配置
+China Reconciliation Difference,对账差异事项
+China Purchase Reconciliation Rule,采购应付对账规则
+China Invoice Control Rule,开票控制规则
+China Sales Invoice Control,销售发票开票控制
+China Sales Settlement,销售结算单
+China Sales Settlement Item,销售结算明细
+China Sales Settlement Rule,销售结算规则
+China Tax Invoice Request,中国开票申请
+China Tax Invoice Request Item,开票申请明细
+China Tax Integration Call,税务接口调用日志
+China Tax Account Mapping,税务科目映射
+China Input Tax Deduction Batch,进项税抵扣批次
+China Input Tax Deduction Item,进项税抵扣明细
+China Report Snapshot,报表快照
+China Tax Invoice,中国税务发票
+China Tax Invoice Allocation,税务发票业务分摊
+China Tax Invoice Item,税务发票明细
+China Voucher Sequence,凭证流水号
+China Business Document Chain,业务单据链
+China Purchase Reconciliation,采购应付对账
+China Output Invoice Reconciliation,销项票账对账
+China Purchase Document Chain,采购业务单据链
+China AR AP Ledger Reconciliation,往来总账与付款台账核对
+China Financial Statements,中国财务报表
+China VAT Ledger,增值税台账
+China VAT Return Worksheet,增值税申报底稿
+China Voucher Integrity,凭证完整性检查
+China Voucher Ledger,中国凭证账簿
+China Finance Manager,中国财务管理员
+China Voucher Maker,凭证制单员
+China Voucher Reviewer,凭证审核员
+China Voucher Poster,凭证记账员
+China Tax User,中国税务专员
+China Archive User,会计档案员
+China Finance Auditor,中国财务审计员
+Direct AR,直接确认应收
+Reconciliation Settlement,对账结算后确认应收
+Original Document,原始凭证
+Accounting Voucher,会计凭证
+Tax Invoice,税务发票
+Reconciliation,对账
+Financial Statement,财务报表
+Closing Package,结账档案包
+Other,其他
+Archived,已归档
+Verification Failed,校验失败
+Superseded,已替代
+Manual,手工
+Required,必须开票
+Not Required,不要求开票
+Blue,蓝票
+Red,红票
+Pending Approval,待审批
+Approved,已审批
+Invoiced,已开票
+Rejected,已驳回
+Cancelled,已取消
+Issue,开具
+Download,下载原件
+Succeeded,成功
+Failed,失败
+Output,销项
+Input,进项
+Not Red,未红冲
+Partially Red,部分红冲
+Fully Red,已红冲
+Selected,已勾选
+Deducted,已抵扣
+Automatic,自动
+Blocking,阻断
+Warning,警告
+Information,信息
+Balance Sheet,资产负债表
+Profit and Loss,利润表
+Cash Flow,现金流量表
+Changes in Equity,所有者权益变动表
+Heading,标题
+Mapped Accounts,映射科目
+Formula,公式
+Debit Positive,借方为正
+Credit Positive,贷方为正
+Customer,客户
+Supplier,供应商
+Bank,银行
+External Confirmation,外部确认
+Internal Review,内部复核
+Bank Statement,银行对账单
+Open,待处理
+Resolved,已解决
+Approved Timing,已批准时间性差异
+Balance Difference,余额差异
+Book Timing,账面时间性差异
+Bank Timing,银行时间性差异
+Missing Entry,缺失记账
+Direct,直接对账
+Receipt and Invoice,收货与发票齐套
+"Receipt, Invoice and Tax Invoice",收货、发票与税票齐套
+Ready,可确认
+Blocked,已拦截
+Not Applicable,不适用
+Waived,已豁免
+Draft,草稿
+Confirmed,已确认
+Posted,已记账
+Reversed,已冲销
+Void,已作废
+Posting,过账
+Cancellation,取消
+Monthly,月结
+Year End,年结
+Closed,已结账
+Reopened,已重新开账
+China Statement Mapping,科目映射控制台
+Statement Type,报表类型
+Account Search,搜索科目
+Pending Review Only,只看待复核
+Mapped Accounts,已映射科目
+Unmapped Accounts,未映射科目
+Pending Review,待复核
+Map Here,映射到本行
+Review Row,复核本行
+Unreview Row,撤销本行复核
+{0} accounts selected,已选 {0} 个科目
+Click a statement row to map,点击左侧报表行完成映射
+Cash Flow Mapping,现金流映射
+Inflow Row,现金流入行
+Outflow Row,现金流出行
+Sign Multiplier,金额方向
+Remove Mapping,移除映射
+Remove this mapping?,确定移除该映射？
+Mapping removed,映射已移除
+Saved {0} mappings,已保存 {0} 条映射
+Row reviewed,本行已复核
+Review cleared,已撤销复核
+Mapped Row,科目行
+Debit Positive,借方为正
+Credit Positive,贷方为正
+Automatic,自动
+Manual,手工
+Accounts,会计科目
+Clear,清除
+Template,模板
+Accounting Standard,会计准则
+Unmapped Only,仅看未映射
+Edit Formula,编辑公式
+Available Row Codes,可用行编码
+Formula saved,公式已保存
+You can write the formula with row labels,可直接使用项目名编写公式
+Unrecognized Items,无法识别的项目
+Invalid item name or row code: {0},无效的项目名或行编码：{0}
+Click to filter,点击筛选
+{0} mapped accounts,包含 {0} 个映射科目
+China Cash Flow Assignment,现金流量指定单
+China Cash Flow Assignment Item,现金流量指定明细
+China Cash Equivalent Scope,现金及现金等价物范围
+Statutory Line Number,法定行次
+Draft Statement,草表
+Formal Statutory Financial Statements,正式法定财务报表
+China Finance User,中国财务用户
+Confirm Assignment,确认指定
+Cancel Assignment,作废指定单

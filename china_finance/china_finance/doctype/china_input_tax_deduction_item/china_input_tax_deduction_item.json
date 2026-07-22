@@ -1,0 +1,13 @@
+{
+ "actions": [], "doctype": "DocType", "editable_grid": 1, "engine": "InnoDB", "istable": 1, "module": "China Finance", "name": "China Input Tax Deduction Item",
+ "field_order": ["tax_invoice", "invoice_number", "invoice_date", "seller_name", "net_amount", "tax_amount", "gross_amount"],
+ "fields": [
+  {"fieldname":"tax_invoice","fieldtype":"Link","label":"进项税务发票","options":"China Tax Invoice","reqd":1,"in_list_view":1},
+  {"fieldname":"invoice_number","fieldtype":"Data","label":"发票号码","read_only":1,"in_list_view":1},
+  {"fieldname":"invoice_date","fieldtype":"Date","label":"开票日期","read_only":1},
+  {"fieldname":"seller_name","fieldtype":"Data","label":"销售方名称","read_only":1},
+  {"fieldname":"net_amount","fieldtype":"Currency","label":"不含税金额","read_only":1},
+  {"fieldname":"tax_amount","fieldtype":"Currency","label":"税额","read_only":1,"in_list_view":1},
+  {"fieldname":"gross_amount","fieldtype":"Currency","label":"价税合计","read_only":1}
+ ]
+}

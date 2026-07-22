@@ -1,0 +1,28 @@
+{
+ "actions":[], "creation":"2026-07-17 00:00:00.000000", "doctype":"DocType", "editable_grid":1, "engine":"InnoDB",
+ "field_order":["line_source","match_status","posting_date","voucher_type","voucher_no","account","remarks","debit","credit","balance","reconciling_amount","purchase_invoice","purchase_orders","purchase_receipts","tax_invoices","reconciliation_policy","reconciliation_status","reconciliation_reason","waiver_reason","waived_by","waived_on"],
+ "fields":[
+  {"fieldname":"line_source","fieldtype":"Select","label":"明细来源","options":"Ledger\nBook Outstanding\nBank Transaction","read_only":1},
+  {"fieldname":"match_status","fieldtype":"Select","label":"匹配状态","options":"Matched\nUnmatched\nTiming","read_only":1},
+  {"fieldname":"posting_date","fieldtype":"Date","in_list_view":1,"label":"过账日期","read_only":1},
+  {"fieldname":"voucher_type","fieldtype":"Link","label":"单据类型","options":"DocType","read_only":1},
+  {"fieldname":"voucher_no","fieldtype":"Dynamic Link","in_list_view":1,"label":"单据","options":"voucher_type","read_only":1},
+  {"fieldname":"account","fieldtype":"Link","label":"科目","options":"Account","read_only":1},
+  {"fieldname":"remarks","fieldtype":"Small Text","label":"摘要","read_only":1},
+  {"fieldname":"debit","fieldtype":"Currency","label":"借方","read_only":1},
+  {"fieldname":"credit","fieldtype":"Currency","label":"贷方","read_only":1},
+  {"fieldname":"balance","fieldtype":"Currency","in_list_view":1,"label":"余额","read_only":1},
+  {"fieldname":"reconciling_amount","fieldtype":"Currency","label":"调节金额","read_only":1},
+  {"fieldname":"purchase_invoice","fieldtype":"Link","label":"采购发票","options":"Purchase Invoice","read_only":1},
+  {"fieldname":"purchase_orders","fieldtype":"Data","label":"采购订单","read_only":1},
+  {"fieldname":"purchase_receipts","fieldtype":"Data","label":"采购收货单","read_only":1},
+  {"fieldname":"tax_invoices","fieldtype":"Data","label":"进项税务发票","read_only":1},
+  {"fieldname":"reconciliation_policy","fieldtype":"Data","label":"采购对账策略","read_only":1},
+  {"fieldname":"reconciliation_status","fieldtype":"Select","in_list_view":1,"label":"采购齐套状态","options":"Ready\nBlocked\nNot Applicable\nWaived","read_only":1},
+  {"fieldname":"reconciliation_reason","fieldtype":"Small Text","label":"采购齐套原因","read_only":1},
+  {"fieldname":"waiver_reason","fieldtype":"Small Text","label":"豁免原因","read_only":1},
+  {"fieldname":"waived_by","fieldtype":"Link","label":"豁免人","options":"User","read_only":1},
+  {"fieldname":"waived_on","fieldtype":"Datetime","label":"豁免时间","read_only":1}
+ ],
+ "istable":1, "modified":"2026-07-17 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Reconciliation Line", "owner":"Administrator", "permissions":[]
+}

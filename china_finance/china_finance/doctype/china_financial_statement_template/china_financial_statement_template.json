@@ -1,0 +1,24 @@
+{
+ "actions":[], "autoname":"field:template_key", "creation":"2026-07-17 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["template_key","title","accounting_standard","statement_type","version","effective_from","effective_to","is_active","rows"],
+ "fields":[
+  {"fieldname":"template_key","fieldtype":"Data","hidden":1,"label":"模板唯一键","read_only":1,"reqd":1,"unique":1},
+  {"fieldname":"title","fieldtype":"Data","in_list_view":1,"label":"模板名称","reqd":1},
+  {"fieldname":"accounting_standard","fieldtype":"Select","in_list_view":1,"label":"会计准则","options":"企业会计准则\n小企业会计准则","reqd":1},
+  {"fieldname":"statement_type","fieldtype":"Select","in_list_view":1,"label":"报表类型","options":"Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity","reqd":1},
+  {"default":"1.0","fieldname":"version","fieldtype":"Data","label":"版本","reqd":1},
+  {"fieldname":"effective_from","fieldtype":"Date","label":"生效日期","reqd":1},
+  {"fieldname":"effective_to","fieldtype":"Date","label":"失效日期"},
+  {"default":"1","fieldname":"is_active","fieldtype":"Check","label":"启用"},
+  {"fieldname":"rows","fieldtype":"Table","label":"报表项目","options":"China Financial Statement Row","reqd":1}
+ ],
+ "modified":"2026-07-17 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Financial Statement Template", "owner":"Administrator",
+ "permissions":[
+  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager","share":1,"write":1},
+  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"role":"China Finance Manager","share":1,"write":1},
+  {"export":1,"print":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ],
+ "search_fields":"template_key,title",
+ "show_title_field_in_link":1,
+ "sort_field":"modified", "sort_order":"DESC", "title_field":"title", "track_changes":1
+}

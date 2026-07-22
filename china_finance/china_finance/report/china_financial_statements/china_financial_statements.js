@@ -1,0 +1,214 @@
+frappe.query_reports["China Financial Statements"] = {
+	after_datatable_render() {
+		const report = frappe.query_report;
+		report.page.main.find(".china-balance-sheet-panels").remove();
+		report.$report.show();
+		if (report.get_filter_value("statement_type") !== "Balance Sheet") return;
+
+		const currency = report.raw_data.chart?.currency;
+		const asset_rows = report.data
+			.filter((row) => row.asset_label)
+			.map((row) => make_balance_sheet_side_row(row, "asset"));
+		const liability_equity_rows = report.data
+			.filter((row) => row.liability_equity_label)
+			.map((row) => make_balance_sheet_side_row(row, "liability_equity"));
+		const $panels = $("<div class='china-balance-sheet-panels'></div>");
+		const asset_panel = append_balance_sheet_panel($panels, __("资产"));
+		const liability_equity_panel = append_balance_sheet_panel($panels, __("负债和所有者权益"));
+		report.$report.before($panels).hide();
+		// DataTable injects a <style> element into its container, which only gets a
+		// stylesheet once the container is attached to the document. Build the
+		// tables only after the panels are inserted.
+		render_balance_sheet_tree(asset_panel, asset_rows, currency);
+		render_balance_sheet_tree(liability_equity_panel, liability_equity_rows, currency);
+	},
+	// The query report page shows the main datatable again after
+	// after_datatable_render, so hide it once the refresh has fully settled.
+	// The tree footer (Set Level / Expand All / Collapse All) only controls the
+	// hidden main datatable, so hide it as well; each panel has its own buttons.
+	after_refresh(report) {
+		if (report.get_filter_value("statement_type") === "Balance Sheet") {
+			report.$report.hide();
+			report.$tree_footer?.hide();
+		}
+	},
+	onload(report) {
+		if (!report.get_filter_value("company")) {
+			report.set_filter_value("company", frappe.defaults.get_user_default("Company"));
+		}
+		report.get_filter("fiscal_year").get_query = () => ({
+			filters: { disabled: 0 },
+		});
+		report.get_filter("cost_center").get_query = () => ({
+			filters: { company: report.get_filter_value("company") },
+		});
+		report.get_filter("project").get_query = () => ({
+			filters: { company: report.get_filter_value("company") },
+		});
+		// Query Report copies df.on_change only during control creation. Update the
+		// created controls so period changes work without reopening the page.
+		report.get_filter("fiscal_year").on_change = () => sync_accounting_period(report, true);
+		report.get_filter("periodicity").on_change = () => sync_accounting_period(report, true);
+		report.get_filter("accounting_period").on_change = () => apply_accounting_period(report, true);
+
+		if (!report.get_filter_value("fiscal_year")) {
+			const fiscal_year = erpnext.utils.get_fiscal_year(frappe.datetime.get_today());
+			report.set_filter_value("fiscal_year", fiscal_year);
+			sync_accounting_period(report, false);
+		} else {
+			sync_accounting_period(report, false);
+		}
+	},
+	formatter(value, row, column, data, default_formatter) {
+		value = default_formatter(value, row, column, data);
+		const balance_sheet_side = column.fieldname === "asset_label" ? "asset" :
+			column.fieldname === "liability_equity_label" ? "liability_equity" : null;
+		if (data && balance_sheet_side) {
+			const indent = data[`${balance_sheet_side}_indent`] || 0;
+			value = `${"&nbsp;".repeat(indent * 4)}${value}`;
+			if (data[`${balance_sheet_side}_bold`]) value = `<strong>${value}</strong>`;
+		} else if (data && data.bold) {
+			value = `<strong>${value}</strong>`;
+		}
+		return value;
+	},
+};
+
+function sync_accounting_period(report, refresh) {
+	const fiscal_year = report.get_filter_value("fiscal_year");
+	if (!fiscal_year) return;
+	frappe.db.get_doc("Fiscal Year", fiscal_year).then((year) => {
+		if (report.get_filter_value("fiscal_year") !== fiscal_year) return;
+		const period_filter = report.get_filter("accounting_period");
+		const options = get_period_options(year, report.get_filter_value("periodicity"));
+		period_filter.df.options = options.map((option) => option.label).join("\n");
+		period_filter.refresh();
+		if (!options.some((option) => option.label === report.get_filter_value("accounting_period"))) {
+			report.set_filter_value("accounting_period", options[0].label);
+		}
+		apply_accounting_period(report, refresh, year, options);
+	});
+}
+
+function apply_accounting_period(report, refresh, fiscal_year, options) {
+	const year_name = report.get_filter_value("fiscal_year");
+	if (!year_name) return;
+	const set_dates = (year) => {
+		const periods = options || get_period_options(year, report.get_filter_value("periodicity"));
+		const selected = periods.find((option) => option.label === report.get_filter_value("accounting_period")) || periods[0];
+		report.set_filter_value({ from_date: selected.from_date, to_date: selected.to_date });
+		if (refresh) report.refresh();
+	};
+	if (fiscal_year) {
+		set_dates(fiscal_year);
+		return;
+	}
+	frappe.db.get_doc("Fiscal Year", year_name).then((year) => {
+		if (report.get_filter_value("fiscal_year") === year_name) set_dates(year);
+	});
+}
+
+function get_period_options(fiscal_year, periodicity) {
+	const start = moment(fiscal_year.year_start_date);
+	const end = moment(fiscal_year.year_end_date);
+	if (periodicity === "季度") {
+		return [1, 2, 3, 4].map((quarter) => make_period_option(start, end, (quarter - 1) * 3, 3, `第${quarter}季度`));
+	}
+	if (periodicity === "月度") {
+		return Array.from({ length: 12 }, (_, index) => make_period_option(start, end, index, 1, `第${index + 1}月`));
+	}
+	return [{ label: "全年", from_date: start.format("YYYY-MM-DD"), to_date: end.format("YYYY-MM-DD") }];
+}
+
+function make_period_option(year_start, year_end, offset_months, duration_months, label) {
+	const start = year_start.clone().add(offset_months, "months");
+	const end = start.clone().add(duration_months, "months").subtract(1, "day");
+	return {
+		label,
+		from_date: start.format("YYYY-MM-DD"),
+		to_date: moment.min(end, year_end).format("YYYY-MM-DD"),
+	};
+}
+
+function make_balance_sheet_side_row(row, side) {
+	return {
+		label: row[`${side}_label`],
+		row_type: row[`${side}_row_type`],
+		indent: row[`${side}_indent`] || 0,
+		bold: row[`${side}_bold`] || 0,
+		opening_amount: row[`${side}_opening_amount`],
+		amount: row[`${side}_amount`],
+		comparison_amount: row[`${side}_comparison_amount`],
+	};
+}
+
+function append_balance_sheet_panel($panels, title) {
+	const $panel = $("<section class='china-balance-sheet-panel'></section>");
+	const $title = $(`<div class="china-balance-sheet-panel__title"><span>${title}</span></div>`);
+	const $actions = $("<span class='china-balance-sheet-panel__actions' style='float: right; margin-left: auto;'></span>");
+	const $expand = $(`<button class="btn btn-xs btn-secondary" type="button">${__("Expand All")}</button>`);
+	const $collapse = $(`<button class="btn btn-xs btn-secondary" type="button">${__("Collapse All")}</button>`);
+	$title.append($actions.append($expand, $collapse));
+	const $body = $("<div class='china-balance-sheet-panel__body'></div>");
+	$panel.append($title, $body);
+	$panels.append($panel);
+	return { body: $body.get(0), $expand, $collapse };
+}
+
+function render_balance_sheet_tree(panel, rows, currency) {
+	const has_comparison = rows.some((row) => row.comparison_amount !== null && row.comparison_amount !== undefined);
+
+	const bold_row = (data) => data && (data.bold || data.row_type === "Heading");
+	const format_amount = (value, row, column, data) => {
+		let formatted = format_currency(value || 0, currency);
+		if (bold_row(data)) formatted = `<strong>${formatted}</strong>`;
+		return formatted;
+	};
+	const columns = [
+		{
+			id: "label",
+			name: __("项目"),
+			width: 260,
+			format: (value, row, column, data) => {
+				let label = frappe.utils.escape_html(value ?? "");
+				if (bold_row(data)) label = `<strong>${label}</strong>`;
+				return label;
+			},
+		},
+		{ id: "opening_amount", name: __("期初余额"), width: 140, format: format_amount },
+		{ id: "amount", name: __("期末余额"), width: 150, format: format_amount },
+	];
+	if (has_comparison) {
+		columns.push({ id: "comparison_amount", name: __("比较期余额"), width: 150, format: format_amount });
+	}
+
+	const datatable = new window.DataTable(panel.body, {
+		columns,
+		data: rows,
+		treeView: true,
+		// Fluid layout stretches the columns to the panel width, so no
+		// horizontal scrollbar appears and sticky columns cannot overlap.
+		layout: "fluid",
+		cellHeight: 33,
+		inlineFilters: true,
+		language: frappe.boot.lang,
+		translations: frappe.utils.datatable.get_translations(),
+		direction: frappe.utils.is_rtl() ? "rtl" : "ltr",
+	});
+	// Start collapsed to the top level, matching the previous custom panels.
+	datatable.rowmanager.setTreeDepth(0);
+	panel.$expand.on("click", () => datatable.rowmanager.expandAllNodes());
+	panel.$collapse.on("click", () => datatable.rowmanager.collapseAllNodes());
+}
+
+// All query reports share one page container (frappe.standard_pages["query-report"]);
+// panels injected for the balance-sheet layout must not leak into other reports.
+if (!frappe._china_fs_panels_cleanup_bound) {
+	frappe._china_fs_panels_cleanup_bound = true;
+	frappe.router.on("change", () => {
+		const route = frappe.get_route();
+		if (route[0] !== "query-report" || route[1] !== "China Financial Statements") {
+			$(".china-balance-sheet-panels").remove();
+		}
+	});
+}

@@ -1,0 +1,36 @@
+{
+ "actions": [], "autoname": "naming_series:", "doctype": "DocType", "engine": "InnoDB", "module": "China Finance", "name": "China Reconciliation Difference", "naming_rule": "By \"Naming Series\" field", "track_changes": 1,
+ "field_order": ["naming_series", "company", "statement", "scope", "difference_type", "amount", "status", "source_section", "source_doctype", "source_name", "carried_from", "reason", "owner_user", "due_date", "resolution_section", "resolution_doctype", "resolution_name", "resolution_notes", "evidence_file", "resolved_by", "resolved_on", "approved_by", "approved_on"],
+ "fields": [
+  {"fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CRD-.YYYY.-.#####","default":"CRD-.YYYY.-.#####","reqd":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"in_list_view":1},
+  {"fieldname":"statement","fieldtype":"Link","label":"对账单","options":"China Reconciliation Statement","reqd":1,"in_list_view":1},
+  {"fieldname":"scope","fieldtype":"Link","label":"对账范围","options":"China Reconciliation Scope","read_only":1},
+  {"fieldname":"difference_type","fieldtype":"Select","label":"差异类型","options":"Balance Difference\nBook Timing\nBank Timing\nMissing Entry\nOther","reqd":1,"in_list_view":1},
+  {"fieldname":"amount","fieldtype":"Currency","label":"差异金额","reqd":1,"in_list_view":1},
+  {"fieldname":"status","fieldtype":"Select","label":"状态","options":"Open\nResolved\nApproved Timing\nWaived","default":"Open","read_only":1,"in_list_view":1},
+  {"fieldname":"source_section","fieldtype":"Section Break","label":"差异来源"},
+  {"fieldname":"source_doctype","fieldtype":"Link","label":"来源单据类型","options":"DocType"},
+  {"fieldname":"source_name","fieldtype":"Dynamic Link","label":"来源单据","options":"source_doctype"},
+  {"fieldname":"carried_from","fieldtype":"Link","label":"承接上期差异","options":"China Reconciliation Difference","read_only":1},
+  {"fieldname":"reason","fieldtype":"Small Text","label":"差异原因","reqd":1},
+  {"fieldname":"owner_user","fieldtype":"Link","label":"责任人","options":"User","reqd":1},
+  {"fieldname":"due_date","fieldtype":"Date","label":"处理期限","reqd":1},
+  {"fieldname":"resolution_section","fieldtype":"Section Break","label":"处理结果"},
+  {"fieldname":"resolution_doctype","fieldtype":"Link","label":"处理单据类型","options":"DocType","read_only":1},
+  {"fieldname":"resolution_name","fieldtype":"Dynamic Link","label":"处理单据","options":"resolution_doctype","read_only":1},
+  {"fieldname":"resolution_notes","fieldtype":"Small Text","label":"处理说明","read_only":1},
+  {"fieldname":"evidence_file","fieldtype":"Attach","label":"处理附件","read_only":1},
+  {"fieldname":"resolved_by","fieldtype":"Link","label":"解决确认人","options":"User","read_only":1},
+  {"fieldname":"resolved_on","fieldtype":"Datetime","label":"解决时间","read_only":1},
+  {"fieldname":"approved_by","fieldtype":"Link","label":"批准人","options":"User","read_only":1},
+  {"fieldname":"approved_on","fieldtype":"Datetime","label":"批准时间","read_only":1}
+ ],
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Accounts Manager","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Accounts User","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Manager","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Auditor","read":1,"report":1,"export":1,"print":1}
+ ]
+}

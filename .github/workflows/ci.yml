@@ -1,0 +1,82 @@
+name: China Finance CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: china-finance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    services:
+      redis-cache:
+        image: redis:alpine
+        ports: ["13000:6379"]
+      redis-queue:
+        image: redis:alpine
+        ports: ["11000:6379"]
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mariadb-admin ping -proot"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mariadb-client redis-tools
+          pip install frappe-bench
+
+      - name: Create Frappe v16 bench
+        run: |
+          bench init --frappe-branch v16.23.0 --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
+
+      - name: Install ERPNext and China Finance
+        working-directory: /home/runner/frappe-bench
+        env:
+          CI: "Yes"
+        run: |
+          # The China CoA JSON lives in the DeepLinkERP fork. Testing against upstream
+          # would silently omit the template that production images contain.
+          bench get-app --branch version-16 erpnext https://github.com/yueweiit/DeepLinkERP.git
+          bench get-app china_finance "$GITHUB_WORKSPACE"
+          bench setup requirements --dev
+          bench new-site --db-root-password root --admin-password admin test_site
+          bench --site test_site install-app erpnext
+          bench --site test_site install-app china_finance
+
+      - name: Verify repeatable migration and assets
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench --site test_site migrate
+          bench --site test_site migrate
+          bench build --app china_finance
+          bench --site test_site execute china_finance.api.deployment_health
+
+      - name: Run tests
+        working-directory: /home/runner/frappe-bench
+        env:
+          TYPE: server
+        run: |
+          bench --site test_site set-config allow_tests true
+          bench --site test_site run-tests --app china_finance

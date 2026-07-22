@@ -1,0 +1,463 @@
+import json
+
+import frappe
+
+
+ROLES = (
+	"China Finance Manager",
+	"China Finance User",
+	"China Voucher Maker",
+	"China Voucher Reviewer",
+	"China Voucher Poster",
+	"China Tax User",
+	"China Archive User",
+	"China Finance Auditor",
+)
+
+DAILY_NAVIGATION = (
+	("China Cash Flow Assignment", "现金流量指定单", "DocType"),
+	("China Tax Invoice", "中国税务发票", "DocType"),
+	("China Sales Settlement", "销售结算单", "DocType"),
+	("China Reconciliation Statement", "对账单", "DocType"),
+)
+
+CLOSING_NAVIGATION = (
+	("China Financial Statements", "中国财务报表", "Report"),
+	("China Closing Run", "中国结账运行单", "DocType"),
+)
+
+CORE_NAVIGATION = DAILY_NAVIGATION + CLOSING_NAVIGATION
+
+ADMIN_NAVIGATION_GROUPS = (
+	(
+		"启用与基础设置", "settings", (
+			("China Finance Settings", "中国财务设置", "DocType"),
+			("China Reconciliation Scope", "对账范围配置", "DocType"),
+			("China Tax Account Mapping", "税务科目映射", "DocType"),
+		),
+	),
+	(
+		"业务控制规则", "sliders-horizontal", (
+			("China Sales Settlement Rule", "销售结算规则", "DocType"),
+			("China Invoice Control Rule", "开票控制规则", "DocType"),
+			("China Purchase Reconciliation Rule", "采购应付对账规则", "DocType"),
+		),
+	),
+	(
+		"法定报表配置", "file-text", (
+			("China Financial Statement Template", "财务报表模板", "DocType"),
+			("China Financial Statement Mapping", "财务报表科目映射", "DocType"),
+			("China Cash Equivalent Scope", "现金及现金等价物范围", "DocType"),
+			("china-statement-mapping", "科目映射控制台", "Page"),
+			("China Accounting Policy", "中国会计政策", "DocType"),
+			("China Financial Statement Notes", "财务报表附注", "DocType"),
+		),
+	),
+	(
+		"审计与归档", "archive", (
+			("China Voucher Sync Issue", "凭证快照同步异常", "DocType"),
+			("China Electronic Document", "电子会计档案", "DocType"),
+			("China Report Snapshot", "报表快照", "DocType"),
+			("China Tax Integration Call", "税务接口调用日志", "DocType"),
+		),
+	),
+)
+
+ADMIN_NAVIGATION = tuple(link for _label, _icon, links in ADMIN_NAVIGATION_GROUPS for link in links)
+
+MAPPING_CONSOLE_LINK = ("china-statement-mapping", "科目映射控制台", "Page")
+MAPPING_CONSOLE_ICON = "list-tree"
+
+WORKSPACE_CONTENT = json.dumps([
+	{"id": "cf-daily", "type": "card", "data": {"card_name": "日常工作", "col": 4}},
+	{"id": "cf-closing", "type": "card", "data": {"card_name": "报表与结账", "col": 4}},
+	*[
+		{"id": f"cf-admin-{index}", "type": "card", "data": {"card_name": label, "col": 4}}
+		for index, (label, _icon, _links) in enumerate(ADMIN_NAVIGATION_GROUPS, 1)
+	],
+], ensure_ascii=False, separators=(",", ":"))
+
+LEGACY_WORKSPACE_CONTENT = json.dumps([
+	{"id": "cf-daily", "type": "card", "data": {"card_name": "日常工作", "col": 4}},
+	{"id": "cf-closing", "type": "card", "data": {"card_name": "报表与结账", "col": 4}},
+	{"id": "cf-admin", "type": "card", "data": {"card_name": "管理与审计", "col": 4}},
+], ensure_ascii=False, separators=(",", ":"))
+
+LEGACY_NAVIGATION = {
+	"China Accounting Voucher",
+	"China Voucher Ledger",
+	"China Voucher Integrity",
+	"China Reconciliation Difference",
+	"China AR AP Ledger Reconciliation",
+	"China Purchase Reconciliation",
+	"China Purchase Document Chain",
+	"China Business Document Chain",
+	"China Input Tax Deduction Batch",
+	"China Tax Invoice Request",
+	"China Output Invoice Reconciliation",
+	"China VAT Ledger",
+	"China VAT Return Worksheet",
+	"Trial Balance",
+}
+
+CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS = (
+	{"fieldname": "company", "label": "公司", "fieldtype": "Link", "options": "Company", "mandatory": 1},
+	{
+		"fieldname": "statement_type", "label": "报表类型", "fieldtype": "Select",
+		"options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity", "mandatory": 1,
+		"default": "Balance Sheet",
+	},
+	{"fieldname": "finance_book", "label": "财务账簿", "fieldtype": "Link", "options": "Finance Book"},
+	{"fieldname": "fiscal_year", "label": "财年", "fieldtype": "Link", "options": "Fiscal Year"},
+	{"fieldname": "periodicity", "label": "期间", "fieldtype": "Select", "options": "年度\n季度\n月度", "default": "年度"},
+	{"fieldname": "accounting_period", "label": "会计期间", "fieldtype": "Select", "options": "全年", "default": "全年"},
+	{"fieldname": "from_date", "label": "本期起始日期", "fieldtype": "Date"},
+	{"fieldname": "to_date", "label": "本期截止日期", "fieldtype": "Date", "mandatory": 1},
+	{"fieldname": "comparison_from_date", "label": "比较期起始日期", "fieldtype": "Date"},
+	{"fieldname": "comparison_to_date", "label": "比较期截止日期", "fieldtype": "Date"},
+	{"fieldname": "cost_center", "label": "成本中心", "fieldtype": "Link", "options": "Cost Center"},
+	{"fieldname": "project", "label": "项目", "fieldtype": "Link", "options": "Project"},
+)
+
+
+def after_install():
+	sync_roles()
+	from china_finance.setup.templates import ensure_company_mappings, seed_cash_equivalent_scope, seed_statement_templates
+
+	seed_statement_templates()
+	seed_cash_equivalent_scope()
+	from china_finance.api import initialize_existing_profile_companies
+	initialize_existing_profile_companies()
+	ensure_company_mappings()
+	from china_finance.setup.china_coa_profile import sync_enabled_company_profiles
+	sync_enabled_company_profiles()
+	sync_sales_settlement_custom_fields()
+	sync_china_financial_statement_report_filters()
+	sync_navigation_metadata()
+
+
+def after_migrate():
+	sync_roles()
+	from china_finance.setup.templates import ensure_company_mappings, seed_cash_equivalent_scope, seed_statement_templates
+
+	seed_statement_templates()
+	seed_cash_equivalent_scope()
+	from china_finance.api import initialize_existing_profile_companies
+	initialize_existing_profile_companies()
+	ensure_company_mappings()
+	from china_finance.setup.china_coa_profile import sync_enabled_company_profiles
+	sync_enabled_company_profiles()
+	sync_sales_settlement_custom_fields()
+	sync_china_financial_statement_report_filters()
+	sync_navigation_metadata()
+	validate_deployment_schema()
+
+
+def sync_roles():
+	for role in ROLES:
+		if not frappe.db.exists("Role", role):
+			frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert(ignore_permissions=True)
+
+
+def sync_china_financial_statement_report_filters():
+	"""Update known standard filters without deleting user-added report filters."""
+	report_name = "China Financial Statements"
+	if not frappe.db.exists("Report", report_name):
+		return
+	report = frappe.get_doc("Report", report_name)
+	if report.is_standard != "Yes" or report.module != "China Finance":
+		return
+	filter_keys = ("fieldname", "label", "fieldtype", "mandatory", "wildcard_filter", "options", "default")
+
+	def normalize_filter(row):
+		filter_row = {key: row.get(key) for key in filter_keys}
+		for key in ("mandatory", "wildcard_filter"):
+			filter_row[key] = int(bool(filter_row[key]))
+		for key in ("options", "default"):
+			filter_row[key] = filter_row[key] or None
+		return filter_row
+
+	known_fieldnames = {row["fieldname"] for row in CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS}
+	custom_filters = [
+		normalize_filter(row)
+		for row in report.filters
+		if row.fieldname not in known_fieldnames
+	]
+	target = [normalize_filter(row) for row in CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS]
+	target.extend(custom_filters)
+	current = [
+		normalize_filter(row)
+		for row in report.filters
+	]
+	if current != target:
+		report.set("filters", target)
+		report.flags.ignore_permissions = True
+		report.save()
+
+
+def sync_sales_settlement_custom_fields():
+	"""Install only additive metadata for ERPNext sales documents."""
+	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+
+	create_custom_fields({
+		"Sales Order": [
+			{"fieldname": "custom_china_settlement_section", "label": "中国财务结算", "fieldtype": "Section Break", "insert_after": "customer_name"},
+			{"fieldname": "custom_china_settlement_mode", "label": "销售结算模式", "fieldtype": "Select", "options": "直接确认应收\n对账结算后确认应收", "read_only": 1, "insert_after": "custom_china_settlement_section"},
+			{"fieldname": "custom_china_settlement_rule", "label": "销售结算规则", "fieldtype": "Link", "options": "China Sales Settlement Rule", "read_only": 1, "insert_after": "custom_china_settlement_mode"},
+			{"fieldname": "custom_china_settlement_confirmation_method", "label": "确认方式", "fieldtype": "Data", "read_only": 1, "insert_after": "custom_china_settlement_rule"},
+			{"fieldname": "custom_china_settlement_override", "label": "已覆盖结算模式", "fieldtype": "Check", "read_only": 1, "insert_after": "custom_china_settlement_confirmation_method"},
+			{"fieldname": "custom_china_settlement_override_reason", "label": "覆盖原因", "fieldtype": "Small Text", "read_only": 1, "insert_after": "custom_china_settlement_override"},
+			{"fieldname": "custom_china_settlement_override_by", "label": "覆盖操作人", "fieldtype": "Link", "options": "User", "read_only": 1, "insert_after": "custom_china_settlement_override_reason"},
+			{"fieldname": "custom_china_settlement_override_on", "label": "覆盖时间", "fieldtype": "Datetime", "read_only": 1, "insert_after": "custom_china_settlement_override_by"},
+			{"fieldname": "custom_china_settled_amount", "label": "已结算金额", "fieldtype": "Currency", "read_only": 1, "insert_after": "custom_china_settlement_override_on"},
+		],
+		"Delivery Note": [
+			{"fieldname": "custom_china_settlement_section", "label": "中国财务结算", "fieldtype": "Section Break", "insert_after": "customer_name"},
+			{"fieldname": "custom_china_settlement_mode", "label": "销售结算模式", "fieldtype": "Select", "options": "直接确认应收\n对账结算后确认应收", "read_only": 1, "insert_after": "custom_china_settlement_section"},
+			{"fieldname": "custom_china_settlement_confirmation_method", "label": "确认方式", "fieldtype": "Data", "read_only": 1, "insert_after": "custom_china_settlement_mode"},
+			{"fieldname": "custom_china_settled_amount", "label": "已结算金额", "fieldtype": "Currency", "read_only": 1, "insert_after": "custom_china_settlement_confirmation_method"},
+			{"fieldname": "custom_china_pending_settlement_amount", "label": "待结算金额", "fieldtype": "Currency", "read_only": 1, "insert_after": "custom_china_settled_amount"},
+		],
+		"Sales Invoice": [
+			{"fieldname": "custom_china_sales_settlement", "label": "销售结算单", "fieldtype": "Link", "options": "China Sales Settlement", "read_only": 1, "insert_after": "customer_name"},
+		],
+	}, update=True)
+
+
+def sync_navigation_metadata():
+	"""Keep route identifiers stable while translations provide Chinese labels."""
+	navigation_name = "China Finance"
+	values_by_doctype = {
+		"Workspace": {"label": navigation_name, "title": navigation_name},
+		"Workspace Sidebar": {"title": navigation_name, "app": "china_finance"},
+		"Desktop Icon": {
+			"label": navigation_name,
+			"link_type": "Workspace Sidebar",
+			"link_to": navigation_name,
+			"sidebar": navigation_name,
+			"app": "china_finance",
+			"hidden": 0,
+		},
+	}
+	for doctype, values in values_by_doctype.items():
+		if frappe.db.exists(doctype, navigation_name):
+			frappe.db.set_value(doctype, navigation_name, values, update_modified=False)
+	sync_simplified_navigation(navigation_name)
+	if frappe.db.exists("Report", "China Purchase Document Chain"):
+		frappe.db.set_value("Report", "China Purchase Document Chain", "disabled", 1, update_modified=False)
+
+	frappe.cache.delete_key("desktop_icons")
+	frappe.cache.delete_key("bootinfo")
+	frappe.clear_cache()
+
+
+def _known_navigation_links():
+	return {link[0] for link in (*CORE_NAVIGATION, *ADMIN_NAVIGATION)} | LEGACY_NAVIGATION | {"China Finance"}
+
+
+def _sidebar_link(link_to, label, link_type):
+	return {
+		"type": "Link", "label": label, "link_to": link_to, "link_type": link_type,
+		"child": 1, "collapsible": 1, "indent": 0, "keep_closed": 0, "show_arrow": 0,
+	}
+
+
+def _sidebar_section(label, icon, keep_closed=0):
+	return {
+		"type": "Section Break", "label": label, "link_type": "DocType", "icon": icon,
+		"child": 0, "collapsible": 1, "indent": 1, "keep_closed": keep_closed, "show_arrow": 0,
+	}
+
+
+def _desired_sidebar_items(custom_links=None):
+	items = [
+		{
+			"type": "Link", "label": "中国财务工作台", "link_to": "China Finance",
+			"link_type": "Workspace", "child": 0, "collapsible": 1, "indent": 0,
+			"keep_closed": 0, "show_arrow": 0, "icon": "landmark",
+		},
+		{**_sidebar_link(*MAPPING_CONSOLE_LINK), "child": 0, "icon": MAPPING_CONSOLE_ICON},
+		_sidebar_section("日常工作", "briefcase"),
+	]
+	items.extend(_sidebar_link(*link) for link in DAILY_NAVIGATION)
+	items.append(_sidebar_section("报表与结账", "sheet"))
+	items.extend(_sidebar_link(*link) for link in CLOSING_NAVIGATION)
+	items.append(_sidebar_section("管理与审计", "settings", 1))
+	for label, icon, links in ADMIN_NAVIGATION_GROUPS:
+		items.append(_sidebar_section(label, icon, 1))
+		items.extend(_sidebar_link(*link) for link in links if link[0] != MAPPING_CONSOLE_LINK[0])
+	if custom_links:
+		items.append(_sidebar_section("自定义", "folder", 1))
+		items.extend(custom_links)
+	return items
+
+
+def _workspace_link(link_to, label, link_type):
+	return {
+		"type": "Link", "label": label, "link_to": link_to, "link_type": link_type,
+		"is_query_report": link_type == "Report", "hidden": 0, "onboard": 0,
+	}
+
+
+def _workspace_card(label, link_count):
+	return {
+		"type": "Card Break", "label": label, "link_type": "DocType", "link_count": link_count,
+		"is_query_report": 0, "hidden": 0, "onboard": 0,
+	}
+
+
+def _desired_workspace_links(custom_links=None):
+	links = [_workspace_card("日常工作", len(DAILY_NAVIGATION))]
+	links.extend(_workspace_link(*link) for link in DAILY_NAVIGATION)
+	links.append(_workspace_card("报表与结账", 2))
+	links.extend(_workspace_link(*link) for link in CLOSING_NAVIGATION)
+	for label, _icon, group_links in ADMIN_NAVIGATION_GROUPS:
+		links.append(_workspace_card(label, len(group_links)))
+		links.extend(_workspace_link(*link) for link in group_links)
+	if custom_links:
+		links.append(_workspace_card("自定义", len(custom_links)))
+		links.extend(custom_links)
+	return links
+
+
+def sync_simplified_navigation(navigation_name="China Finance"):
+	"""Apply the standard navigation while preserving unknown links and all private sidebars."""
+	known = _known_navigation_links()
+	if frappe.db.exists("Workspace Sidebar", navigation_name):
+		sidebar = frappe.get_doc("Workspace Sidebar", navigation_name)
+		custom = []
+		for item in sidebar.items:
+			if item.type == "Link" and item.link_to not in known:
+				custom.append(_sidebar_link(item.link_to, item.label, item.link_type))
+		desired = _desired_sidebar_items(custom)
+		current = [
+			(row.type, row.label, row.link_to, row.link_type, row.child, row.keep_closed, row.icon)
+			for row in sidebar.items
+		]
+		target = [
+			(
+				row.get("type"), row.get("label"), row.get("link_to"), row.get("link_type"),
+				row.get("child", 0), row.get("keep_closed", 0), row.get("icon"),
+			)
+			for row in desired
+		]
+		if current != target:
+			sidebar.set("items", desired)
+			sidebar.flags.ignore_permissions = True
+			sidebar.save()
+
+	if frappe.db.exists("Workspace", navigation_name):
+		workspace = frappe.get_doc("Workspace", navigation_name)
+		custom = []
+		for item in workspace.links:
+			if item.type == "Link" and item.link_to not in known:
+				custom.append(_workspace_link(item.link_to, item.label, item.link_type))
+		desired = _desired_workspace_links(custom)
+		current = [(row.type, row.label, row.link_to, row.link_type) for row in workspace.links]
+		target = [(row.get("type"), row.get("label"), row.get("link_to"), row.get("link_type")) for row in desired]
+		if current != target:
+			workspace.set("links", desired)
+			workspace.flags.ignore_permissions = True
+			workspace.save()
+		if (workspace.content or "").replace(" ", "") == LEGACY_WORKSPACE_CONTENT:
+			workspace.db_set("content", WORKSPACE_CONTENT, update_modified=False)
+
+
+def validate_deployment_schema():
+	required = {
+		"China Finance Settings": ("company", "activation_date", "accounting_standard", "cash_flow_assignment_activation_date", "statutory_reporting_activation_date", "report_amount_unit", "coa_template", "coa_version", "coa_hash", "coa_integrity_status"),
+		"China Sales Settlement Rule": ("rule_key", "company", "customer", "settlement_mode", "effective_from"),
+		"China Sales Settlement": ("company", "customer", "status", "posting_date", "sales_invoice"),
+		"China Sales Settlement Item": ("delivery_note", "delivery_note_item", "settlement_qty", "settlement_amount"),
+		"China Accounting Voucher": ("source_key", "voucher_key", "statutory_number"),
+		"China Voucher Sync Issue": ("issue_key", "company", "source_doctype", "source_name", "status", "retry_count"),
+		"China Cash Flow Assignment": ("company", "posting_date", "status", "china_accounting_voucher", "revision", "assignment_key"),
+		"China Cash Flow Assignment Item": ("gl_entry", "cash_account", "cash_flow_row_code", "assigned_amount"),
+		"China Voucher Sequence": ("sequence_key", "current_value"),
+		"China Tax Invoice": ("invoice_key", "invoice_number", "gross_amount", "file_hash"),
+		"China Invoice Control Rule": ("company", "requirement", "effective_from"),
+		"China Sales Invoice Control": ("sales_invoice", "requirement", "reason"),
+		"China Tax Invoice Request": ("company", "customer", "status"),
+		"China Tax Invoice Request Item": ("sales_invoice", "net_amount", "tax_amount"),
+		"China Tax Integration Call": ("company", "operation", "idempotency_key", "status"),
+		"China Tax Account Mapping": ("mapping_key", "company", "direction", "account", "effective_from"),
+		"China Input Tax Deduction Batch": ("company", "deduction_period", "status", "tax_amount"),
+		"China Input Tax Deduction Item": ("tax_invoice", "tax_amount"),
+		"China Electronic Document": ("sha256", "reference_doctype", "reference_name"),
+		"China Reconciliation Statement": ("statement_type", "scope", "period_key", "closing_balance", "difference"),
+		"China Reconciliation Scope": ("scope_key", "company", "scope_type", "reference_name"),
+		"China Reconciliation Difference": ("statement", "difference_type", "amount", "status"),
+		"China Purchase Reconciliation Rule": ("company", "policy", "effective_from"),
+		"China Financial Statement Template": ("template_key", "accounting_standard", "statement_type"),
+		"China Financial Statement Row": ("row_code", "statutory_line_number", "row_type", "balance_direction"),
+		"China Financial Statement Mapping": (
+			"mapping_key", "template", "account", "reviewed", "cash_inflow_row_code", "cash_outflow_row_code",
+			"account_number_snapshot", "mapping_basis", "mapping_rule_version",
+		),
+		"China Cash Equivalent Scope": ("scope_key", "company", "account", "classification", "effective_from", "reviewed"),
+		"China Accounting Policy": ("policy_key", "company", "category", "effective_from"),
+		"China Financial Statement Notes": (
+			"notes_key", "company", "from_date", "to_date", "policies_json", "statement_data_json",
+			"major_non_cash_transactions",
+		),
+		"China Closing Run": ("company", "to_date", "status"),
+		"China Report Snapshot": (
+			"closing_run", "statement_type", "sha256", "notes", "notes_sha256", "template_version",
+			"report_status", "mapping_sha256", "cash_scope_sha256", "validation_json",
+		),
+	}
+	missing = []
+	for doctype, fields in required.items():
+		if not frappe.db.exists("DocType", doctype):
+			missing.append(doctype)
+			continue
+		for fieldname in fields:
+			if not frappe.db.has_column(doctype, fieldname):
+				missing.append(f"{doctype}.{fieldname}")
+	if frappe.db.exists("DocType", "China Accounting Voucher") and not frappe.get_meta(
+		"China Accounting Voucher"
+	).has_field("entries"):
+		missing.append("China Accounting Voucher.entries")
+	if frappe.db.exists("DocType", "China Tax Invoice Request") and not frappe.get_meta(
+		"China Tax Invoice Request"
+	).has_field("items"):
+		missing.append("China Tax Invoice Request.items")
+	if frappe.db.exists("DocType", "China Input Tax Deduction Batch") and not frappe.get_meta(
+		"China Input Tax Deduction Batch"
+	).has_field("items"):
+		missing.append("China Input Tax Deduction Batch.items")
+	if frappe.db.exists("DocType", "China Cash Flow Assignment") and not frappe.get_meta(
+		"China Cash Flow Assignment"
+	).has_field("items"):
+		missing.append("China Cash Flow Assignment.items")
+	if frappe.db.exists("DocType", "China Sales Settlement") and not frappe.get_meta(
+		"China Sales Settlement"
+	).has_field("items"):
+		missing.append("China Sales Settlement.items")
+	for doctype, fieldname in (
+		("Sales Order", "custom_china_settlement_mode"),
+		("Delivery Note", "custom_china_settlement_mode"),
+		("Sales Invoice", "custom_china_sales_settlement"),
+	):
+		if frappe.db.exists("DocType", doctype) and not frappe.get_meta(doctype).has_field(fieldname):
+			missing.append(f"{doctype}.{fieldname}")
+	for report in (
+		"China Voucher Ledger", "China Voucher Integrity", "China VAT Ledger", "China Financial Statements",
+		"China Business Document Chain", "China VAT Return Worksheet", "China Purchase Reconciliation", "China Output Invoice Reconciliation", "China Purchase Document Chain", "China AR AP Ledger Reconciliation",
+	):
+		if not frappe.db.exists("Report", report):
+			missing.append(f"Report:{report}")
+	if not frappe.db.exists("Workspace", "China Finance"):
+		missing.append("Workspace:China Finance")
+	if not frappe.db.exists("Print Format", "China Accounting Voucher"):
+		missing.append("Print Format:China Accounting Voucher")
+	if not frappe.db.exists("Workspace Sidebar", "China Finance"):
+		missing.append("Workspace Sidebar:China Finance")
+	if not frappe.db.exists("Desktop Icon", "China Finance"):
+		missing.append("Desktop Icon:China Finance")
+	if frappe.db.exists("Report", "China Purchase Document Chain") and not frappe.db.get_value(
+		"Report", "China Purchase Document Chain", "disabled"
+	):
+		missing.append("DisabledReport:China Purchase Document Chain")
+	if missing:
+		frappe.throw("China Finance schema is incomplete: " + ", ".join(missing))

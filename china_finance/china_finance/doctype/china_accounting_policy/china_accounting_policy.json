@@ -1,0 +1,31 @@
+{
+ "actions":[], "autoname":"naming_series:", "creation":"2026-07-20 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["naming_series","policy_key","company","accounting_standard","category","title","version","effective_from","effective_to","measurement_basis","policy_text","change_section","change_type","previous_policy","change_reason","financial_impact","approval_section","approved_by","approved_on"],
+ "fields":[
+  {"default":"CAP-.YYYY.-.#####","fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CAP-.YYYY.-.#####","reqd":1},
+  {"fieldname":"policy_key","fieldtype":"Data","hidden":1,"label":"政策唯一键","length":500,"read_only":1,"reqd":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"accounting_standard","fieldtype":"Select","in_list_view":1,"label":"会计准则","options":"企业会计准则\n小企业会计准则","reqd":1},
+  {"fieldname":"category","fieldtype":"Select","in_list_view":1,"label":"政策类别","options":"财务报表编制基础\n收入确认\n存货\n固定资产\n无形资产及研发支出\n金融工具及减值\n外币折算\n职工薪酬\n所得税\n政府补助\n租赁\n预计负债\n其他","reqd":1},
+  {"fieldname":"title","fieldtype":"Data","in_list_view":1,"label":"政策名称","reqd":1},
+  {"default":"1.0","fieldname":"version","fieldtype":"Data","label":"版本","reqd":1},
+  {"fieldname":"effective_from","fieldtype":"Date","in_list_view":1,"label":"生效日期","reqd":1},
+  {"fieldname":"effective_to","fieldtype":"Date","label":"失效日期","allow_on_submit":1},
+  {"default":"历史成本","fieldname":"measurement_basis","fieldtype":"Select","label":"主要计量基础","options":"历史成本\n重置成本\n可变现净值\n现值\n公允价值\n混合计量","reqd":1},
+  {"fieldname":"policy_text","fieldtype":"Text Editor","label":"会计政策内容","reqd":1},
+  {"fieldname":"change_section","fieldtype":"Section Break","label":"政策变更"},
+  {"default":"首次制定","fieldname":"change_type","fieldtype":"Select","label":"变更类型","options":"首次制定\n法规要求变更\n自愿变更\n差错更正","reqd":1},
+  {"fieldname":"previous_policy","fieldtype":"Link","label":"上一版本政策","options":"China Accounting Policy"},
+  {"fieldname":"change_reason","fieldtype":"Small Text","label":"变更原因"},
+  {"fieldname":"financial_impact","fieldtype":"Text","label":"财务影响及处理方法"},
+  {"fieldname":"approval_section","fieldtype":"Section Break","label":"审批记录"},
+  {"fieldname":"approved_by","fieldtype":"Link","label":"批准人","options":"User","read_only":1},
+  {"fieldname":"approved_on","fieldtype":"Datetime","label":"批准时间","read_only":1}
+ ],
+ "is_submittable":1, "modified":"2026-07-20 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Accounting Policy", "naming_rule":"By \"Naming Series\" field", "owner":"Administrator",
+ "permissions":[
+  {"create":1,"delete":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager","submit":1,"write":1},
+  {"create":1,"delete":1,"export":1,"print":1,"read":1,"report":1,"role":"China Finance Manager","submit":1,"write":1},
+  {"export":1,"print":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ], "sort_field":"effective_from", "sort_order":"DESC", "track_changes":1
+}

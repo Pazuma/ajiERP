@@ -1,0 +1,11 @@
+{
+ "add_total_row": 1, "doctype": "Report", "module": "China Finance", "name": "China Purchase Document Chain", "report_name": "China Purchase Document Chain", "report_type": "Script Report", "is_standard": "Yes", "ref_doctype": "Purchase Order", "prepared_report": 0, "disabled": 1,
+ "filters": [
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","mandatory":1},
+  {"fieldname":"from_date","fieldtype":"Date","label":"起始日期","mandatory":1},
+  {"fieldname":"to_date","fieldtype":"Date","label":"截止日期","mandatory":1},
+  {"fieldname":"supplier","fieldtype":"Link","label":"供应商","options":"Supplier"},
+  {"fieldname":"exception_only","fieldtype":"Check","label":"仅异常"}
+ ],
+ "roles": [{"role":"System Manager"},{"role":"Accounts Manager"},{"role":"Accounts User"},{"role":"China Finance Manager"},{"role":"China Tax User"},{"role":"China Finance Auditor"}]
+}

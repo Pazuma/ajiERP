@@ -1,0 +1,17 @@
+{
+ "actions":[], "creation":"2026-07-17 00:00:00.000000", "doctype":"DocType", "editable_grid":1, "engine":"InnoDB",
+ "field_order":["row_code","statutory_line_number","label","is_child","row_type","formula","balance_direction","indent","bold","show_zero"],
+ "fields":[
+  {"fieldname":"row_code","fieldtype":"Data","in_list_view":1,"label":"行编码","reqd":1},
+  {"fieldname":"statutory_line_number","fieldtype":"Data","in_list_view":1,"label":"法定行次","description":"正式报表显示的法定行次，与系统内部行编码分离。"},
+  {"fieldname":"label","fieldtype":"Data","in_list_view":1,"label":"项目","reqd":1},
+  {"default":"0","description":"启用后显示为前一父行的子项","fieldname":"is_child","fieldtype":"Check","in_list_view":1,"label":"作为子行"},
+  {"default":"Mapped Accounts","fieldname":"row_type","fieldtype":"Select","label":"行类型","options":"Heading\nMapped Accounts\nFormula","reqd":1},
+  {"depends_on":"eval:doc.row_type=='Formula'","fieldname":"formula","fieldtype":"Code","label":"公式","options":"PythonExpression"},
+  {"default":"Debit Positive","fieldname":"balance_direction","fieldtype":"Select","label":"余额方向","options":"Debit Positive\nCredit Positive"},
+  {"default":"0","fieldname":"indent","fieldtype":"Int","hidden":1,"label":"缩进","read_only":1},
+  {"default":"0","fieldname":"bold","fieldtype":"Check","label":"加粗"},
+  {"default":"1","fieldname":"show_zero","fieldtype":"Check","label":"显示零值"}
+ ],
+ "istable":1, "modified":"2026-07-17 00:00:00.000000", "modified_by":"Administrator", "module":"China Finance", "name":"China Financial Statement Row", "owner":"Administrator", "permissions":[]
+}
