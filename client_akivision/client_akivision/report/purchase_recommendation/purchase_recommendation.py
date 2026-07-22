@@ -97,8 +97,9 @@ def _best_purchase(tiers, demanded_qty):
 	"""Compute direct-purchase price and the round-up recommendation for one supplier.
 
 	Tries the demanded qty plus every higher tier's min_qty and picks the cheapest
-	total; ties go to the smaller qty. Savings compare against buying the demanded
-	qty as-is (None when the demanded qty hits no tier).
+	total; ties go to the smaller qty. Savings compare against the no-round-up
+	baseline: the demanded qty as-is, or — when the demand hits no tier — the
+	smallest tier above the demand (the cheapest way to buy at all).
 	"""
 	direct = _hit_tier(tiers, demanded_qty)
 	direct_rate = direct["rate"] if direct else None
@@ -124,9 +125,18 @@ def _best_purchase(tiers, demanded_qty):
 		):
 			best_qty, best_rate, best_total = qty, tier["rate"], total
 
+	baseline_qty = baseline_total = None
+	if direct_total is not None:
+		baseline_qty, baseline_total = demanded_qty, direct_total
+	else:
+		entry = next((tier for tier in tiers if tier["min_qty"] > demanded_qty), None)
+		if entry:
+			baseline_qty = entry["min_qty"]
+			baseline_total = baseline_qty * entry["rate"]
+
 	savings = None
-	if direct_total is not None and best_total is not None:
-		savings = direct_total - best_total
+	if baseline_total is not None and best_total is not None:
+		savings = baseline_total - best_total
 
 	return {
 		"direct_rate": direct_rate,
@@ -135,6 +145,8 @@ def _best_purchase(tiers, demanded_qty):
 		"recommended_rate": best_rate,
 		"recommended_total": best_total,
 		"savings": savings,
+		"baseline_qty": baseline_qty,
+		"baseline_total": baseline_total,
 	}
 
 
@@ -152,7 +164,7 @@ def get_recommendation_rows(filters):
 	)
 
 	rules = _get_item_tier_rules(filters.item_code, filters.get("company"), on_date)
-	quotes = _get_latest_quotations(filters.item_code)
+	quotes = _get_quotation_rows(filters.item_code)
 	prices = _get_latest_item_prices(filters.item_code, on_date)
 	po_rates = _get_last_po_rates(filters.item_code)
 
@@ -245,16 +257,12 @@ def _build_supplier_row(
 		row["min_order_qty"] = min((tier["min_qty"] for tier in tiers), default=None)
 		if not direct_rules:
 			notes.append(_("Group-level pricing rule"))
-		if row["direct_total"] is None:
-			notes.append(_("Demand matches no price tier"))
 	elif quote and currency_ok(quote.get("currency")):
 		quote_tiers = _quotation_tiers(quote)
 		if quote_tiers:
 			row.update(_best_purchase(quote_tiers, demanded_qty))
 			row["price_source"] = _("Supplier Quotation")
 			row["min_order_qty"] = min((tier["min_qty"] for tier in quote_tiers), default=None)
-			if row["direct_total"] is None:
-				notes.append(_("Demand matches no price tier"))
 		else:
 			rate = flt(quote["rows"][0]["rate"])
 			row.update(
@@ -281,6 +289,16 @@ def _build_supplier_row(
 		)
 	elif tier_rules or quote or price:
 		notes.append(_("Non-default currency quote not compared"))
+
+	if row["direct_total"] is None and row.get("price_source"):
+		notes.append(_("Demand matches no price tier"))
+		baseline_qty = flt(row.get("baseline_qty"))
+		if baseline_qty and flt(row.get("recommended_qty")) > baseline_qty:
+			notes.append(
+				_("Buying {0} units costs less in total than the {1}-unit minimum").format(
+					"{:g}".format(flt(row["recommended_qty"])), "{:g}".format(baseline_qty)
+				)
+			)
 
 	row["note"] = "; ".join(notes)
 	return row
@@ -333,12 +351,8 @@ def _get_item_tier_rules(item_code, company, on_date):
 	return [rule for rule in rules if rule.name in matched_parents]
 
 
-def _get_latest_quotations(item_code):
-	"""Return the latest submitted Supplier Quotation per supplier, with all its rows for the item.
-
-	Multiple rows for the same item in one quotation express the supplier's
-	quantity price breaks (row qty = tier start, row rate = tier price).
-	"""
+def _get_quotation_rows(item_code):
+	"""Return quantity price points from every submitted Supplier Quotation, per supplier."""
 	rows = frappe.db.sql(
 		"""
 		SELECT sq.supplier, sq.name AS quotation, sq.valid_till, sq.currency,
@@ -351,20 +365,33 @@ def _get_latest_quotations(item_code):
 		(item_code,),
 		as_dict=True,
 	)
-	latest = {}
+	return _merge_quotation_rows(rows)
+
+
+def _merge_quotation_rows(rows):
+	"""Merge SQL rows (newest quotation first) into per-supplier price points.
+
+	Every submitted quotation row for the item is a quantity price point (row
+	qty = tier start, row rate = tier price); at the same quantity the newer
+	quotation wins. valid_till/currency come from the supplier's latest quote.
+	"""
+	by_supplier = {}
+	seen_qtys = {}
 	for row in rows:
-		entry = latest.get(row.supplier)
+		entry = by_supplier.get(row["supplier"])
 		if entry is None:
-			entry = latest[row.supplier] = {
-				"quotation": row.quotation,
-				"valid_till": row.valid_till,
-				"currency": row.currency,
+			entry = by_supplier[row["supplier"]] = {
+				"quotation": row["quotation"],
+				"valid_till": row["valid_till"],
+				"currency": row["currency"],
 				"rows": [],
 			}
-		if row.quotation != entry["quotation"]:
-			continue
+			seen_qtys[row["supplier"]] = set()
+		if row["qty"] in seen_qtys[row["supplier"]]:
+			continue  # At the same quantity the newer quotation wins.
+		seen_qtys[row["supplier"]].add(row["qty"])
 		entry["rows"].append(row)
-	return latest
+	return by_supplier
 
 
 def _quotation_tiers(quote):

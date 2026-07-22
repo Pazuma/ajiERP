@@ -1,0 +1,20 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["enabled", "provider", "api_base_url", "api_key", "model", "timeout"],
+ "fields": [
+  {"fieldname":"enabled","fieldtype":"Check","label":"Enabled","default":"0","description":"启用后,供应商报价导入可解析 PDF / 图片报价文件"},
+  {"fieldname":"provider","fieldtype":"Select","label":"Provider","options":"OpenAI Compatible\nAnthropic","default":"OpenAI Compatible","reqd":1,"description":"Kimi Code(api.kimi.com/coding)选 Anthropic;DeepSeek/通义/OpenAI 选 OpenAI Compatible"},
+  {"fieldname":"api_base_url","fieldtype":"Data","label":"API Base URL","default":"https://api.openai.com/v1","description":"OpenAI 兼容接口地址,如 https://api.deepseek.com/v1;Anthropic/Kimi Code 填 https://api.kimi.com/coding/v1"},
+  {"fieldname":"api_key","fieldtype":"Password","label":"API Key"},
+  {"fieldname":"model","fieldtype":"Data","label":"LLM Model","description":"OpenAI 兼容填 gpt-4o-mini 等;Anthropic/Kimi Code 按会员档填 k3 或 kimi-for-coding。解析图片报价需多模态模型"},
+  {"fieldname":"timeout","fieldtype":"Int","label":"Timeout (Seconds)","default":"60"}
+ ],
+ "issingle": 1,
+ "module": "Client Akivision",
+ "name": "Quote LLM Settings",
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1}
+ ]
+}

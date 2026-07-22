@@ -17,6 +17,13 @@ from frappe.utils.xlsxutils import read_xlsx_file_from_attached_file
 # "Supplier Quote Import Item".
 MAPPING_FIELDS = ("supplier_part_no", "item_code", "qty", "rate", "currency")
 
+SPREADSHEET_EXTENSIONS = (".xlsx", ".xls", ".csv")
+
+
+def is_spreadsheet_file(file_url):
+	"""Whether the uploaded file is a spreadsheet parsed via column mapping."""
+	return (file_url or "").lower().endswith(SPREADSHEET_EXTENSIONS)
+
 
 def read_sheet_rows(file_url, header_row=1):
 	"""Read the uploaded quote file and split into headers + data rows.

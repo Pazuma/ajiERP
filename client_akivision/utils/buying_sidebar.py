@@ -43,6 +43,16 @@ def sync_buying_sidebar_entries():
 	)
 	items = _move_after(items, supplier_quote_import.name, "Supplier Quotation")
 
+	purchase_recommendation = _ensure_single_link(
+		items,
+		link_type="Report",
+		link_to="Purchase Recommendation",
+		label="Purchase Recommendation",
+		icon="thumbs-up",
+		child=0,
+	)
+	items = _move_after(items, purchase_recommendation.name, "Supplier Quote Import")
+
 	purchase_taxes_template = _ensure_single_link(
 		items,
 		link_type="DocType",
@@ -52,6 +62,16 @@ def sync_buying_sidebar_entries():
 		child=1,
 	)
 	items = _move_before_section(items, purchase_taxes_template.name, {"Reports", "报表"})
+
+	quote_llm_settings = _ensure_single_link(
+		items,
+		link_type="DocType",
+		link_to="Quote LLM Settings",
+		label="Quote LLM Settings",
+		icon="settings",
+		child=1,
+	)
+	items = _move_before_section(items, quote_llm_settings.name, {"Reports", "报表"})
 	_reindex(items)
 
 	frappe.cache.delete_key("bootinfo")

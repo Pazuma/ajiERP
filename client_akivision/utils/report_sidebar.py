@@ -15,7 +15,6 @@ SIDEBAR_LINKS = {
 			("Report", "Purchase List", "采购清单", "purchase_list"),
 			("Report", "Supplier Performance Evaluation", "供应商回顾", "supplier_performance_evaluation"),
 			("Report", "Purchase Delay Analysis", "采购到货延迟分析", "purchase_delay_analysis"),
-			("Report", "Purchase Recommendation", "采购推荐分析", "purchase_recommendation"),
 		),
 	},
 	"Stock": {

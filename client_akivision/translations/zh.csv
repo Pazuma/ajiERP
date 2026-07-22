@@ -583,3 +583,30 @@ Best Supplier,最优供应商
 Suppliers Compared,参与比价供应商数
 No quotations or pricing rules found for this item.,该物料暂无有效报价或阶梯价。
 Please select an Item and enter a demanded quantity.,请选择物料并输入需求数量。
+Quote LLM Settings,报价LLM设置
+API Base URL,API 地址
+API Key,API 密钥
+LLM Model,模型
+Timeout (Seconds),超时(秒)
+LLM quote parsing is not enabled. Please enable it in Quote LLM Settings first.,"尚未启用 LLM 报价解析,请先在报价LLM设置中启用。"
+"This PDF has no readable text layer (likely a scanned document). Please ask the supplier for an Excel/text quote, or enter the items manually.","该 PDF 没有可读文本层(可能是扫描件),请向供应商索取 Excel 或文本报价,或手工录入明细。"
+LLM parsing supports PDF and image files only.,LLM 解析仅支持 PDF 与图片文件。
+Extract the quotation data from this document:,请从以下文档中提取报价数据:
+Extract the quotation data from this image:,请从这张图片中提取报价数据:
+LLM parsing failed. The file is kept; please check Quote LLM Settings or enter the items manually.,"LLM 解析失败,文件已保留;请检查报价LLM设置或手工录入明细。"
+LLM returned an unreadable result. Please try again or enter the items manually.,"LLM 返回了无法识别的结果,请重试或手工录入明细。"
+No quotation rows were recognized. Please check the file or enter the items manually.,"未识别到报价行,请检查文件或手工录入明细。"
+LLM Not Configured,未配置 LLM
+"PDF and image quotes are parsed via LLM. Please configure Quote LLM Settings first, or enter the items manually.","PDF 与图片报价通过 LLM 解析,请先配置报价LLM设置,或手工录入明细。"
+Parse this document with the LLM? Review the items afterwards before generating the quotation.,使用 LLM 解析该文件?解析后请核对明细再生成报价单。
+Parsing with LLM...,LLM 解析中…
+Provider,服务商
+"Cannot reach the LLM provider. The file is kept; please check the network and Quote LLM Settings, or enter the items manually.","无法连接 LLM 服务商,文件已保留;请检查网络与报价LLM设置,或手工录入明细。"
+LLM parsing failed (HTTP {0}): {1},LLM 解析失败(HTTP {0}):{1}
+Buying {0} units costs less in total than the {1}-unit minimum,买 {0} 个反而比最低档 {1} 个更省钱
+Purchase Recommendation,采购推荐分析
+Re-parsing will replace the {0} existing items.,重新解析将替换现有的 {0} 条明细。
+Parse Completed,解析完成
+"Parsed {0} rows, {1} need attention (invalid rows are highlighted).",已解析 {0} 行，其中 {1} 行待处理（无效行已标红）。
+Parsed,已解析
+Generated,已生成
