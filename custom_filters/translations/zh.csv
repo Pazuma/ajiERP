@@ -483,3 +483,4 @@ Accounts Receivable Ageing,应收账款账龄
 Accounts Payable Ageing,应付账款账龄
 Issue a debit note against an existing Sales Invoice to adjust the rate. The quantity will be retained from the original invoice.,针对现有销售发票开具借项通知单以调整价格。数量将沿用原发票上的数量。
 Is customer exempted from sales tax?,客户是否免征销售税？
+Default Supplier Quotation Warehouse,供应商报价默认仓库

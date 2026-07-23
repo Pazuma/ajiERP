@@ -2,7 +2,7 @@
 	if (window.__custom_filters_desk_tabs_loaded) return;
 	window.__custom_filters_desk_tabs_loaded = true;
 
-	const DESK_TABS_VERSION = "2026.07.21.1";
+	const DESK_TABS_VERSION = "2026.07.21.2";
 	const AUTO_PIN_MIGRATION_VERSION = 2;
 	const MAX_TABS = 20;
 	const VISIBLE_TAB_LIMIT = 7;
@@ -90,10 +90,10 @@
 			}
 
 			const doc = cur_frm.doc || {};
-			return doc.__title || doc.title || doc.name || `${translated_doctype} ${docname || ""}`.trim();
+			return doc.__title || doc.title || doc.name || docname || translated_doctype;
 		}
 
-		return `${translated_doctype} ${docname || ""}`.trim();
+		return docname || translated_doctype;
 	}
 
 	function resolve_page_title(route) {
@@ -125,6 +125,20 @@
 
 		if (view === "app" || view === "desk") return translate(name || doctype || view);
 		return resolve_page_title(route);
+	}
+
+	// 表单类标签显示为「单据类型 + 名称」（如“销售发票 客户1”），与面包屑后两段一致；
+	// tab.title 只存名称部分，渲染时拼接前缀，旧持久化数据无需迁移。
+	function display_title(tab) {
+		if (!tab) return "";
+		if (tab.type === "form" && tab.doctype) {
+			const doctype_label = translate(tab.doctype);
+			const name = String(tab.title || "").trim();
+			if (!name || name === doctype_label) return doctype_label;
+			if (name.toLowerCase().startsWith((doctype_label + " ").toLowerCase())) return name;
+			return `${doctype_label} ${name}`;
+		}
+		return tab.title || "";
 	}
 
 	function current_route_form() {
@@ -967,7 +981,7 @@
 			if (tab.pinned) item.classList.add("pinned");
 			if (tab.route_key === this.entering_key) item.classList.add("is-entering");
 			item.dataset.routeKey = tab.route_key;
-			item.title = tab.title;
+			item.title = display_title(tab);
 			item.setAttribute("role", "tab");
 			item.setAttribute("aria-selected", tab.route_key === this.state.active_route_key ? "true" : "false");
 			item.setAttribute("tabindex", tab.route_key === this.state.active_route_key ? "0" : "-1");
@@ -982,7 +996,7 @@
 
 			const title = document.createElement("span");
 			title.className = "custom-filters-desk-tab-title";
-			title.textContent = tab.title;
+			title.textContent = display_title(tab);
 			item.appendChild(title);
 
 			if (!tab.pinned) {
@@ -1140,13 +1154,13 @@
 				item.type = "button";
 				item.className = "custom-filters-desk-tabs-overflow-item";
 				item.dataset.routeKey = tab.route_key;
-				item.title = tab.title;
+				item.title = display_title(tab);
 				item.setAttribute("role", "menuitem");
 				item.setAttribute("tabindex", "-1");
 
 				const title = document.createElement("span");
 				title.className = "custom-filters-desk-tabs-overflow-title";
-				title.textContent = tab.title;
+				title.textContent = display_title(tab);
 				item.appendChild(title);
 
 				this.overflow_menu.appendChild(item);

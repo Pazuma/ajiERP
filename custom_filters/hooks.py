@@ -56,6 +56,7 @@ doctype_js = {
 	"Stock Entry": "public/js/stock_entry.js",
 	"Sales Order": "public/js/sales_order.js",
 	"Purchase Order": "public/js/purchase_order.js",
+	"Supplier Quotation": "public/js/supplier_quotation.js",
 }
 
 doctype_list_js = {
@@ -105,6 +106,11 @@ doctype_list_js = {
 
 # before_install = "custom_filters.install.before_install"
 # after_install = "custom_filters.install.after_install"
+
+# Migration
+# ------------
+
+after_migrate = "custom_filters.custom_filters.setup.after_migrate"
 
 # Uninstallation
 # ------------
@@ -156,13 +162,11 @@ doctype_list_js = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Supplier Quotation": {
+		"validate": "custom_filters.custom_filters.supplier_quotation.set_default_warehouse",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
