@@ -52,7 +52,6 @@ def hide_selling_pos_and_non_delivery_reports(bootinfo):
         {"Setup", "Master", "Masters", "主数据", "设置"},
         {"Item Alternative", "Inventory Dimension", "Quality Inspection Template"},
     )
-    hide_sidebar_sections(sidebars.get("manufacturing"), {"Material Planning", "物料计划"})
 
 
 def ensure_operations_management_sidebar(sidebars):

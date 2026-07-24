@@ -133,7 +133,6 @@ Sold,已销售
 for-sample,样品
 Sample Loan Out {0} has already been fully returned.,客户样品借出单 {0} 已全部归还。
 On Loan,借出中
-Payment Entry,回款/付款凭证
 Payments,收付款
 Purchase List,采购清单
 Receipt List,入库清单
@@ -610,3 +609,6 @@ Parse Completed,解析完成
 "Parsed {0} rows, {1} need attention (invalid rows are highlighted).",已解析 {0} 行，其中 {1} 行待处理（无效行已标红）。
 Parsed,已解析
 Generated,已生成
+Create Purchase Order Draft,创建采购订单草稿
+Create,创建
+No purchasable recommendation rows.,没有可生成的推荐行。

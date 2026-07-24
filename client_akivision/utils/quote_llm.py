@@ -33,6 +33,9 @@ IMAGE_MIME_TYPES = {
 MIN_PDF_TEXT_LENGTH = 50
 MAX_ATTEMPTS = 3
 RETRY_DELAYS = (5, 15)  # seconds to wait before attempt 2 and 3
+# Optional request params dropped one by one when a provider answers HTTP 400
+# (e.g. Kimi's k3 rejects any temperature other than 1).
+OPTIONAL_BODY_PARAMS = ("response_format", "temperature")
 MAX_RETRY_DELAY = 30  # cap for a provider-supplied Retry-After header
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
@@ -148,6 +151,14 @@ def _call_llm(messages, settings):
 		delay = None
 		try:
 			response = requests.post(url, headers=headers, json=body, timeout=int(settings.timeout or 60))
+			# Some providers reject optional params (response_format, a specific
+			# temperature); drop them one at a time and retry immediately.
+			while response.status_code == 400:
+				rejected = next((param for param in OPTIONAL_BODY_PARAMS if param in body), None)
+				if not rejected:
+					break
+				body.pop(rejected)
+				response = requests.post(url, headers=headers, json=body, timeout=int(settings.timeout or 60))
 		except requests.RequestException:
 			if attempt < MAX_ATTEMPTS - 1:
 				continue  # Network blip; back off and retry.
@@ -158,10 +169,6 @@ def _call_llm(messages, settings):
 					"and Quote LLM Settings, or enter the items manually."
 				)
 			)
-		if provider == PROVIDER_OPENAI and response.status_code == 400 and "response_format" in body:
-			# Some providers reject response_format; retry without it.
-			body.pop("response_format", None)
-			continue
 		if response.status_code in RETRYABLE_STATUS_CODES and attempt < MAX_ATTEMPTS - 1:
 			delay = _retry_delay(response, attempt)  # Provider overloaded / rate limited; back off and retry.
 			continue

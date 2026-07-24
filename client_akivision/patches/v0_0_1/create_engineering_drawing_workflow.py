@@ -70,7 +70,7 @@ def ensure_workflow_masters():
 
 def get_style(state):
     return {
-        "Draft": "Inverse",
+        "Draft": "Danger",
         "Pending Approval": "Warning",
         "Finalized": "Success",
         "Rejected": "Danger",

@@ -92,7 +92,7 @@ def _find_section(items, labels):
 	return next((item for item in items if item.type in section_types and item.label in labels), None)
 
 
-def _ensure_single_link(items, *, link_type, link_to, label, icon, child):
+def _ensure_single_link(items, *, link_type, link_to, label, icon, child, parent=SIDEBAR_NAME):
 	matches = [
 		item for item in items if item.type == "Link" and item.link_type == link_type and item.link_to == link_to
 	]
@@ -111,7 +111,8 @@ def _ensure_single_link(items, *, link_type, link_to, label, icon, child):
 				"link_to": link_to,
 				"icon": icon,
 				"child": child,
-			}
+			},
+			parent=parent,
 		)
 		items.append(item)
 	else:
@@ -126,11 +127,11 @@ def _ensure_single_link(items, *, link_type, link_to, label, icon, child):
 	return item
 
 
-def _create_item(values):
+def _create_item(values, parent=SIDEBAR_NAME):
 	item = frappe.get_doc(
 		{
 			"doctype": "Workspace Sidebar Item",
-			"parent": SIDEBAR_NAME,
+			"parent": parent,
 			"parenttype": "Workspace Sidebar",
 			"parentfield": "items",
 			"idx": 9999,
