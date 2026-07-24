@@ -161,8 +161,10 @@ Show inclusive tax in print,打印时显示价内税
 Show Payment Schedule in print,打印时显示付款计划
 Automatically fetch Payment Terms from Order/Quotation,自动从订单/报价单获取付款条款
 Automatically process deferred Accounting entry,自动处理递延会计分录
-Book deferred entries via Journal Entry,通过日记账凭证登记递延分录
-Submit Journal entries,提交日记账凭证
+Journal Entry,记账凭证
+Journal Entry Account,会计分录
+Book deferred entries via Journal Entry,通过记账凭证登记递延分录
+Submit Journal entries,提交记账凭证
 Book Deferred entries based on,递延分录登记依据
 Delete Accounting and Stock Ledger entries on deletion of transaction,删除单据时同时删除会计和库存台账分录
 Role Allowed to over bill ,允许超额开票的角色
@@ -484,3 +486,17 @@ Accounts Payable Ageing,应付账款账龄
 Issue a debit note against an existing Sales Invoice to adjust the rate. The quantity will be retained from the original invoice.,针对现有销售发票开具借项通知单以调整价格。数量将沿用原发票上的数量。
 Is customer exempted from sales tax?,客户是否免征销售税？
 Default Supplier Quotation Warehouse,供应商报价默认仓库
+Payment Entry,收付款单
+Account Name,银行账户名称
+Bank Account,银行账户
+Bank Accounts,银行账户
+Is Default Account,默认账户
+Is Company Account,本公司银行账户
+Is Credit Card,信用卡账户
+Account Details,银行账户信息
+IBAN,国际银行账号（IBAN）
+Branch Code,银行支行代码
+Bank Account No,银行账号
+Statement PDF Password,银行对账单PDF密码
+Account Type,银行账户类型
+Bank Account Type,银行账户类型
