@@ -46,7 +46,8 @@ ADMIN_NAVIGATION_GROUPS = (
 	(
 		"法定报表配置", "file-text", (
 			("China Financial Statement Template", "财务报表模板", "DocType"),
-			("China Financial Statement Mapping", "财务报表科目映射", "DocType"),
+		("China Financial Statement Mapping", "财务报表科目映射", "DocType"),
+		("China Prior Period Error Adjustment", "前期差错更正", "DocType"),
 			("China Cash Equivalent Scope", "现金及现金等价物范围", "DocType"),
 			("china-statement-mapping", "科目映射控制台", "Page"),
 			("China Accounting Policy", "中国会计政策", "DocType"),
@@ -104,7 +105,7 @@ CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS = (
 	{"fieldname": "company", "label": "公司", "fieldtype": "Link", "options": "Company", "mandatory": 1},
 	{
 		"fieldname": "statement_type", "label": "报表类型", "fieldtype": "Select",
-		"options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity", "mandatory": 1,
+		"options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity\nTrial Balance", "mandatory": 1,
 		"default": "Balance Sheet",
 	},
 	{"fieldname": "finance_book", "label": "财务账簿", "fieldtype": "Link", "options": "Finance Book"},
@@ -373,6 +374,8 @@ def validate_deployment_schema():
 		"China Voucher Sync Issue": ("issue_key", "company", "source_doctype", "source_name", "status", "retry_count"),
 		"China Cash Flow Assignment": ("company", "posting_date", "status", "china_accounting_voucher", "revision", "assignment_key"),
 		"China Cash Flow Assignment Item": ("gl_entry", "cash_account", "cash_flow_row_code", "assigned_amount"),
+		"China Prior Period Error Adjustment": ("company", "journal_entry", "prior_period_end", "evidence_file", "status"),
+		"China Prior Period Error Adjustment Line": ("account", "statement_type", "row_code", "amount"),
 		"China Voucher Sequence": ("sequence_key", "current_value"),
 		"China Tax Invoice": ("invoice_key", "invoice_number", "gross_amount", "file_hash"),
 		"China Invoice Control Rule": ("company", "requirement", "effective_from"),

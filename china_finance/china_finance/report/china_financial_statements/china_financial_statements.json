@@ -22,7 +22,7 @@
    "fieldtype": "Select",
    "label": "\u62a5\u8868\u7c7b\u578b",
    "mandatory": 1,
-   "options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity",
+   "options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity\nTrial Balance",
    "wildcard_filter": 0
   },
   {

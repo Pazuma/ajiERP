@@ -5,6 +5,19 @@ from frappe.utils import add_days, getdate
 TEMPLATE_VERSION = "3.0"
 TEMPLATE_EFFECTIVE_FROM = "2026-01-01"
 
+# Depreciation and amortisation cannot be translated into a direct-method cash
+# flow line from their account number alone. A cash leg involving either must
+# be classified and confirmed by the accountant.
+NON_CASH_FLOW_SUGGESTION_PREFIXES = ("510102", "510105")
+
+
+def requires_manual_cash_flow_assignment(account_number):
+	return str(account_number or "").startswith(NON_CASH_FLOW_SUGGESTION_PREFIXES)
+
+
+def is_strictly_excluded_from_statement(account_number, statement_type):
+	return statement_type == "Profit and Loss" and str(account_number or "") == "6901"
+
 
 def get_seed_version(accounting_standard):
 	return TEMPLATE_VERSION if accounting_standard == "企业会计准则" else "2.0"
@@ -377,6 +390,13 @@ def sync_unreviewed_automatic_mappings(company, accounting_standard):
 			fields=["name", "account", "row_code", "cash_inflow_row_code", "cash_outflow_row_code", "account_number_snapshot", "mapping_basis", "mapping_rule_version"],
 		):
 			account = accounts.get(mapping.account)
+			if account and (
+				(statement_type == "Cash Flow" and requires_manual_cash_flow_assignment(account.account_number))
+				or is_strictly_excluded_from_statement(account.account_number, statement_type)
+			):
+				frappe.delete_doc("China Financial Statement Mapping", mapping.name, ignore_permissions=True)
+				updated += 1
+				continue
 			classification, _basis = classify_company_account(company, account, statement_type, accounts_by_name) if account else (None, None)
 			if not classification:
 				continue
@@ -390,7 +410,7 @@ def sync_unreviewed_automatic_mappings(company, accounting_standard):
 				"row_code": row_code,
 				"account_number_snapshot": account.account_number,
 				"mapping_basis": _basis,
-				"mapping_rule_version": "1.0",
+				"mapping_rule_version": "1.2",
 			}
 			if statement_type == "Cash Flow":
 				values.update(cash_inflow_row_code=inflow_code, cash_outflow_row_code=outflow_code)
@@ -429,6 +449,8 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 			continue
 		valid_codes = {row.row_code for row in frappe.get_cached_doc("China Financial Statement Template", template).rows}
 		for account in accounts:
+			if (statement_type == "Cash Flow" and requires_manual_cash_flow_assignment(account.account_number)) or is_strictly_excluded_from_statement(account.account_number, statement_type):
+				continue
 			classification, basis = classify_company_account(company, account, statement_type, accounts_by_name)
 			if not classification:
 				continue
@@ -455,7 +477,7 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 					"mapping_source": "Automatic", "reviewed": 0,
 					"account_number_snapshot": account.account_number,
 					"mapping_basis": basis,
-					"mapping_rule_version": "1.0",
+					"mapping_rule_version": "1.2",
 				}
 			).insert(ignore_permissions=True)
 			created += 1
@@ -520,6 +542,10 @@ def sync_automatic_cash_flow_mappings(company, accounting_standard):
 		account = accounts.get(mapping.account)
 		if not account:
 			continue
+		if requires_manual_cash_flow_assignment(account.account_number):
+			frappe.delete_doc("China Financial Statement Mapping", mapping.name, ignore_permissions=True)
+			updated += 1
+			continue
 		classification, _basis = classify_company_account(company, account, "Cash Flow", accounts_by_name)
 		if not classification:
 			continue
@@ -543,6 +569,8 @@ def classify_company_account(company, account, statement_type, accounts_by_name=
 
 	if not is_profile_company(company):
 		return classify_account(account, statement_type), "Attribute Fallback"
+	if (statement_type == "Cash Flow" and requires_manual_cash_flow_assignment(account.account_number)) or is_strictly_excluded_from_statement(account.account_number, statement_type):
+		return None, None
 	classification = classify_account_number(str(account.account_number or ""), statement_type, account)
 	if classification:
 		return classification, "Account Number"
@@ -591,17 +619,33 @@ def classify_account_number(number, statement_type, account=None):
 		return _classify_profit_loss_number(number)
 	if statement_type == "Changes in Equity":
 		if number == "4001": return "OWNER_CONTRIBUTIONS"
+		if number.startswith("4002"): return "OWNER_CONTRIBUTIONS"
 		if number.startswith("4003"): return "OTHER_COMPREHENSIVE"
 		if number == "4103": return "NET_PROFIT"
 		if number.startswith("410402"): return "SURPLUS_RESERVE_TRANSFER"
 		if number.startswith("410403"): return "DISTRIBUTIONS"
 		if number.startswith("4104"): return "PROFIT_DISTRIBUTION"
-		if number.startswith(("4002", "4101", "4201", "999901")): return "OTHER_CHANGES"
+		if number.startswith("6901"): return "ERROR_CORRECTION"
+		if number.startswith(("4101", "4201", "999901")): return "OTHER_CHANGES"
 		return None
 	if statement_type == "Cash Flow":
 		if account and account.account_type in {"Cash", "Bank"}: return None
-		if number.startswith(("6001", "6051", "1122", "1123", "1121")):
+		if number.startswith(("6001", "6051", "1122", "1123", "1121", "2203", "2204")):
 			return ("CASH_RECEIVED_SALES", "CASH_RECEIVED_SALES", "OTHER_OPERATING_PAYMENTS")
+		if number.startswith("1101"):
+			return ("CASH_PAID_INVESTMENTS", "CASH_RECEIVED_INVESTMENT_RECOVERY", "CASH_PAID_INVESTMENTS")
+		if number.startswith("6115"):
+			return ("CASH_RECEIVED_ASSET_DISPOSAL", "CASH_RECEIVED_ASSET_DISPOSAL", "OTHER_INVESTING_PAYMENTS")
+		if number.startswith(("4001", "4002")):
+			return ("CASH_RECEIVED_INVESTMENT", "CASH_RECEIVED_INVESTMENT", "OTHER_FINANCING_PAYMENTS")
+		if number.startswith(("500101", "500104", "510103", "510104", "5201")):
+			return ("CASH_PAID_SUPPLIERS", "OTHER_OPERATING_RECEIPTS", "CASH_PAID_SUPPLIERS")
+		if number.startswith(("500102", "510101")):
+			return ("CASH_PAID_EMPLOYEES", "OTHER_OPERATING_RECEIPTS", "CASH_PAID_EMPLOYEES")
+		if number.startswith(("500103", "510199")):
+			return ("OTHER_OPERATING_PAYMENTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
+		if number.startswith(("510102", "510105")):
+			return None
 		if number.startswith(("140", "141", "2201", "2202", "2205", "2206")):
 			return ("CASH_PAID_SUPPLIERS", "OTHER_OPERATING_RECEIPTS", "CASH_PAID_SUPPLIERS")
 		if number.startswith(("2211",)):
@@ -655,7 +699,7 @@ def _classify_balance_sheet_number(number):
 	if number.startswith("2211"): return "EMPLOYEE_BENEFITS_PAYABLE"
 	if number.startswith("222"): return "TAXES_PAYABLE"
 	if number.startswith(("2231", "2232", "2241")): return "OTHER_PAYABLES"
-	if number.startswith("2301"): return "OTHER_CURRENT_LIABILITIES"
+	if number.startswith("2301"): return "DEFERRED_INCOME"
 	if number.startswith("2501"): return "LONG_TERM_BORROWINGS"
 	if number.startswith("2502"): return "BONDS_PAYABLE"
 	if number.startswith(("2701", "2702")): return "LONG_TERM_PAYABLES"
@@ -686,7 +730,7 @@ def _classify_profit_loss_number(number):
 	if number.startswith("6603"): return "FINANCE_EXPENSES"
 	if number.startswith("6701"): return "ASSET_IMPAIRMENT_LOSSES"
 	if number.startswith("6702"): return "CREDIT_IMPAIRMENT_LOSSES"
-	if number.startswith(("6711", "6901")): return "NONOPERATING_EXPENSE"
+	if number.startswith("6711"): return "NONOPERATING_EXPENSE"
 	if number.startswith("6801"): return "INCOME_TAX"
 	return None
 
@@ -794,6 +838,8 @@ def classify_balance_sheet_account(account, name):
 
 
 def classify_profit_loss_account(account, name):
+	if str(getattr(account, "account_number", "") or "") == "6901":
+		return None
 	if "其他综合收益" in name:
 		return "OCI_EQUITY_METHOD_RECLASS" if "权益法" in name else "OCI_FOREIGN_CURRENCY" if "外币" in name else "OCI_EQUITY_INVESTMENT_FAIR_VALUE"
 	if account.root_type == "Income":

@@ -13,7 +13,9 @@ from china_finance.setup.china_coa_profile import (
 	get_profile_accounts,
 	sync_china_coa_master_data,
 )
-from china_finance.setup.templates import classify_account_number, _classify_known_profile_fallback
+from china_finance.setup.templates import (
+	_classify_known_profile_fallback, classify_account_number, requires_manual_cash_flow_assignment,
+)
 
 
 class TestChinaCoaProfileIntegration(IntegrationTestCase):
@@ -104,6 +106,9 @@ class TestChinaCoaProfile(UnitTestCase):
 		for row in get_profile_accounts():
 			if row["is_group"] or row["root_type"] not in {"Income", "Expense"}:
 				continue
+			if row["account_number"] == "6901":
+				self.assertIsNone(classify_account_number(row["account_number"], "Profit and Loss", SimpleNamespace(root_type=row["root_type"])))
+				continue
 			account = SimpleNamespace(account_type=row["account_type"], root_type=row["root_type"])
 			self.assertIsNotNone(
 				classify_account_number(row["account_number"], "Profit and Loss", account),
@@ -125,6 +130,9 @@ class TestChinaCoaProfile(UnitTestCase):
 		for row in get_profile_accounts():
 			if row["is_group"] or row["account_type"] in {"Cash", "Bank"}:
 				continue
+			if requires_manual_cash_flow_assignment(row["account_number"]):
+				self.assertIsNone(classify_account_number(row["account_number"], "Cash Flow", SimpleNamespace(account_type=row["account_type"], root_type=row["root_type"])))
+				continue
 			account = SimpleNamespace(account_type=row["account_type"], root_type=row["root_type"])
 			self.assertIsNotNone(
 				classify_account_number(row["account_number"], "Cash Flow", account)
@@ -138,3 +146,8 @@ class TestChinaCoaProfile(UnitTestCase):
 		self.assertEqual(classify_account_number("11220101", "Balance Sheet", account), "ACCOUNTS_RECEIVABLE")
 		self.assertEqual(classify_account_number("660206", "Profit and Loss", account), "RD_EXPENSES")
 		self.assertEqual(classify_account_number("22210101", "Balance Sheet", account), "TAXES_PAYABLE")
+		self.assertEqual(classify_account_number("2301", "Balance Sheet", account), "DEFERRED_INCOME")
+		self.assertEqual(classify_account_number("2203", "Cash Flow", account)[1], "CASH_RECEIVED_SALES")
+		self.assertEqual(classify_account_number("1101", "Cash Flow", account)[2], "CASH_PAID_INVESTMENTS")
+		self.assertEqual(classify_account_number("6115", "Cash Flow", account)[1], "CASH_RECEIVED_ASSET_DISPOSAL")
+		self.assertEqual(classify_account_number("4002", "Cash Flow", account)[1], "CASH_RECEIVED_INVESTMENT")

@@ -20,6 +20,8 @@ def _apply_default_period(filters):
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
 	_apply_default_period(filters)
+	if filters.statement_type == "Trial Balance":
+		return execute_native_trial_balance(filters)
 	result = build_statement(
 		filters.company,
 		filters.statement_type,
@@ -46,6 +48,7 @@ def execute(filters=None):
 			filters.finance_book,
 			filters.cost_center,
 			filters.project,
+			restate_prior_period=True,
 		)
 		comparison_values = {row["row_code"]: row["amount"] for row in comparison["rows"]}
 		for row in result["rows"]:
@@ -82,11 +85,34 @@ def execute(filters=None):
 			result["rows"],
 			message,
 			get_cash_flow_chart(result["rows"], filters.company, filters),
-			get_cash_flow_summary(result["rows"], filters.company),
+			get_cash_flow_summary(result["rows"], filters.company, filters),
 		)
 	if filters.statement_type == "Changes in Equity" and result.get("equity_matrix"):
 		return get_equity_columns(result["equity_matrix"]), result["equity_matrix"]["rows"], message
 	return get_columns(), result["rows"], message
+
+
+def execute_native_trial_balance(filters):
+	"""Render ERPNext's native Trial Balance inside this report page."""
+	from erpnext.accounts.report.trial_balance.trial_balance import execute as execute_trial_balance
+
+	native_filters = frappe._dict({
+		"company": filters.company,
+		"fiscal_year": filters.fiscal_year,
+		"from_date": filters.from_date,
+		"to_date": filters.to_date,
+		"finance_book": filters.finance_book,
+		"cost_center": filters.cost_center,
+		"project": filters.project,
+		"include_default_book_entries": 1,
+		"show_net_values": 1,
+		"show_group_accounts": 1,
+		"show_zero_values": filters.get("show_zero_values", 0),
+		"with_period_closing_entry_for_opening": 1,
+		"with_period_closing_entry_for_current_period": 1,
+	})
+	columns, data = execute_trial_balance(native_filters)
+	return columns, data
 
 
 def get_columns():
@@ -270,54 +296,76 @@ def get_cash_flow_metrics(rows):
 	}
 
 
-def get_cash_flow_chart(rows, company, filters):
+def get_cash_flow_dashboard_metrics(rows, company, filters):
 	metrics = get_cash_flow_metrics(rows)
+	closing_balance_sheet = build_statement(
+		company,
+		"Balance Sheet",
+		filters.from_date,
+		filters.to_date,
+		filters.finance_book,
+		filters.cost_center,
+		filters.project,
+	)
+	balance_amounts = {row["row_code"]: flt(row.get("amount")) for row in closing_balance_sheet["rows"]}
+	return {
+		"operating": metrics["operating"],
+		"cash_balance": flt(next(
+			(row.get("amount") for row in rows if row.get("row_code") == "CLOSING_CASH"),
+			0,
+		)),
+		"accounts_receivable": balance_amounts.get("ACCOUNTS_RECEIVABLE", 0),
+		"inventory": balance_amounts.get("INVENTORIES", 0),
+	}
+
+
+def get_cash_flow_chart(rows, company, filters):
+	metrics = get_cash_flow_dashboard_metrics(rows, company, filters)
 	period_label = filters.get("accounting_period") or filters.get("to_date")
 	return {
 		"data": {
 			"labels": [period_label],
 			"datasets": [
-				{"name": _("经营活动"), "values": [metrics["operating"]]},
-				{"name": _("投资活动"), "values": [metrics["investing"]]},
-				{"name": _("筹资活动"), "values": [metrics["financing"]]},
-				{"name": _("现金净增加额"), "values": [metrics["net_increase"]]},
+				{"name": _("经营现金流"), "values": [metrics["operating"]]},
+				{"name": _("期末现金及现金等价物"), "values": [metrics["cash_balance"]]},
+				{"name": _("应收账款"), "values": [metrics["accounts_receivable"]]},
+				{"name": _("存货"), "values": [metrics["inventory"]]},
 			],
 		},
 		"type": "bar",
 		"fieldtype": "Currency",
 		"currency": frappe.get_cached_value("Company", company, "default_currency"),
-		"colors": ["#16a34a", "#f59e0b", "#2563eb", "#e76f51"],
+		"colors": ["#16a34a", "#2563eb", "#f59e0b", "#e76f51"],
 	}
 
 
-def get_cash_flow_summary(rows, company):
-	metrics = get_cash_flow_metrics(rows)
+def get_cash_flow_summary(rows, company, filters):
+	metrics = get_cash_flow_dashboard_metrics(rows, company, filters)
 	currency = frappe.get_cached_value("Company", company, "default_currency")
 	return [
 		{
 			"value": metrics["operating"],
-			"label": _("本年经营活动现金流净额"),
+			"label": _("经营活动产生的现金流量净额"),
 			"datatype": "Currency",
 			"currency": currency,
 			"indicator": "Green" if metrics["operating"] >= 0 else "Red",
 		},
 		{
-			"value": metrics["investing"],
-			"label": _("本年投资活动现金流净额"),
+			"value": metrics["cash_balance"],
+			"label": _("期末现金及现金等价物余额"),
 			"datatype": "Currency",
 			"currency": currency,
 		},
 		{
-			"value": metrics["financing"],
-			"label": _("本年筹资活动现金流净额"),
+			"value": metrics["accounts_receivable"],
+			"label": _("应收账款余额"),
 			"datatype": "Currency",
 			"currency": currency,
 		},
 		{
-			"value": metrics["net_increase"],
-			"label": _("本年现金净增加额"),
+			"value": metrics["inventory"],
+			"label": _("存货余额"),
 			"datatype": "Currency",
 			"currency": currency,
-			"indicator": "Green" if metrics["net_increase"] >= 0 else "Red",
 		},
 	]

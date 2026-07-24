@@ -30,6 +30,11 @@ class ChinaFinancialStatementMapping(Document):
 		self.validate_no_overlapping_period()
 		if self.template and self.row_code:
 			template = frappe.get_cached_doc("China Financial Statement Template", self.template)
+			if (
+				template.statement_type == "Profit and Loss"
+				and self.account_number_snapshot == "6901"
+			):
+				frappe.throw(_("6901 以前年度损益调整不得计入当期利润表，请使用前期差错更正记录进行严格追溯调整"))
 			rows_by_code = {row.row_code: row for row in template.rows}
 			if self.row_code not in rows_by_code:
 				frappe.throw(_("模板中不存在报表行 {0}").format(self.row_code))

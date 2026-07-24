@@ -21,6 +21,8 @@ from china_finance.services.financial_statement import (
 	validate_statement_links,
 )
 from china_finance.setup.china_coa_profile import get_china_coa_master_data_readiness
+from china_finance.setup.templates import requires_manual_cash_flow_assignment
+from china_finance.services.prior_period_error import get_prior_period_error_readiness
 
 
 STATEMENT_TYPES = ("Balance Sheet", "Profit and Loss", "Cash Flow", "Changes in Equity")
@@ -55,6 +57,13 @@ def _mapping_readiness(company, statement_type, from_date, to_date):
 			"Account", filters={"company": company, "is_group": 0, "account_type": ["in", ["Cash", "Bank"]]}, pluck="name"
 		))
 		required -= cash_accounts
+		required -= {
+			row.name for row in frappe.get_all(
+				"Account", filters={"company": company, "is_group": 0, "disabled": 0},
+				fields=["name", "account_number"],
+			)
+			if requires_manual_cash_flow_assignment(row.account_number)
+		}
 	if statement_type == "Balance Sheet":
 		mappings = get_mappings(company, template, to_date)
 		by_account = {row.account: row for row in mappings}
@@ -132,6 +141,12 @@ def get_statutory_report_readiness_data(company, from_date, to_date):
 	assignment = get_assignment_coverage(company, from_date, to_date)
 	items.append(_item("CASH_FLOW_ASSIGNMENT", _("现金流量指定已确认"), assignment["passed"], assignment["details"], assignment["count"]))
 
+	prior_errors = get_prior_period_error_readiness(company, from_date, to_date)
+	items.append(_item(
+		"PRIOR_PERIOD_ERROR_ADJUSTMENT", _("前期差错更正已审批并附依据"),
+		prior_errors["passed"], prior_errors["details"], prior_errors["count"],
+	))
+
 	links = validate_statement_links(company, from_date, to_date, settings.reconciliation_tolerance)
 	for code, label, key in (
 		("BALANCE_SHEET_EQUATION", _("资产负债表勾稽"), "balance_sheet"),
@@ -152,7 +167,11 @@ def get_statutory_report_readiness_data(company, from_date, to_date):
 	items.append(_item("COMPARATIVE_DATA", _("比较数据可生成"), comparison_ok, "；".join(comparison_details)))
 
 	notes = get_submitted_notes(company, from_date, to_date)
-	items.append(_item("FINANCIAL_STATEMENT_NOTES", _("财务报表附注已提交"), bool(notes), notes.name if notes else _("缺少本期已提交附注")))
+	notes_complete = bool(notes) and (not prior_errors["approved_count"] or bool(notes.prior_period_errors))
+	notes_details = notes.name if notes else _("缺少本期已提交附注")
+	if notes and prior_errors["approved_count"] and not notes.prior_period_errors:
+		notes_details = _("存在已审批前期差错更正，附注必须披露更正原因及比较数据影响")
+	items.append(_item("FINANCIAL_STATEMENT_NOTES", _("财务报表附注已提交"), notes_complete, notes_details))
 
 	return {
 		"company": company, "from_date": str(from_date), "to_date": str(to_date),

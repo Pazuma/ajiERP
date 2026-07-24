@@ -81,7 +81,10 @@ def get_template(company, statement_type, to_date, accounting_standard=None, req
 	return frappe.get_cached_doc("China Financial Statement Template", name)
 
 
-def build_statement(company, statement_type, from_date, to_date, finance_book=None, cost_center=None, project=None):
+def build_statement(
+	company, statement_type, from_date, to_date, finance_book=None, cost_center=None, project=None,
+	restate_prior_period=False,
+):
 	to_date = getdate(to_date)
 	from_date = getdate(from_date or get_first_day(to_date))
 	template = get_template(company, statement_type, to_date)
@@ -112,6 +115,13 @@ def build_statement(company, statement_type, from_date, to_date, finance_book=No
 		)
 		period_meta = ytd_meta = {}
 
+	if restate_prior_period and statement_type == "Balance Sheet":
+		from china_finance.services.prior_period_error import get_restatement_values
+
+		for row_code, amount in get_restatement_values(company, "Balance Sheet", to_date).items():
+			period_values[row_code] += amount
+			ytd_values[row_code] += amount
+
 	period_rows = render_rows(template, period_values)
 	opening_rows = (
 		{row["row_code"]: row["amount"] for row in render_rows(template, opening_values)}
@@ -135,7 +145,7 @@ def build_statement(company, statement_type, from_date, to_date, finance_book=No
 		)
 	elif statement_type == "Changes in Equity":
 		equity_matrix = build_equity_matrix(
-			company, template, mappings, from_date, to_date, finance_book, cost_center, project
+			company, template, mappings, from_date, to_date, finance_book, cost_center, project, restate_prior_period
 		)
 
 	warnings = []
@@ -746,7 +756,10 @@ def classify_equity_component(account_name):
 	return "retained_earnings"
 
 
-def build_equity_matrix(company, template, mappings, from_date, to_date, finance_book=None, cost_center=None, project=None):
+def build_equity_matrix(
+	company, template, mappings, from_date, to_date, finance_book=None, cost_center=None, project=None,
+	restate_prior_period=False,
+):
 	accounts = frappe.get_all(
 		"Account", filters={"company": company, "root_type": "Equity", "is_group": 0, "disabled": 0},
 		fields=["name", "account_name"],
@@ -798,6 +811,14 @@ def build_equity_matrix(company, template, mappings, from_date, to_date, finance
 			for component, value in period_values.get(template_row.row_code, {}).items():
 				matrix_row[component] += value
 		rows.append(matrix_row)
+	if restate_prior_period:
+		from china_finance.services.prior_period_error import get_restatement_values
+
+		adjustment = get_restatement_values(company, "Changes in Equity", to_date)
+		for matrix_row in rows:
+			if matrix_row["row_code"] == "ERROR_CORRECTION":
+				matrix_row["retained_earnings"] += flt(adjustment.get("ERROR_CORRECTION"))
+				break
 
 	closing = blank("CLOSING_EQUITY", "四、本年年末所有者权益余额", 1)
 	for component, _label in EQUITY_COMPONENTS:
@@ -890,7 +911,9 @@ def snapshot_statement(closing_run, statement_type, validation_results=None, not
 	comparison_from, comparison_to = get_comparison_period(
 		closing_run.company, statement_type, closing_run.from_date, closing_run.to_date
 	)
-	comparison = build_statement(closing_run.company, statement_type, comparison_from, comparison_to)
+	comparison = build_statement(
+		closing_run.company, statement_type, comparison_from, comparison_to, restate_prior_period=True
+	)
 	comparison_values = {row["row_code"]: row["amount"] for row in comparison["rows"]}
 	for row in result["rows"]:
 		row["comparison_amount"] = comparison_values.get(row["row_code"], 0)

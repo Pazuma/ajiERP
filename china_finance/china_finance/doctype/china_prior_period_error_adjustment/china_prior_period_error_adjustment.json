@@ -1,0 +1,25 @@
+{
+ "actions":[], "autoname":"naming_series:", "creation":"2026-07-23 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
+ "field_order":["naming_series","adjustment_key","company","journal_entry","prior_period_end","reason","evidence_file","status","approval_section","approved_by","approved_on","lines_section","lines"],
+ "fields":[
+  {"default":"CPER-.YYYY.-.#####","fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CPER-.YYYY.-.#####","reqd":1},
+  {"fieldname":"adjustment_key","fieldtype":"Data","hidden":1,"read_only":1,"unique":1},
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"journal_entry","fieldtype":"Link","in_list_view":1,"label":"追溯调整日记账","options":"Journal Entry","reqd":1},
+  {"fieldname":"prior_period_end","fieldtype":"Date","in_list_view":1,"label":"原错报期间截止日","reqd":1},
+  {"fieldname":"reason","fieldtype":"Text Editor","label":"前期差错原因及更正说明","reqd":1},
+  {"fieldname":"evidence_file","fieldtype":"Attach","label":"更正依据","reqd":1},
+  {"default":"草稿","fieldname":"status","fieldtype":"Select","in_list_view":1,"label":"状态","options":"草稿\n待审批\n已审批\n已取消","read_only":1},
+  {"fieldname":"approval_section","fieldtype":"Section Break","label":"审批记录"},
+  {"fieldname":"approved_by","fieldtype":"Link","label":"审批人","options":"User","read_only":1},
+  {"fieldname":"approved_on","fieldtype":"Datetime","label":"审批时间","read_only":1},
+  {"fieldname":"lines_section","fieldtype":"Section Break","label":"报表影响明细"},
+  {"fieldname":"lines","fieldtype":"Table","label":"报表影响明细","options":"China Prior Period Error Adjustment Line","read_only":1}
+ ],
+ "is_submittable":1, "module":"China Finance", "name":"China Prior Period Error Adjustment", "naming_rule":"By \"Naming Series\" field",
+ "permissions":[
+  {"create":1,"delete":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager","submit":1,"write":1},
+  {"create":1,"delete":1,"export":1,"print":1,"read":1,"report":1,"role":"China Finance Manager","submit":1,"write":1},
+  {"export":1,"print":1,"read":1,"report":1,"role":"China Finance Auditor"}
+ ], "track_changes":1
+}

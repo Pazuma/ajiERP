@@ -16,6 +16,22 @@ from china_finance.setup.china_coa_profile import (
 )
 
 
+@frappe.whitelist()
+def get_prior_period_error_adjustment_readiness(company, from_date, to_date):
+	from china_finance.services.prior_period_error import get_prior_period_error_readiness
+
+	frappe.has_permission("Company", "read", company, throw=True)
+	return get_prior_period_error_readiness(company, from_date, to_date)
+
+
+@frappe.whitelist()
+def submit_prior_period_error_adjustment(name):
+	frappe.only_for(("System Manager", "China Finance Manager"))
+	doc = frappe.get_doc("China Prior Period Error Adjustment", name)
+	doc.submit()
+	return {"name": doc.name, "status": doc.status, "docstatus": doc.docstatus}
+
+
 def _initialize_company(
 	company,
 	accounting_standard="企业会计准则",
@@ -182,6 +198,9 @@ def deployment_health(company=None):
 			"print_format": bool(frappe.db.exists("Print Format", "China Accounting Voucher")),
 			"voucher_sync_issue": bool(frappe.db.exists("DocType", "China Voucher Sync Issue")),
 			"cash_flow_assignment": bool(frappe.db.exists("DocType", "China Cash Flow Assignment")),
+			"prior_period_error_adjustment": bool(
+				frappe.db.exists("DocType", "China Prior Period Error Adjustment")
+			),
 			"retired_purchase_chain": bool(
 				frappe.db.get_value("Report", "China Purchase Document Chain", "disabled")
 			),

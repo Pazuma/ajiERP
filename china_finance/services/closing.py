@@ -13,6 +13,7 @@ from china_finance.services.disclosure import get_disclosure_closing_checks, get
 from china_finance.services.sales_settlement import get_sales_settlement_closing_check
 from china_finance.services.cash_flow_assignment import get_assignment_coverage
 from china_finance.services.statutory_reporting import get_statutory_report_readiness_data
+from china_finance.services.prior_period_error import get_prior_period_error_readiness
 from china_finance.setup.china_coa_profile import (
 	TEMPORARY_ACCOUNT_NUMBERS, get_china_coa_master_data_readiness,
 	get_company_accounts_by_number, get_profile_status,
@@ -39,6 +40,11 @@ def run_closing_checks(company, from_date, to_date, period_closing_voucher=None,
 	add(
 		"CONFIGURATION_READINESS", _("中国财务关键配置完整"), not configuration_errors,
 		"；".join(configuration_errors),
+	)
+	prior_errors = get_prior_period_error_readiness(company, from_date, to_date)
+	add(
+		"PRIOR_PERIOD_ERROR_ADJUSTMENT", _("前期差错更正已审批并附依据"),
+		prior_errors["passed"], prior_errors["details"],
 	)
 	coa_status = get_profile_status(company)
 	if coa_status.get("supported"):
