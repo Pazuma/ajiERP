@@ -239,14 +239,14 @@ def _get_generic_vat_account(company):
 	"""Return the unnumbered ERPNext VAT account only when it is clearly generic."""
 	accounts = frappe.get_all(
 		"Account",
-		filters={"company": company, "is_group": 0, "account_type": "Tax"},
+		filters={"company": company, "is_group": 0},
 		fields=["name", "account_name", "account_number", "root_type"],
 	)
 	for account in accounts:
 		if (
 			not account.account_number
 			and account.root_type == "Liability"
-			and (account.account_name or "").strip().upper() == "VAT"
+			and (account.account_name or "").strip().upper() in {"VAT", "VAT - YC"}
 		):
 			return account
 	return None
@@ -292,6 +292,25 @@ def _item_tax_template_is_unused(name):
 	))
 
 
+def _remove_unused_generic_tax_templates(company):
+	"""Remove the legacy ``China Tax`` templates after their links are repaired."""
+	removed = 0
+	for doctype, checker in (
+		("Sales Taxes and Charges Template", _tax_template_is_unused),
+		("Purchase Taxes and Charges Template", _tax_template_is_unused),
+		("Item Tax Template", lambda _doctype, _company, name: _item_tax_template_is_unused(name)),
+	):
+		for template in frappe.get_all(doctype, filters={"company": company, "title": ["like", "China Tax%"]}, pluck="name"):
+			if not checker(doctype, company, template):
+				continue
+			try:
+				frappe.delete_doc(doctype, template, ignore_permissions=True)
+				removed += 1
+			except frappe.LinkExistsError:
+				frappe.db.set_value(doctype, template, "disabled", 1, update_modified=False)
+	return removed
+
+
 def _normalize_generic_item_tax_templates(company, vat_account):
 	"""Split an unused generic item tax template into China output and input variants."""
 	updated = created = 0
@@ -325,6 +344,55 @@ def _normalize_generic_item_tax_templates(company, vat_account):
 	return {"updated": updated, "created": created}
 
 
+def _ensure_china_tax_templates(company):
+	"""Create the three usable China tax templates for a profile company.
+
+	ERPNext does not create these templates when the company is created with an
+	imported chart. Keep this idempotent and use numbered China VAT accounts.
+	"""
+	output_account = get_account_by_number(company, TAX_ACCOUNT_RULES["Output"], leaf=True)
+	input_account = get_account_by_number(company, TAX_ACCOUNT_RULES["Input"], leaf=True)
+	created = {"sales": 0, "purchase": 0, "item": 0}
+
+	definitions = (
+		("Sales Taxes and Charges Template", "销售税费模板（13%销项税）", "sales", output_account.name, "销项税额", "销售税费"),
+		("Purchase Taxes and Charges Template", "采购税费模板（13%进项税）", "purchase", input_account.name, "进项税额", "采购税费"),
+	)
+	for doctype, title, key, account, description, _label in definitions:
+		if frappe.db.exists(doctype, {"company": company, "title": title}):
+			continue
+		frappe.get_doc({
+			"doctype": doctype,
+			"company": company,
+			"title": title,
+			"taxes": [{
+				"charge_type": "On Net Total",
+				"account_head": account,
+				"description": description,
+				"rate": 13,
+			}],
+		}).insert(ignore_permissions=True)
+		created[key] += 1
+
+	if not frappe.db.exists("Item Tax Template", {"company": company, "title": "物料税费模板（13%销项税）"}):
+		frappe.get_doc({
+			"doctype": "Item Tax Template",
+			"company": company,
+			"title": "物料税费模板（13%销项税）",
+			"taxes": [{"tax_type": output_account.name, "tax_rate": 13}],
+		}).insert(ignore_permissions=True)
+		created["item"] += 1
+	if not frappe.db.exists("Item Tax Template", {"company": company, "title": "物料税费模板（13%进项税）"}):
+		frappe.get_doc({
+			"doctype": "Item Tax Template",
+			"company": company,
+			"title": "物料税费模板（13%进项税）",
+			"taxes": [{"tax_type": input_account.name, "tax_rate": 13}],
+		}).insert(ignore_permissions=True)
+		created["item"] += 1
+	return created
+
+
 def normalize_generic_vat_templates(company):
 	"""Replace safe, unused generic VAT template rows with China input/output VAT.
 
@@ -335,10 +403,37 @@ def normalize_generic_vat_templates(company):
 	"""
 	if not is_profile_company(company):
 		return {"templates_updated": 0, "item_templates_updated": 0, "item_templates_created": 0, "vat_account_disabled": False, "vat_account_deleted": False, "skipped": True}
+	china_templates = _ensure_china_tax_templates(company)
 	vat = _get_generic_vat_account(company)
 	if not vat:
+		# Older migrations may have removed the orphaned VAT account while leaving
+		# its string link in unused templates. Repair those links by value.
+		for doctype, child_doctype, direction in (
+			("Sales Taxes and Charges Template", "Sales Taxes and Charges", "Output"),
+			("Purchase Taxes and Charges Template", "Purchase Taxes and Charges", "Input"),
+		):
+			target = get_account_by_number(company, TAX_ACCOUNT_RULES[direction], leaf=True)
+			for template in frappe.get_all(doctype, filters={"company": company, "disabled": 0}, pluck="name"):
+				if not _tax_template_is_unused(doctype, company, template):
+					continue
+				for row in frappe.get_all(child_doctype, filters={"parent": template, "parenttype": doctype}, fields=["name", "account_head"]):
+					if str(row.account_head or "").strip().upper().startswith("VAT"):
+						frappe.db.set_value(child_doctype, row.name, "account_head", target.name, update_modified=False)
+				if str(frappe.db.get_value(doctype, template, "title") or "").startswith("China Tax"):
+					frappe.db.set_value(doctype, template, "disabled", 1, update_modified=False)
+		for template in frappe.get_all("Item Tax Template", filters={"company": company, "disabled": 0}, pluck="name"):
+				if not _item_tax_template_is_unused(template):
+					continue
+				for row in frappe.get_all("Item Tax Template Detail", filters={"parent": template, "parenttype": "Item Tax Template"}, fields=["name", "tax_type"]):
+					if str(row.tax_type or "").strip().upper().startswith("VAT"):
+						frappe.db.set_value("Item Tax Template Detail", row.name, "tax_type", get_account_by_number(company, TAX_ACCOUNT_RULES["Output"], leaf=True).name, update_modified=False)
+				if str(frappe.db.get_value("Item Tax Template", template, "title") or "").startswith("China Tax"):
+					frappe.db.set_value("Item Tax Template", template, "disabled", 1, update_modified=False)
+		removed_templates = _remove_unused_generic_tax_templates(company)
 		return {
 			"templates_updated": 0, "item_templates_updated": 0, "item_templates_created": 0,
+			"china_templates_created": china_templates,
+			"generic_templates_deleted": removed_templates,
 			"vat_account_disabled": False, "vat_account_deleted": False,
 			"generic_tax_parent_deleted": _remove_empty_generic_tax_parent(company), "skipped": False,
 		}
@@ -389,9 +484,12 @@ def normalize_generic_vat_templates(company):
 				frappe.db.set_value("Account", vat.name, "disabled", 1, update_modified=False)
 				vat_account_disabled = True
 	generic_tax_parent_deleted = _remove_empty_generic_tax_parent(company)
+	generic_templates_deleted = _remove_unused_generic_tax_templates(company)
 	return {
 		"templates_updated": updated, "item_templates_updated": item_templates["updated"],
 		"item_templates_created": item_templates["created"],
+		"china_templates_created": china_templates,
+		"generic_templates_deleted": generic_templates_deleted,
 		"vat_account_disabled": vat_account_disabled, "vat_account_deleted": vat_account_deleted,
 		"generic_tax_parent_deleted": generic_tax_parent_deleted, "skipped": False,
 	}

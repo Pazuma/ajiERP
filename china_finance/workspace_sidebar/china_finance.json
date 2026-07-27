@@ -255,6 +255,17 @@
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
+   "label": "\u524d\u671f\u5dee\u9519\u66f4\u6b63",
+   "link_to": "China Prior Period Error Adjustment",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
    "label": "\u73b0\u91d1\u53ca\u73b0\u91d1\u7b49\u4ef7\u7269\u8303\u56f4",
    "link_to": "China Cash Equivalent Scope",
    "link_type": "DocType",
@@ -339,7 +350,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-07-22 13:55:34.246724",
+ "modified": "2026-07-27 08:49:53.475942",
  "modified_by": "Administrator",
  "module": "China Finance",
  "name": "China Finance",
