@@ -234,13 +234,28 @@ def retry_cancellation_snapshot(issue_name):
 def get_source_snapshot_status(source_doctype, source_name):
 	doc = _get_source_document(source_doctype, source_name)
 	settings = get_company_settings(get_company(doc))
-	if not settings or getdate(get_posting_date(doc)) < getdate(settings.activation_date):
+	if not settings:
 		return {"not_applicable": True}
 	voucher_name = frappe.db.get_value(
 		"China Accounting Voucher", {"source_key": f"Posting|{source_doctype}|{source_name}"}, "name"
 	)
 	if not voucher_name:
-		return {"snapshot_ready": False, "reason": _("审计快照尚未生成")}
+		from china_finance.services.cash_equivalent_scope import get_cash_scope_accounts
+		cash_accounts = get_cash_scope_accounts(get_company(doc), now_datetime().date())
+		has_cash_entry = bool(cash_accounts and frappe.db.exists(
+			"GL Entry",
+			{
+				"voucher_type": source_doctype,
+				"voucher_no": source_name,
+				"account": ["in", cash_accounts],
+				"is_cancelled": 0,
+			},
+		))
+		return {
+			"snapshot_ready": False,
+			"can_create_assignment": has_cash_entry,
+			"reason": _("审计快照尚未生成"),
+		}
 	voucher = frappe.get_doc("China Accounting Voucher", voucher_name)
 	assignment = frappe.db.get_value(
 		"China Cash Flow Assignment",
@@ -249,13 +264,10 @@ def get_source_snapshot_status(source_doctype, source_name):
 		as_dict=True,
 		order_by="revision desc, creation desc",
 	)
-	from china_finance.services.cash_flow_assignment import get_cash_legs_for_voucher, is_direct_assignment_required
+	from china_finance.services.cash_flow_assignment import get_cash_legs_for_voucher
 
-	needs_assignment = bool(
-		doc.docstatus == 1
-		and is_direct_assignment_required(voucher.company, voucher.posting_date)
-		and get_cash_legs_for_voucher(voucher)
-	)
+	cash_legs = get_cash_legs_for_voucher(voucher)
+	needs_assignment = bool(doc.docstatus == 1 and cash_legs)
 	return {
 		"snapshot_ready": voucher.docstatus == 1,
 		"snapshot_name": voucher.name,
@@ -263,7 +275,7 @@ def get_source_snapshot_status(source_doctype, source_name):
 		"can_view_snapshot": voucher.has_permission("read"),
 		"assignment": assignment,
 		"assignment_required": needs_assignment,
-		"assignment_reason": _("该单据不包含需要指定的外部现金流") if not needs_assignment and not assignment else "",
+		"assignment_reason": _("该单据不包含现金/银行分录") if not needs_assignment and not assignment else "",
 	}
 
 
@@ -277,7 +289,9 @@ def create_cash_flow_assignment_from_source(source_doctype, source_name):
 		"China Accounting Voucher", {"source_key": f"Posting|{source_doctype}|{source_name}", "docstatus": 1}, "name"
 	)
 	if not voucher_name:
-		frappe.throw(_("审计快照尚未生成，请稍后重试"))
+		voucher_name = create_voucher_from_source(doc, "Posting", force=True)
+	if not voucher_name:
+		frappe.throw(_("审计快照尚未生成，且来源单据没有可用总账分录"))
 	from china_finance.services.cash_flow_assignment import create_cash_flow_assignment
 
 	name = create_cash_flow_assignment(voucher_name)
@@ -314,7 +328,7 @@ def create_voucher_from_source(doc, source_event="Posting", force=False):
 	if not settings:
 		return None
 	posting_date = get_posting_date(doc)
-	if posting_date < getdate(settings.activation_date):
+	if posting_date < getdate(settings.activation_date) and not force:
 		return None
 
 	source_key = f"{source_event}|{doc.doctype}|{doc.name}"

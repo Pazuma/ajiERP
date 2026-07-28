@@ -6,7 +6,7 @@ from frappe.utils import getdate, now_datetime
 
 class ChinaFinancialStatementMapping(Document):
 	REVIEW_RELEVANT_FIELDS = (
-		"company", "template", "row_code", "account", "cash_inflow_row_code", "cash_outflow_row_code",
+		"company", "template", "row_code", "supplementary_row_code", "account", "cash_inflow_row_code", "cash_outflow_row_code",
 		"sign_multiplier", "effective_from", "effective_to", "account_number_snapshot", "mapping_basis",
 	)
 
@@ -40,6 +40,13 @@ class ChinaFinancialStatementMapping(Document):
 				frappe.throw(_("模板中不存在报表行 {0}").format(self.row_code))
 			if rows_by_code[self.row_code].row_type != "Mapped Accounts":
 				frappe.throw(_("科目只能映射到明细项目，不能映射到标题或公式行"))
+			if self.supplementary_row_code:
+				if self.supplementary_row_code not in rows_by_code:
+					frappe.throw(_("模板中不存在补充披露项目 {0}").format(self.supplementary_row_code))
+				if rows_by_code[self.supplementary_row_code].row_type != "Mapped Accounts":
+					frappe.throw(_("补充披露项目只能选择明细项目，不能选择标题或公式行"))
+				if self.supplementary_row_code == self.row_code:
+					frappe.throw(_("补充披露项目不能与主报表项目相同"))
 		self.invalidate_review_when_mapping_changes()
 		if self.reviewed and not self.reviewed_by:
 			self.reviewed_by = frappe.session.user
@@ -47,10 +54,12 @@ class ChinaFinancialStatementMapping(Document):
 		if self.template:
 			template = frappe.get_cached_doc("China Financial Statement Template", self.template)
 			valid_codes = {row.row_code for row in template.rows}
-			for fieldname in ("row_code", "cash_inflow_row_code", "cash_outflow_row_code"):
+			for fieldname in ("row_code", "supplementary_row_code", "cash_inflow_row_code", "cash_outflow_row_code"):
 				value = self.get(fieldname)
 				if value and value not in valid_codes:
 					frappe.throw(_("{0} 不是模板 {1} 的有效行编码").format(self.meta.get_label(fieldname), self.template))
+				if value and rows_by_code[value].row_type != "Mapped Accounts":
+					frappe.throw(_("{0} 只能选择明细项目，不能选择标题或公式行").format(self.meta.get_label(fieldname)))
 			if template.statement_type == "Cash Flow" and not (
 				self.cash_inflow_row_code and self.cash_outflow_row_code
 			):

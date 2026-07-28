@@ -1,14 +1,15 @@
 {
  "actions":[], "autoname":"hash", "creation":"2026-07-17 00:00:00.000000", "doctype":"DocType", "engine":"InnoDB",
- "field_order":["mapping_key","company","template","row_code","account","account_number_snapshot","mapping_basis","mapping_rule_version","cash_flow_section","cash_inflow_row_code","cash_outflow_row_code","sign_multiplier","effective_from","effective_to","mapping_source","reviewed","reviewed_by","reviewed_on","review_notes"],
+ "field_order":["mapping_key","company","template","row_code","supplementary_row_code","account","account_number_snapshot","mapping_basis","mapping_rule_version","cash_flow_section","cash_inflow_row_code","cash_outflow_row_code","sign_multiplier","effective_from","effective_to","mapping_source","reviewed","reviewed_by","reviewed_on","review_notes"],
  "fields":[
   {"fieldname":"mapping_key","fieldtype":"Data","hidden":1,"label":"映射唯一键","length":500,"read_only":1,"reqd":1,"unique":1},
   {"fieldname":"company","fieldtype":"Link","in_list_view":1,"label":"公司","options":"Company","reqd":1},
   {"fieldname":"template","fieldtype":"Link","in_list_view":1,"label":"报表模板","options":"China Financial Statement Template","reqd":1},
   {"fieldname":"row_code","fieldtype":"Autocomplete","in_list_view":1,"label":"归入报表项目","reqd":1,"description":"选择“行编码 | 项目名称”。项目名称用于日常复核，行编码由系统保存。"},
+  {"fieldname":"supplementary_row_code","fieldtype":"Autocomplete","label":"补充披露项目","description":"仅用于“其中”类披露，不参与主项目公式汇总。"},
   {"fieldname":"account","fieldtype":"Link","in_list_view":1,"label":"会计科目","options":"Account","reqd":1},
   {"fieldname":"account_number_snapshot","fieldtype":"Data","label":"科目编号快照","read_only":1},
-  {"fieldname":"mapping_basis","fieldtype":"Select","label":"映射依据","options":"\nAccount Number\nParent Inheritance\nAttribute Fallback\nManual","read_only":1},
+  {"fieldname":"mapping_basis","fieldtype":"Select","label":"映射依据","options":"\nAccount Number\nParent Inheritance\nAttribute Fallback\nAccounting Standard Downgrade\nFormula Row Migration\nManual","read_only":1},
   {"fieldname":"mapping_rule_version","fieldtype":"Data","label":"映射规则版本","read_only":1},
   {"fieldname":"cash_flow_section","fieldtype":"Section Break","label":"现金流量归类","depends_on":"eval:doc.template && doc.template.includes('Cash Flow')"},
   {"fieldname":"cash_inflow_row_code","fieldtype":"Autocomplete","label":"收到现金时归入","description":"选择“行编码 | 项目名称”。现金或银行科目增加时使用。"},

@@ -116,6 +116,14 @@ def initialize_profile_company_on_update(doc, method=None):
 	_initialize_company(doc.name)
 
 
+def sync_settings_mappings_on_update(doc, method=None):
+	"""Create review-required mappings when a company changes its accounting standard."""
+	if not doc.enabled or not doc.company or not doc.accounting_standard:
+		return
+	create_automatic_mappings(doc.company, doc.accounting_standard, doc.activation_date)
+	sync_unreviewed_automatic_mappings(doc.company, doc.accounting_standard)
+
+
 def initialize_existing_profile_companies():
 	"""Backfill companies created before China Finance was installed.
 

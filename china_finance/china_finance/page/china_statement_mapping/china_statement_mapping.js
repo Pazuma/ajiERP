@@ -20,6 +20,7 @@ class ChinaStatementMapping {
 		this.can_write = frappe.user.has_role(["China Finance Manager", "Accounts Manager", "System Manager"]);
 		this.can_edit_template = frappe.user.has_role(["China Finance Manager", "System Manager"]);
 		this.selected_accounts = new Set();
+		this.selected_rows = new Set();
 		this.collapsed_rows = new Set();
 		this.collapsed_accounts = new Set();
 		this.expanded_aggregates = new Set();
@@ -118,11 +119,14 @@ class ChinaStatementMapping {
 				.smc-row:hover { background: var(--bg-light-gray); }
 				.smc-row--heading, .smc-row--bold { font-weight: 600; }
 				.smc-row__head { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+				.smc-row__select { flex: none; margin: 0; }
 				.smc-row__toggle { width: 20px; height: 20px; line-height: 18px; flex: none; text-align: center; cursor: pointer; color: var(--text-muted); border-radius: 4px; transition: background-color 0.12s ease; }
 				.smc-row__toggle:hover { background: var(--border-color); color: var(--text-color); }
 				.smc-row__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 				.smc-row__direction { flex: none; color: var(--text-muted); font-size: var(--text-xs); border: 1px solid var(--border-color); border-radius: 4px; padding: 0 6px; }
 				.smc-row__pending { flex: none; font-size: var(--text-xs); color: var(--orange-500); background: var(--bg-orange, #fff4e5); border-radius: 8px; padding: 1px 8px; white-space: nowrap; }
+				.smc-review-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 18px; border-bottom: 1px solid var(--border-color); background: var(--subtle-fg); font-size: var(--text-sm); }
+				.smc-review-toolbar .text-muted { margin-right: auto; }
 				.smc-row__actions { flex: none; display: inline-flex; gap: 6px; }
 				.smc-row__formula { margin: 2px 0 5px 30px; padding: 6px 10px; font-size: var(--text-xs); color: var(--text-muted); background: var(--subtle-fg); border-radius: 4px; line-height: 2; }
 				.smc-formula-token { display: inline-block; border: 1px solid var(--border-color); border-radius: 4px; padding: 0 5px; margin: 0 1px; background: var(--card-bg); color: var(--text-color); }
@@ -157,19 +161,22 @@ class ChinaStatementMapping {
 				.smc-account__grouplabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 				.smc-account__badge { margin-left: auto; font-size: var(--text-xs); color: var(--red-500); background: var(--bg-light-red, #fff5f5); border-radius: 8px; padding: 0 7px; white-space: nowrap; }
 				.smc-account__target { margin-left: auto; color: var(--text-muted); font-size: var(--text-xs); white-space: nowrap; }
+				.smc-account__suggestion { color: var(--blue-600, #1f6feb); background: var(--bg-blue, #f0f6ff); border-radius: 4px; padding: 1px 6px; }
 				.smc-selection-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-blue, #f0f6ff); font-size: var(--text-sm); }
+				.smc-selection-hint { color: var(--text-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 				.smc-empty { padding: 28px 14px; color: var(--text-muted); text-align: center; }
 				@media (max-width: 991px) { .smc-main { grid-template-columns: 1fr; } }
 			</style>`,
 		).appendTo(document.head);
 	}
 
-	async refresh() {
+	async refresh(restore_scroll_top = null) {
 		const company = this.company.get_value();
 		const statement_type = this.statement_type.get_value();
 		if (!company || !statement_type) return;
 		const accounting_standard = this.accounting_standard.get_value();
 		this.selected_accounts.clear();
+		this.selected_rows.clear();
 		this.collapsed_rows.clear();
 		this.collapsed_accounts.clear();
 		this.expanded_aggregates.clear();
@@ -184,6 +191,9 @@ class ChinaStatementMapping {
 			},
 		);
 		this.render_all();
+		if (restore_scroll_top !== null) {
+			this.$rows.find(".smc-rows__list").scrollTop(restore_scroll_top);
+		}
 	}
 
 	render_all() {
@@ -230,9 +240,32 @@ class ChinaStatementMapping {
 		const $panel = $(
 			`<div>
 				<div class="smc-panel-title">${frappe.utils.escape_html(this.template_title())}</div>
+				<div class="smc-review-toolbar"></div>
 				<div class="smc-rows__list"></div>
 			</div>`,
 		);
+		const $toolbar = $panel.find(".smc-review-toolbar");
+		if (this.can_write) {
+			const pending_rows = rows.filter((row) => row.mappings.some((mapping) => !mapping.reviewed));
+			$toolbar.html(
+				`<span>${__("选择报表行进行批量复核")}</span>
+				<span class="text-muted">${this.selected_rows.size ? __("已选择 {0} 行", [this.selected_rows.size]) : __("未选择")}</span>
+				<button class="btn btn-xs btn-default smc-review-all">${__("选择待复核行")}</button>
+				<button class="btn btn-xs btn-primary smc-review-selected" ${this.selected_rows.size ? "" : "disabled"}>${__("批量复核")}</button>
+				<button class="btn btn-xs btn-default smc-unreview-selected" ${this.selected_rows.size ? "" : "disabled"}>${__("取消复核")}</button>
+				<button class="btn btn-xs btn-default smc-clear-rows" ${this.selected_rows.size ? "" : "disabled"}>${__("清除选择")}</button>`,
+			);
+			$toolbar.find(".smc-review-all").on("click", () => {
+				pending_rows.forEach((row) => this.selected_rows.add(row.row_code));
+				this.render_rows();
+			});
+			$toolbar.find(".smc-review-selected").on("click", () => this.review_selected_rows(1));
+			$toolbar.find(".smc-unreview-selected").on("click", () => this.review_selected_rows(0));
+			$toolbar.find(".smc-clear-rows").on("click", () => {
+				this.selected_rows.clear();
+				this.render_rows();
+			});
+		}
 		const $list = $panel.find(".smc-rows__list");
 		rows.forEach((row, index) => {
 			if (!visibility.visible.has(index)) return;
@@ -290,6 +323,18 @@ class ChinaStatementMapping {
 			`<div class="smc-row ${is_heading ? "smc-row--heading" : ""} ${row.bold ? "smc-row--bold" : ""}"></div>`,
 		);
 		const $head = $('<div class="smc-row__head"></div>').appendTo($row);
+		if (this.can_write && row.mappings.length) {
+			const $select = $('<input type="checkbox" class="smc-row__select">')
+				.prop("checked", this.selected_rows.has(row.row_code))
+				.attr("aria-label", __("选择报表行"));
+			$select.on("click", (event) => event.stopPropagation());
+			$select.on("change", () => {
+				if ($select.prop("checked")) this.selected_rows.add(row.row_code);
+				else this.selected_rows.delete(row.row_code);
+				this.render_rows();
+			});
+			$head.append($select);
+		}
 		$head.append(
 			`<span class="smc-row__toggle" style="margin-left: ${row.indent * 18}px">${has_children ? (collapsed ? "▸" : "▾") : ""}</span>`,
 		);
@@ -555,14 +600,27 @@ class ChinaStatementMapping {
 		const keyword = (this.account_search.get_value() || "").trim().toLowerCase();
 		const $panel = $(`<div><div class="smc-panel-title">${__("Accounts")} (${this.data.summary.total_leaf_accounts})</div></div>`);
 		if (this.can_write && this.selected_accounts.size) {
+			const selected = this.data.accounts.filter((account) => this.selected_accounts.has(account.name));
+			const suggestions = selected.filter((account) => account.likely_row);
+			const suggestion_text = suggestions.length
+				? suggestions.map((account) => `${account.account_number || account.account_name} -> ${account.likely_row.label}`).join("; ")
+				: __("当前报表中无法可靠判断所选科目的映射，请人工选择报表项目。");
 			const $bar = $(
 				`<div class="smc-selection-bar">
 					<span>${__("{0} accounts selected", [this.selected_accounts.size])}</span>
-					<span class="text-muted">${__("Click a statement row to map")}</span>
-					<button class="btn btn-xs btn-default" style="margin-left:auto">${__("Clear")}</button>
+					<span class="smc-selection-hint" title="${frappe.utils.escape_html(suggestion_text)}">${frappe.utils.escape_html(suggestion_text)}</span>
+					<button class="btn btn-xs btn-default smc-selection-clear" style="margin-left:auto">${__("Clear")}</button>
 				</div>`,
 			);
-			$bar.find("button").on("click", () => {
+			if (suggestions.length === 1 && selected.length === 1) {
+				const $apply = $(`<button class="btn btn-xs btn-primary">${__("按建议映射")}</button>`);
+				$apply.on("click", () => {
+					const row = this.data.rows.find((item) => item.row_code === suggestions[0].likely_row.row_code);
+					if (row) this.map_selected_accounts(row);
+				});
+				$bar.find(".smc-selection-clear").before($apply);
+			}
+			$bar.find(".smc-selection-clear").on("click", () => {
 				this.selected_accounts.clear();
 				this.render_rows();
 				this.render_accounts();
@@ -685,6 +743,9 @@ class ChinaStatementMapping {
 		$item.append(`<span title="${frappe.utils.escape_html(account.name)}">${frappe.utils.escape_html(label)}</span>`);
 		if (target_label) {
 			$item.append(`<span class="smc-account__target">→ ${frappe.utils.escape_html(target_label)}</span>`);
+		} else if (unmapped && account.likely_row) {
+			const suggestion = `${account.likely_row.row_code} ${account.likely_row.label}`;
+			$item.append(`<span class="smc-account__target smc-account__suggestion">${__("建议映射")}: ${frappe.utils.escape_html(suggestion)}</span>`);
 		}
 		return $item;
 	}
@@ -778,6 +839,7 @@ class ChinaStatementMapping {
 	}
 
 	async set_row_reviewed(row, reviewed) {
+		const scroll_top = this.$rows.find(".smc-rows__list").scrollTop() || 0;
 		await frappe.xcall("china_finance.services.statement_mapping_console.set_mappings_reviewed", {
 			names: row.mappings.map((mapping) => mapping.name),
 			reviewed,
@@ -786,6 +848,22 @@ class ChinaStatementMapping {
 			message: reviewed ? __("Row reviewed") : __("Review cleared"),
 			indicator: "green",
 		});
-		this.refresh();
+		this.refresh(scroll_top);
+	}
+
+	async review_selected_rows(reviewed) {
+		const rows = this.data.rows.filter((row) => this.selected_rows.has(row.row_code));
+		const names = rows.flatMap((row) => row.mappings.map((mapping) => mapping.name));
+		if (!names.length) return;
+		const scroll_top = this.$rows.find(".smc-rows__list").scrollTop() || 0;
+		await frappe.xcall("china_finance.services.statement_mapping_console.set_mappings_reviewed", {
+			names,
+			reviewed,
+		});
+		frappe.show_alert({
+			message: reviewed ? __("已批量复核 {0} 行", [rows.length]) : __("已取消复核 {0} 行", [rows.length]),
+			indicator: "green",
+		});
+		this.refresh(scroll_top);
 	}
 }

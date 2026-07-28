@@ -33,9 +33,12 @@ frappe.query_reports["China Financial Statements"] = {
 		}
 	},
 	onload(report) {
+		add_china_finance_export_actions(report);
 		if (!report.get_filter_value("company")) {
 			report.set_filter_value("company", frappe.defaults.get_user_default("Company"));
 		}
+		report.get_filter("company").on_change = () => sync_statutory_header(report);
+		sync_statutory_header(report);
 		report.get_filter("fiscal_year").get_query = () => ({
 			filters: { disabled: 0 },
 		});
@@ -73,6 +76,64 @@ frappe.query_reports["China Financial Statements"] = {
 		return value;
 	},
 };
+
+function add_china_finance_export_actions(report) {
+	if (report.__china_finance_export_actions_added || !report.page?.add_action_item) return;
+	report.__china_finance_export_actions_added = true;
+	const excel_item = report.page.add_action_item(__("导出 Excel"), () => frappe.query_report.export_report());
+	const pdf_item = report.page.add_action_item(__("导出 PDF"), () => {
+		frappe.call({
+			method: "china_finance.china_finance.report.china_financial_statements.china_financial_statements.export_current_report_pdf",
+			args: { filters: report.get_filter_values() },
+			freeze: true,
+			freeze_message: __("正在生成 PDF"),
+			callback(response) {
+				const file_url = response.message?.file_url;
+				if (!file_url) {
+					frappe.throw(__("PDF 生成失败，未返回文件链接"));
+				}
+				window.open(file_url, "_blank", "noopener");
+			},
+		});
+	});
+	// The query-report page is shared across all reports, so keep the button
+	// label and these menu items in sync with the currently loaded report.
+	const sync_actions = () => {
+		const is_china_statements = frappe.get_route()[1] === "China Financial Statements";
+		report.page.actions_btn_group
+			.find(".actions-btn-group-label")
+			.text(is_china_statements ? __("导出") : __("Actions"));
+		$(excel_item).closest("li").toggle(is_china_statements);
+		$(pdf_item).closest("li").toggle(is_china_statements);
+		if (is_china_statements) {
+			report.page.actions_btn_group.removeClass("hide");
+			return;
+		}
+		// Hide the whole actions button when nothing visible remains in its menu.
+		const has_visible_items =
+			report.page.actions
+				.find("li")
+				.filter((_, el) => $(el).is(":visible") && !$(el).hasClass("dropdown-divider")).length > 0;
+		report.page.actions_btn_group.toggleClass("hide", !has_visible_items);
+	};
+	sync_actions();
+	$(report.page.wrapper).on("show", sync_actions);
+}
+
+function sync_statutory_header(report) {
+	const company = report.get_filter_value("company");
+	if (!company) return;
+	Promise.all([
+		frappe.db.get_value("Company", company, "tax_id"),
+		frappe.db.get_value("China Finance Settings", company, "accounting_standard"),
+	]).then(([tax, settings]) => {
+		if (report.get_filter_value("company") !== company) return;
+		report.statutory_header = {
+			tax_id: tax?.message?.tax_id || "",
+			accounting_standard: settings?.message?.accounting_standard || "",
+		};
+	});
+}
 
 function sync_accounting_period(report, refresh) {
 	const fiscal_year = report.get_filter_value("fiscal_year");

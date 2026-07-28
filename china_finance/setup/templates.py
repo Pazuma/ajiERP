@@ -3,12 +3,13 @@ from frappe.utils import add_days, getdate
 
 
 TEMPLATE_VERSION = "3.0"
+MAPPING_RULE_VERSION = "1.5"
 TEMPLATE_EFFECTIVE_FROM = "2026-01-01"
 
 # Depreciation and amortisation cannot be translated into a direct-method cash
 # flow line from their account number alone. A cash leg involving either must
 # be classified and confirmed by the accountant.
-NON_CASH_FLOW_SUGGESTION_PREFIXES = ("510102", "510105")
+NON_CASH_FLOW_SUGGESTION_PREFIXES = ("1231", "1471", "1602", "1702", "510102", "510105")
 
 
 def requires_manual_cash_flow_assignment(account_number):
@@ -20,7 +21,7 @@ def is_strictly_excluded_from_statement(account_number, statement_type):
 
 
 def get_seed_version(accounting_standard):
-	return TEMPLATE_VERSION if accounting_standard == "企业会计准则" else "2.0"
+	return TEMPLATE_VERSION
 
 
 def row(code, label, row_type="Mapped Accounts", formula=None, direction="Debit Positive", indent=0, bold=0):
@@ -147,15 +148,22 @@ SMALL_ENTERPRISE_ROWS = {
 		row("NOTES_RECEIVABLE", "应收票据", indent=1), row("ACCOUNTS_RECEIVABLE", "应收账款", indent=1),
 		row("PREPAYMENTS", "预付账款", indent=1), row("DIVIDENDS_RECEIVABLE", "应收股利", indent=1),
 		row("INTEREST_RECEIVABLE", "应收利息", indent=1), row("OTHER_RECEIVABLES", "其他应收款", indent=1),
-		row("INVENTORIES", "存货", indent=1), row("OTHER_CURRENT_ASSETS", "其他流动资产", indent=1),
+		row("INVENTORIES", "存货", "Formula", "RAW_MATERIALS + WORK_IN_PROGRESS + FINISHED_GOODS + TURNOVER_MATERIALS - INVENTORY_PROVISION", indent=1), row("RAW_MATERIALS", "其中：原材料", indent=2),
+		row("WORK_IN_PROGRESS", "在产品", indent=2), row("FINISHED_GOODS", "库存商品", indent=2),
+		row("TURNOVER_MATERIALS", "周转材料", indent=2), row("INVENTORY_PROVISION", "减：存货跌价准备", direction="Credit Positive", indent=2), row("OTHER_CURRENT_ASSETS", "其他流动资产", indent=1),
 		row("CURRENT_ASSETS", "流动资产合计", "Formula", "CASH + SHORT_TERM_INVESTMENTS + NOTES_RECEIVABLE + ACCOUNTS_RECEIVABLE + PREPAYMENTS + DIVIDENDS_RECEIVABLE + INTEREST_RECEIVABLE + OTHER_RECEIVABLES + INVENTORIES + OTHER_CURRENT_ASSETS", bold=1),
 		row("NONCURRENT_ASSETS_HEADING", "非流动资产", "Heading", bold=1),
 		row("LONG_TERM_BOND_INVESTMENTS", "长期债券投资", indent=1), row("LONG_TERM_EQUITY_INVESTMENTS", "长期股权投资", indent=1),
-		row("FIXED_ASSETS", "固定资产原价", indent=1), row("ACCUMULATED_DEPRECIATION", "减：累计折旧", direction="Credit Positive", indent=1),
-		row("CONSTRUCTION_IN_PROGRESS", "在建工程", indent=1), row("INTANGIBLE_ASSETS", "无形资产", indent=1),
-		row("DEVELOPMENT_EXPENDITURE", "开发支出", indent=1), row("LONG_TERM_DEFERRED_EXPENSES", "长期待摊费用", indent=1),
-		row("OTHER_NONCURRENT_ASSETS", "其他非流动资产", indent=1),
-		row("NONCURRENT_ASSETS", "非流动资产合计", "Formula", "LONG_TERM_BOND_INVESTMENTS + LONG_TERM_EQUITY_INVESTMENTS + FIXED_ASSETS - ACCUMULATED_DEPRECIATION + CONSTRUCTION_IN_PROGRESS + INTANGIBLE_ASSETS + DEVELOPMENT_EXPENDITURE + LONG_TERM_DEFERRED_EXPENSES + OTHER_NONCURRENT_ASSETS", bold=1),
+		# Group the statutory fixed-asset rows under one display-only parent.  The
+		# heading has no statutory line number and does not affect the formula.
+		row("FIXED_ASSETS_HEADING", "固定资产", "Heading", indent=1, bold=1),
+		row("FIXED_ASSETS", "固定资产原价", indent=2), row("ACCUMULATED_DEPRECIATION", "减：累计折旧", direction="Credit Positive", indent=2),
+		row("FIXED_ASSETS_NET", "固定资产账面价值", "Formula", "FIXED_ASSETS - ACCUMULATED_DEPRECIATION", indent=2),
+		row("CONSTRUCTION_IN_PROGRESS", "在建工程", indent=1), row("ENGINEERING_MATERIALS", "工程物资", indent=1),
+		row("FIXED_ASSET_DISPOSAL", "固定资产清理", indent=1), row("BIOLOGICAL_ASSETS", "生产性生物资产", indent=1),
+		row("INTANGIBLE_ASSETS", "无形资产", indent=1), row("DEVELOPMENT_EXPENDITURE", "开发支出", indent=1),
+		row("LONG_TERM_DEFERRED_EXPENSES", "长期待摊费用", indent=1), row("OTHER_NONCURRENT_ASSETS", "其他非流动资产", indent=1),
+		row("NONCURRENT_ASSETS", "非流动资产合计", "Formula", "LONG_TERM_BOND_INVESTMENTS + LONG_TERM_EQUITY_INVESTMENTS + FIXED_ASSETS_NET + CONSTRUCTION_IN_PROGRESS + ENGINEERING_MATERIALS + FIXED_ASSET_DISPOSAL + BIOLOGICAL_ASSETS + INTANGIBLE_ASSETS + DEVELOPMENT_EXPENDITURE + LONG_TERM_DEFERRED_EXPENSES + OTHER_NONCURRENT_ASSETS", bold=1),
 		row("TOTAL_ASSETS", "资产合计", "Formula", "CURRENT_ASSETS + NONCURRENT_ASSETS", bold=1),
 		row("CURRENT_LIABILITIES_HEADING", "流动负债", "Heading", direction="Credit Positive", bold=1),
 		row("SHORT_TERM_BORROWINGS", "短期借款", direction="Credit Positive", indent=1), row("NOTES_PAYABLE", "应付票据", direction="Credit Positive", indent=1),
@@ -169,18 +177,31 @@ SMALL_ENTERPRISE_ROWS = {
 		row("DEFERRED_INCOME", "递延收益", direction="Credit Positive", indent=1), row("OTHER_NONCURRENT_LIABILITIES", "其他非流动负债", direction="Credit Positive", indent=1),
 		row("NONCURRENT_LIABILITIES", "非流动负债合计", "Formula", "LONG_TERM_BORROWINGS + LONG_TERM_PAYABLES + DEFERRED_INCOME + OTHER_NONCURRENT_LIABILITIES", "Credit Positive", bold=1),
 		row("TOTAL_LIABILITIES", "负债合计", "Formula", "CURRENT_LIABILITIES + NONCURRENT_LIABILITIES", "Credit Positive", bold=1),
-		row("PAID_IN_CAPITAL", "实收资本（或股本）", direction="Credit Positive"), row("CAPITAL_RESERVE", "资本公积", direction="Credit Positive"),
-		row("SURPLUS_RESERVE", "盈余公积", direction="Credit Positive"), row("RETAINED_EARNINGS", "未分配利润", direction="Credit Positive"),
-		row("OWNERS_EQUITY", "所有者权益合计", "Formula", "PAID_IN_CAPITAL + CAPITAL_RESERVE + SURPLUS_RESERVE + RETAINED_EARNINGS", "Credit Positive", bold=1),
+		row("OWNERS_EQUITY_HEADING", "所有者权益（或股东权益）", "Heading", direction="Credit Positive", bold=1),
+		row("PAID_IN_CAPITAL", "实收资本（或股本）", direction="Credit Positive", indent=1), row("CAPITAL_RESERVE", "资本公积", direction="Credit Positive", indent=1),
+		row("SURPLUS_RESERVE", "盈余公积", direction="Credit Positive", indent=1), row("RETAINED_EARNINGS", "未分配利润", direction="Credit Positive", indent=1),
+		row("OWNERS_EQUITY", "所有者权益（或股东权益）合计", "Formula", "PAID_IN_CAPITAL + CAPITAL_RESERVE + SURPLUS_RESERVE + RETAINED_EARNINGS", "Credit Positive", indent=1, bold=1),
 		row("TOTAL_LIABILITIES_EQUITY", "负债和所有者权益合计", "Formula", "TOTAL_LIABILITIES + OWNERS_EQUITY", "Credit Positive", bold=1),
 	],
 	"Profit and Loss": [
 		row("OPERATING_REVENUE", "一、营业收入", direction="Credit Positive", bold=1), row("OPERATING_COST", "减：营业成本", indent=1),
-		row("TAX_SURCHARGES", "税金及附加", indent=1), row("SELLING_EXPENSES", "销售费用", indent=1),
-		row("ADMIN_EXPENSES", "管理费用", indent=1), row("FINANCE_EXPENSES", "财务费用", indent=1),
+		row("TAX_SURCHARGES", "税金及附加", indent=1), row("CONSUMPTION_TAX", "其中：消费税", indent=2),
+		row("BUSINESS_TAX", "营业税", indent=2), row("URBAN_MAINTENANCE_TAX", "城市维护建设税", indent=2),
+		row("RESOURCE_TAX", "资源税", indent=2), row("LAND_VALUE_ADDED_TAX", "土地增值税", indent=2),
+		row("LOCAL_PROPERTY_TAXES", "城镇土地使用税、房产税、车船税、印花税", indent=2),
+		row("EDUCATION_SURCHARGES", "教育费附加、矿产资源补偿费、排污费", indent=2),
+		row("SELLING_EXPENSES", "销售费用", indent=1), row("PRODUCT_REPAIR_EXPENSES", "其中：商品维修费", indent=2),
+		row("ADVERTISING_EXPENSES", "广告费和业务宣传费", indent=2),
+		row("ADMIN_EXPENSES", "管理费用", indent=1), row("STARTUP_EXPENSES", "其中：开办费", indent=2),
+		row("ENTERTAINMENT_EXPENSES", "业务招待费", indent=2), row("RESEARCH_EXPENSES", "其中：研究费用", indent=2),
+		row("FINANCE_EXPENSES", "财务费用", indent=1), row("INTEREST_EXPENSES", "其中：利息费用（收入以“-”号填列）", indent=2),
 		row("INVESTMENT_INCOME", "加：投资收益", direction="Credit Positive", indent=1),
 		row("OPERATING_PROFIT", "二、营业利润", "Formula", "OPERATING_REVENUE - OPERATING_COST - TAX_SURCHARGES - SELLING_EXPENSES - ADMIN_EXPENSES - FINANCE_EXPENSES + INVESTMENT_INCOME", "Credit Positive", bold=1),
-		row("NONOPERATING_INCOME", "加：营业外收入", direction="Credit Positive", indent=1), row("NONOPERATING_EXPENSE", "减：营业外支出", indent=1),
+		row("NONOPERATING_INCOME", "加：营业外收入", direction="Credit Positive", indent=1), row("GOVERNMENT_GRANTS", "其中：政府补助", direction="Credit Positive", indent=2),
+		row("NONOPERATING_EXPENSE", "减：营业外支出", indent=1), row("BAD_DEBT_LOSSES", "其中：坏账损失", indent=2),
+		row("LONG_TERM_BOND_LOSSES", "无法收回的长期债券投资损失", indent=2), row("LONG_TERM_EQUITY_LOSSES", "无法收回的长期股权投资损失", indent=2),
+		row("NATURAL_DISASTER_LOSSES", "自然灾害等不可抗力因素造成的损失", indent=2),
+		row("TAX_LATE_PAYMENT_PENALTIES", "税收滞纳金", indent=2),
 		row("TOTAL_PROFIT", "三、利润总额", "Formula", "OPERATING_PROFIT + NONOPERATING_INCOME - NONOPERATING_EXPENSE", "Credit Positive", bold=1),
 		row("INCOME_TAX", "减：所得税费用", indent=1), row("NET_PROFIT", "四、净利润", "Formula", "TOTAL_PROFIT - INCOME_TAX", "Credit Positive", bold=1),
 	],
@@ -285,8 +306,7 @@ def seed_statement_templates():
 	for standard, statements in STATEMENT_ROWS.items():
 		version = get_seed_version(standard)
 		for statement_type, rows in statements.items():
-			if standard == "企业会计准则":
-				retire_previous_template_versions(standard, statement_type)
+			retire_previous_template_versions(standard, statement_type)
 			template_key = f"{standard}|{statement_type}|{version}"
 			if frappe.db.exists("China Financial Statement Template", template_key):
 				continue
@@ -329,6 +349,72 @@ def refresh_enterprise_v3_templates():
 		doc.set("rows", build_seed_rows(rows))
 		doc.flags.ignore_permissions = True
 		doc.save()
+
+
+def refresh_small_enterprise_v3_templates():
+	"""Align small-enterprise v3 rows to the statutory order without losing custom rows."""
+	old_fixed_asset_formula = (
+		"LONG_TERM_BOND_INVESTMENTS + LONG_TERM_EQUITY_INVESTMENTS + FIXED_ASSETS "
+		"- ACCUMULATED_DEPRECIATION + CONSTRUCTION_IN_PROGRESS + INTANGIBLE_ASSETS "
+		"+ DEVELOPMENT_EXPENDITURE + LONG_TERM_DEFERRED_EXPENSES + OTHER_NONCURRENT_ASSETS"
+	)
+	new_fixed_asset_formula = (
+		"LONG_TERM_BOND_INVESTMENTS + LONG_TERM_EQUITY_INVESTMENTS + FIXED_ASSETS_NET "
+		"+ CONSTRUCTION_IN_PROGRESS + ENGINEERING_MATERIALS + FIXED_ASSET_DISPOSAL "
+		"+ BIOLOGICAL_ASSETS + INTANGIBLE_ASSETS + DEVELOPMENT_EXPENDITURE "
+		"+ LONG_TERM_DEFERRED_EXPENSES + OTHER_NONCURRENT_ASSETS"
+	)
+	new_inventory_formula = "RAW_MATERIALS + WORK_IN_PROGRESS + FINISHED_GOODS + TURNOVER_MATERIALS - INVENTORY_PROVISION"
+	for statement_type, rows in STATEMENT_ROWS["小企业会计准则"].items():
+		name = frappe.db.get_value(
+			"China Financial Statement Template",
+			{"accounting_standard": "小企业会计准则", "statement_type": statement_type, "version": "3.0"}, "name",
+		)
+		if not name or frappe.db.exists("China Report Snapshot", {"template": name}):
+			continue
+		doc = frappe.get_doc("China Financial Statement Template", name)
+		seed_rows = build_seed_rows(rows)
+		existing = {row.row_code: row for row in doc.rows}
+		ordered_rows = []
+		changed = False
+		for row_data in seed_rows:
+			row = existing.get(row_data["row_code"])
+			if row:
+				if any(row.get(field) != value for field, value in row_data.items() if field not in {"name", "parent", "parentfield", "parenttype"}):
+					# Only synchronize structural metadata; user-entered labels/formulas remain intact.
+					for field in ("statutory_line_number", "row_type", "is_child", "indent", "bold", "show_zero", "label", "formula", "balance_direction"):
+						if row.get(field) != row_data[field]:
+							row.set(field, row_data[field])
+							changed = True
+				ordered_rows.append(row)
+			else:
+				ordered_rows.append(frappe._dict(row_data))
+				changed = True
+		custom_rows = [row for row in doc.rows if row.row_code not in {item["row_code"] for item in seed_rows}]
+		if custom_rows:
+			ordered_rows.extend(custom_rows)
+		if [row.row_code for row in doc.rows] != [row.row_code if hasattr(row, "row_code") else row["row_code"] for row in ordered_rows]:
+			changed = True
+		if statement_type == "Balance Sheet":
+			for row in ordered_rows:
+				if row.row_code == "NONCURRENT_ASSETS" and row.formula == old_fixed_asset_formula:
+					row.formula = new_fixed_asset_formula
+					changed = True
+				if row.row_code == "INVENTORIES" and row.formula != new_inventory_formula:
+					row.formula = new_inventory_formula
+					changed = True
+		if changed:
+			# Rebuild the child table through Frappe's API so newly added child rows
+			# receive parent metadata and are persisted correctly.
+			doc.set("rows", [])
+			for row in ordered_rows:
+				as_dict = getattr(row, "as_dict", None)
+				values = as_dict() if callable(as_dict) else dict(row)
+				for field in ("name", "parent", "parentfield", "parenttype", "idx"):
+					values.pop(field, None)
+				doc.append("rows", values)
+			doc.flags.ignore_permissions = True
+			doc.save()
 
 
 def retire_previous_template_versions(accounting_standard, statement_type):
@@ -387,7 +473,7 @@ def sync_unreviewed_automatic_mappings(company, accounting_standard):
 		for mapping in frappe.get_all(
 			"China Financial Statement Mapping",
 			filters={"company": company, "template": template, "mapping_source": "Automatic", "reviewed": 0},
-			fields=["name", "account", "row_code", "cash_inflow_row_code", "cash_outflow_row_code", "account_number_snapshot", "mapping_basis", "mapping_rule_version"],
+			fields=["name", "account", "row_code", "supplementary_row_code", "cash_inflow_row_code", "cash_outflow_row_code", "account_number_snapshot", "mapping_basis", "mapping_rule_version"],
 		):
 			account = accounts.get(mapping.account)
 			if account and (
@@ -398,6 +484,7 @@ def sync_unreviewed_automatic_mappings(company, accounting_standard):
 				updated += 1
 				continue
 			classification, _basis = classify_company_account(company, account, statement_type, accounts_by_name) if account else (None, None)
+			classification = refine_classification_for_template(account, statement_type, valid_rows, classification)
 			if not classification:
 				continue
 			if isinstance(classification, tuple):
@@ -408,9 +495,10 @@ def sync_unreviewed_automatic_mappings(company, accounting_standard):
 				continue
 			values = {
 				"row_code": row_code,
+				"supplementary_row_code": get_supplementary_row_code(account, statement_type, valid_rows, row_code),
 				"account_number_snapshot": account.account_number,
 				"mapping_basis": _basis,
-				"mapping_rule_version": "1.2",
+				"mapping_rule_version": MAPPING_RULE_VERSION,
 			}
 			if statement_type == "Cash Flow":
 				values.update(cash_inflow_row_code=inflow_code, cash_outflow_row_code=outflow_code)
@@ -447,11 +535,13 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 		)
 		if not template:
 			continue
-		valid_codes = {row.row_code for row in frappe.get_cached_doc("China Financial Statement Template", template).rows}
+		valid_rows = {row.row_code: row.row_type for row in frappe.get_cached_doc("China Financial Statement Template", template).rows}
+		valid_codes = set(valid_rows)
 		for account in accounts:
 			if (statement_type == "Cash Flow" and requires_manual_cash_flow_assignment(account.account_number)) or is_strictly_excluded_from_statement(account.account_number, statement_type):
 				continue
 			classification, basis = classify_company_account(company, account, statement_type, accounts_by_name)
+			classification = refine_classification_for_template(account, statement_type, valid_codes, classification)
 			if not classification:
 				continue
 			if isinstance(classification, tuple):
@@ -462,7 +552,7 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 				row_code, inflow_code, outflow_code = fallback_classification(
 					account, statement_type, valid_codes, inflow_code, outflow_code
 				)
-			if not row_code or row_code not in valid_codes:
+			if not row_code or valid_rows.get(row_code) != "Mapped Accounts":
 				continue
 			effective_date = max(frappe.utils.getdate(effective_from), frappe.utils.getdate(TEMPLATE_EFFECTIVE_FROM))
 			mapping_key = f"{company}|{template}|{account.name}|{effective_date}"
@@ -472,12 +562,13 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 				{
 					"doctype": "China Financial Statement Mapping", "mapping_key": mapping_key,
 					"company": company, "template": template, "row_code": row_code, "account": account.name,
+					"supplementary_row_code": get_supplementary_row_code(account, statement_type, valid_rows, row_code),
 					"cash_inflow_row_code": inflow_code, "cash_outflow_row_code": outflow_code,
 					"sign_multiplier": "1", "effective_from": effective_date,
 					"mapping_source": "Automatic", "reviewed": 0,
 					"account_number_snapshot": account.account_number,
 					"mapping_basis": basis,
-					"mapping_rule_version": "1.2",
+				"mapping_rule_version": MAPPING_RULE_VERSION,
 				}
 			).insert(ignore_permissions=True)
 			created += 1
@@ -537,7 +628,7 @@ def sync_automatic_cash_flow_mappings(company, accounting_standard):
 	for mapping in frappe.get_all(
 		"China Financial Statement Mapping",
 		filters={"company": company, "template": template, "mapping_source": "Automatic", "reviewed": 0},
-		fields=["name", "account", "row_code", "cash_inflow_row_code", "cash_outflow_row_code"],
+		fields=["name", "account", "row_code", "cash_inflow_row_code", "cash_outflow_row_code", "mapping_rule_version"],
 	):
 		account = accounts.get(mapping.account)
 		if not account:
@@ -554,6 +645,7 @@ def sync_automatic_cash_flow_mappings(company, accounting_standard):
 			"row_code": row_code,
 			"cash_inflow_row_code": inflow_code,
 			"cash_outflow_row_code": outflow_code,
+			"mapping_rule_version": MAPPING_RULE_VERSION,
 		}
 		if any(mapping.get(fieldname) != value for fieldname, value in values.items()):
 			frappe.db.set_value("China Financial Statement Mapping", mapping.name, values, update_modified=False)
@@ -610,6 +702,134 @@ def _classify_known_profile_fallback(account, statement_type):
 	return None
 
 
+def refine_classification_for_template(account, statement_type, valid_rows, classification):
+	"""Use small-enterprise statutory detail rows when the selected template has them."""
+	if not account or not classification:
+		return classification
+	number = str(account.account_number or "")
+	name = account.account_name or account.name or ""
+	if statement_type == "Balance Sheet":
+		# Small-enterprise templates intentionally collapse several enterprise
+		# presentation lines.  Keep this downgrade explicit and auditable.
+		if "SHORT_TERM_INVESTMENTS" in valid_rows and number.startswith("1101"):
+			return "SHORT_TERM_INVESTMENTS"
+		if (
+			"ADVANCES_FROM_CUSTOMERS" in valid_rows
+			and "CONTRACT_LIABILITIES" not in valid_rows
+			and number.startswith("2204")
+		):
+			return "ADVANCES_FROM_CUSTOMERS"
+		if (
+			"OTHER_NONCURRENT_ASSETS" in valid_rows
+			and "RIGHT_OF_USE_ASSETS" not in valid_rows
+			and number.startswith("1622")
+		):
+			return "OTHER_NONCURRENT_ASSETS"
+		if "LONG_TERM_PAYABLES" in valid_rows and number.startswith(("2703", "2802")):
+			return "LONG_TERM_PAYABLES"
+		detailed = {
+			"1131": "DIVIDENDS_RECEIVABLE", "1132": "INTEREST_RECEIVABLE",
+			"1501": "LONG_TERM_BOND_INVESTMENTS", "1502": "LONG_TERM_BOND_INVESTMENTS",
+			"1511": "LONG_TERM_EQUITY_INVESTMENTS", "1512": "LONG_TERM_EQUITY_INVESTMENTS",
+			"1471": "INVENTORY_PROVISION", "1602": "ACCUMULATED_DEPRECIATION", "160201": "ACCUMULATED_DEPRECIATION", "160202": "ACCUMULATED_DEPRECIATION", "160203": "ACCUMULATED_DEPRECIATION", "1605": "ENGINEERING_MATERIALS",
+			"1606": "FIXED_ASSET_DISPOSAL", "1621": "BIOLOGICAL_ASSETS",
+			"2231": "INTEREST_PAYABLE", "2232": "PROFIT_PAYABLE",
+		}
+		row_code = detailed.get(number)
+		if not row_code:
+			if number.startswith(("1401", "1402", "1403", "1404")) or "原材料" in name:
+				row_code = "RAW_MATERIALS"
+			elif number.startswith(("5001", "5101", "5201")) or "生产成本" in name or "在产品" in name:
+				row_code = "WORK_IN_PROGRESS"
+			elif number in {"1405", "1406", "1408"} or any(word in name for word in ("库存商品", "产成品", "委托加工物资")):
+				row_code = "FINISHED_GOODS"
+			elif number.startswith("1411") or "周转材料" in name or "低值易耗品" in name:
+				row_code = "TURNOVER_MATERIALS"
+		if row_code and row_code in valid_rows:
+			return row_code
+	if statement_type == "Profit and Loss":
+		row_code = None
+		if (
+			number.startswith("6101")
+			and "INVESTMENT_INCOME" in valid_rows
+			and "FAIR_VALUE_CHANGES" not in valid_rows
+		):
+			row_code = "INVESTMENT_INCOME"
+		elif (
+			number.startswith(("6117", "6301"))
+			and "NONOPERATING_INCOME" in valid_rows
+			and "OTHER_INCOME" not in valid_rows
+		):
+			row_code = "NONOPERATING_INCOME"
+		elif (
+			number.startswith(("6701", "6702"))
+			and "NONOPERATING_EXPENSE" in valid_rows
+			and "ASSET_IMPAIRMENT_LOSSES" not in valid_rows
+		):
+			row_code = "NONOPERATING_EXPENSE"
+		if number.startswith("6403"):
+			if "消费税" in name:
+				row_code = "CONSUMPTION_TAX"
+			elif "营业税" in name:
+				row_code = "BUSINESS_TAX"
+			elif "城市维护" in name:
+				row_code = "URBAN_MAINTENANCE_TAX"
+			elif "资源税" in name:
+				row_code = "RESOURCE_TAX"
+			elif "土地增值税" in name:
+				row_code = "LAND_VALUE_ADDED_TAX"
+			elif any(word in name for word in ("土地使用税", "房产税", "车船税", "印花税")):
+				row_code = "LOCAL_PROPERTY_TAXES"
+			elif any(word in name for word in ("教育费附加", "矿产资源补偿", "排污费")):
+				row_code = "EDUCATION_SURCHARGES"
+		if number.startswith("6601"):
+			if "维修" in name:
+				row_code = "PRODUCT_REPAIR_EXPENSES"
+			elif any(word in name for word in ("广告", "业务宣传")):
+				row_code = "ADVERTISING_EXPENSES"
+		if number.startswith("6602") and "开办" in name:
+			row_code = "STARTUP_EXPENSES"
+		if number.startswith("6602") and "招待" in name:
+			row_code = "ENTERTAINMENT_EXPENSES"
+		if number.startswith(("660206", "530101")) or any(word in name for word in ("研发", "研究")):
+			row_code = "ADMIN_EXPENSES"
+		if number.startswith("6603") and any(word in name for word in ("利息", "Interest")):
+			row_code = "INTEREST_EXPENSES"
+		if number.startswith("6301") and "政府补助" in name:
+			row_code = "GOVERNMENT_GRANTS"
+		if number.startswith("6711"):
+			if "坏账" in name:
+				row_code = "BAD_DEBT_LOSSES"
+			elif "长期债券" in name:
+				row_code = "LONG_TERM_BOND_LOSSES"
+			elif "长期股权" in name:
+				row_code = "LONG_TERM_EQUITY_LOSSES"
+			elif "自然灾害" in name or "不可抗力" in name:
+				row_code = "NATURAL_DISASTER_LOSSES"
+			elif "滞纳金" in name:
+				row_code = "TAX_LATE_PAYMENT_PENALTIES"
+		if row_code and row_code in valid_rows:
+			return row_code
+	return classification
+
+
+def get_supplementary_row_code(account, statement_type, valid_rows, row_code):
+	"""Return a disclosure-only detail row without duplicating the statement total.
+
+	Small-enterprise research expenditure is included in management expenses, while
+	the statutory form also requires an 'of which: research expenses' disclosure.
+	The primary mapping remains ADMIN_EXPENSES and this field is rendered outside
+	the parent formula.
+	"""
+	if statement_type != "Profit and Loss" or "RESEARCH_EXPENSES" not in valid_rows:
+		return None
+	number = str(account.account_number or "")
+	name = account.account_name or account.name or ""
+	if row_code == "ADMIN_EXPENSES" and (number.startswith(("660206", "530101")) or any(word in name for word in ("研发", "研究"))):
+		return "RESEARCH_EXPENSES"
+	return None
+
+
 def classify_account_number(number, statement_type, account=None):
 	if not number:
 		return None
@@ -644,6 +864,8 @@ def classify_account_number(number, statement_type, account=None):
 			return ("CASH_PAID_EMPLOYEES", "OTHER_OPERATING_RECEIPTS", "CASH_PAID_EMPLOYEES")
 		if number.startswith(("500103", "510199")):
 			return ("OTHER_OPERATING_PAYMENTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
+		if number == "5101":
+			return ("OTHER_OPERATING_PAYMENTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
 		if number.startswith(("510102", "510105")):
 			return None
 		if number.startswith(("140", "141", "2201", "2202", "2205", "2206")):
@@ -658,12 +880,12 @@ def classify_account_number(number, statement_type, account=None):
 			return ("CASH_PAID_LONG_TERM_ASSETS", "CASH_RECEIVED_ASSET_DISPOSAL", "CASH_PAID_LONG_TERM_ASSETS")
 		if number.startswith(("2001", "2501", "2502", "2701")):
 			return ("CASH_RECEIVED_BORROWINGS", "CASH_RECEIVED_BORROWINGS", "CASH_PAID_DEBT_REPAYMENT")
-		if number.startswith("4001"):
-			return ("CASH_RECEIVED_INVESTMENT", "CASH_RECEIVED_INVESTMENT", "OTHER_FINANCING_PAYMENTS")
 		if number.startswith(("2231", "2232", "410403", "660301")):
 			return ("CASH_PAID_DIVIDENDS_INTEREST", "OTHER_FINANCING_RECEIPTS", "CASH_PAID_DIVIDENDS_INTEREST")
 		if number.startswith(("6111", "1131", "1132")):
 			return ("CASH_RECEIVED_INVESTMENT_INCOME", "CASH_RECEIVED_INVESTMENT_INCOME", "OTHER_INVESTING_PAYMENTS")
+		if number.startswith("6301"):
+			return ("OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
 		if number.startswith(("660", "670", "6711", "1221", "2241")):
 			return ("OTHER_OPERATING_PAYMENTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
 	return None
@@ -677,12 +899,16 @@ def _classify_balance_sheet_number(number):
 	if number.startswith("1123"): return "PREPAYMENTS"
 	if number.startswith(("1131", "1132", "1221")): return "OTHER_RECEIVABLES"
 	if number.startswith(("140", "141", "1471", "500", "510", "5201")): return "INVENTORIES"
+	if number.startswith("1125"): return "RECEIVABLE_FINANCING"
 	if number.startswith(("1501", "1502")): return "DEBT_INVESTMENTS"
 	if number.startswith("1503"): return "OTHER_DEBT_INVESTMENTS"
 	if number.startswith(("1511", "1512")): return "LONG_TERM_EQUITY_INVESTMENTS"
 	if number.startswith("1521"): return "INVESTMENT_PROPERTY"
 	if number.startswith("1531"): return "LONG_TERM_RECEIVABLES"
-	if number.startswith(("1601", "1602", "1603", "1606")): return "FIXED_ASSETS"
+	if number.startswith(("1601", "1603", "1606")): return "FIXED_ASSETS"
+	if number.startswith("1602"): return "ACCUMULATED_DEPRECIATION"
+	if number.startswith("1621"): return "BIOLOGICAL_ASSETS"
+	if number.startswith("1622"): return "RIGHT_OF_USE_ASSETS"
 	if number.startswith(("1604", "1605")): return "CONSTRUCTION_IN_PROGRESS"
 	if number.startswith(("1701", "1702", "1703")): return "INTANGIBLE_ASSETS"
 	if number.startswith("530102"): return "DEVELOPMENT_EXPENDITURE"
@@ -703,13 +929,16 @@ def _classify_balance_sheet_number(number):
 	if number.startswith("2501"): return "LONG_TERM_BORROWINGS"
 	if number.startswith("2502"): return "BONDS_PAYABLE"
 	if number.startswith(("2701", "2702")): return "LONG_TERM_PAYABLES"
+	if number.startswith(("2703", "2802")): return "LEASE_LIABILITIES"
 	if number.startswith("2801"): return "PROVISIONS"
 	if number.startswith(("2711",)): return "OTHER_NONCURRENT_LIABILITIES"
 	if number.startswith("2901"): return "DEFERRED_TAX_LIABILITIES"
 	if number.startswith("4001"): return "PAID_IN_CAPITAL"
 	if number.startswith("4002"): return "CAPITAL_RESERVE"
+	if number.startswith(("4005", "4401")): return "OTHER_EQUITY_INSTRUMENTS"
 	if number.startswith("4003"): return "OTHER_COMPREHENSIVE_INCOME"
 	if number.startswith("4101"): return "SURPLUS_RESERVE"
+	if number.startswith("4102"): return "SPECIAL_RESERVE"
 	if number.startswith(("4103", "4104", "999901")): return "RETAINED_EARNINGS"
 	if number.startswith("4201"): return "TREASURY_SHARES"
 	return None
@@ -818,7 +1047,8 @@ def classify_balance_sheet_account(account, name):
 		("DEVELOPMENT_EXPENDITURE", ("开发支出",)), ("DEFERRED_TAX_ASSETS", ("递延所得税资产",)),
 		("SHORT_TERM_BORROWINGS", ("短期借款",)), ("NOTES_PAYABLE", ("应付票据",)),
 		("ACCOUNTS_PAYABLE", ("应付账款",)), ("ADVANCES_FROM_CUSTOMERS", ("预收",)),
-		("CONTRACT_LIABILITIES", ("合同负债",)), ("EMPLOYEE_BENEFITS_PAYABLE", ("应付职工薪酬",)),
+		("CONTRACT_LIABILITIES", ("合同负债",)), ("LONG_TERM_EMPLOYEE_BENEFITS", ("长期应付职工薪酬",)),
+		("EMPLOYEE_BENEFITS_PAYABLE", ("应付职工薪酬",)),
 		("TAXES_PAYABLE", ("应交税",)), ("OTHER_PAYABLES", ("其他应付",)),
 		("LONG_TERM_BORROWINGS", ("长期借款",)), ("LEASE_LIABILITIES", ("租赁负债",)),
 		("DEFERRED_INCOME", ("递延收益",)), ("DEFERRED_TAX_LIABILITIES", ("递延所得税负债",)),

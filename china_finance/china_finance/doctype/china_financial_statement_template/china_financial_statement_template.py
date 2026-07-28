@@ -12,7 +12,10 @@ class ChinaFinancialStatementTemplate(Document):
 		for index, row in enumerate(self.rows):
 			if row.is_child and index == 0:
 				frappe.throw(_("首个报表项目不能设为子行"))
-			row.indent = 1 if row.is_child else 0
+			# ``is_child`` controls whether a row participates in the hierarchy;
+			# ``indent`` carries its actual depth.  Do not collapse all descendants
+			# to one level when a statutory template is saved.
+			row.indent = max(int(row.indent or 0), 1) if row.is_child else 0
 
 	def validate(self):
 		codes = [row.row_code for row in self.rows]

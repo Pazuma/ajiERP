@@ -4,7 +4,7 @@ from frappe.utils import cint, getdate, today
 
 from china_finance.services.financial_statement import get_template
 from china_finance.services.statement_mapping_review import REVIEW_ROLES, set_mapping_reviewed
-from china_finance.setup.templates import TEMPLATE_EFFECTIVE_FROM
+from china_finance.setup.templates import TEMPLATE_EFFECTIVE_FROM, classify_company_account, refine_classification_for_template
 
 READ_ROLES = (
 	"System Manager",
@@ -44,7 +44,7 @@ def get_mapping_console(company, statement_type, accounting_standard=None):
 		filters={"company": company, "template": template.name},
 		fields=[
 			"name", "account", "row_code", "cash_inflow_row_code", "cash_outflow_row_code",
-			"sign_multiplier", "mapping_source", "reviewed", "effective_from", "effective_to",
+			"supplementary_row_code", "mapping_basis", "sign_multiplier", "mapping_source", "reviewed", "effective_from", "effective_to",
 		],
 		order_by="account",
 	)
@@ -60,10 +60,10 @@ def get_mapping_console(company, statement_type, accounting_standard=None):
 		fields=["name", "account_name", "account_number", "parent_account", "is_group", "root_type"],
 		order_by="lft",
 	)
-	return build_console_payload(template, mappings, leaf_accounts, all_accounts)
+	return build_console_payload(template, mappings, leaf_accounts, all_accounts, company=company)
 
 
-def build_console_payload(template, mappings, leaf_accounts, all_accounts=None):
+def build_console_payload(template, mappings, leaf_accounts, all_accounts=None, company=None):
 	"""Pure aggregation so tests can run without a database."""
 	account_index = {account.name: account for account in leaf_accounts}
 	row_mappings = {}
@@ -78,6 +78,8 @@ def build_console_payload(template, mappings, leaf_accounts, all_accounts=None):
 			"account_number": account.account_number if account else None,
 			"root_type": account.root_type if account else None,
 			"row_code": mapping.row_code,
+			"supplementary_row_code": getattr(mapping, "supplementary_row_code", None),
+			"mapping_basis": getattr(mapping, "mapping_basis", None),
 			"cash_inflow_row_code": mapping.cash_inflow_row_code,
 			"cash_outflow_row_code": mapping.cash_outflow_row_code,
 			"sign_multiplier": -1 if cint(mapping.sign_multiplier) == -1 else 1,
@@ -102,7 +104,21 @@ def build_console_payload(template, mappings, leaf_accounts, all_accounts=None):
 		}
 		for row in template.rows
 	]
+	root_order = {"Asset": 0, "Liability": 1, "Equity": 2, "Income": 3, "Expense": 4}
+	valid_rows = {row.row_code: row.row_type for row in template.rows}
+	row_labels = {row.row_code: row.label for row in template.rows}
 	unmapped_accounts = [account for account in leaf_accounts if account.name not in mapped_accounts]
+	likely_row_by_account = {}
+	for account in unmapped_accounts:
+		classification, _basis = classify_company_account(company, account, template.statement_type) if company else (None, None)
+		classification = refine_classification_for_template(account, template.statement_type, valid_rows, classification)
+		account.likely_row_code = classification[0] if isinstance(classification, tuple) else classification
+		if account.likely_row_code in row_labels:
+			likely_row_by_account[account.name] = {
+				"row_code": account.likely_row_code,
+				"label": row_labels[account.likely_row_code],
+			}
+	unmapped_accounts.sort(key=lambda account: (root_order.get(account.root_type, 99), account.account_number or "", account.name))
 	accounts = [
 		{
 			"name": account.name,
@@ -111,6 +127,7 @@ def build_console_payload(template, mappings, leaf_accounts, all_accounts=None):
 			"parent_account": account.parent_account or "",
 			"is_group": int(bool(account.is_group)),
 			"root_type": account.root_type,
+			"likely_row": likely_row_by_account.get(account.name),
 		}
 		for account in (all_accounts or [])
 	]

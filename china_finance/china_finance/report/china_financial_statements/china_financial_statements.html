@@ -1,0 +1,123 @@
+<style>
+	.statutory-report h2 { text-align: center; font-size: 18px; margin: 4px 0 10px; }
+	.statutory-report .meta { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 4px; }
+	.statutory-report .meta td { padding: 1px 4px; vertical-align: top; }
+	.statutory-report .meta .right { text-align: right; }
+	.statutory-report table.grid { width: 100%; border-collapse: collapse; }
+	.statutory-report .grid th, .statutory-report .grid td { border: 1px solid #000; padding: 2px 6px; font-size: 12px; }
+	.statutory-report .grid th { text-align: center; font-weight: bold; }
+	.statutory-report .grid td.num { text-align: right; white-space: nowrap; }
+	.statutory-report .grid td.line-no { text-align: center; width: 42px; }
+	.statutory-report .grid tr.bold td { font-weight: bold; }
+</style>
+
+{% if (filters.statement_type === "Balance Sheet") { %}
+{%
+	var header_info = report.statutory_header || {};
+	var form_code = header_info.accounting_standard === "小企业会计准则" ? "会小企01表" : "会企01表";
+
+	var sides = [];
+	for (var i = 0; i < data.length; i++) {
+		var d = data[i];
+		sides.push([
+			{label: d.asset_label, type: d.asset_row_type, indent: d.asset_indent || 0, bold: d.asset_bold, opening: d.asset_opening_amount, amount: d.asset_amount, no: ""},
+			{label: d.liability_equity_label, type: d.liability_equity_row_type, indent: d.liability_equity_indent || 0, bold: d.liability_equity_bold, opening: d.liability_equity_opening_amount, amount: d.liability_equity_amount, no: ""},
+		]);
+	}
+	var line_no = 0;
+	for (var i = 0; i < sides.length; i++) {
+		if (sides[i][0].label && sides[i][0].type !== "Heading") sides[i][0].no = ++line_no;
+	}
+	for (var i = 0; i < sides.length; i++) {
+		if (sides[i][1].label && sides[i][1].type !== "Heading") sides[i][1].no = ++line_no;
+	}
+
+	function side_label(side) {
+		if (!side.label) return "";
+		if (side.type === "Heading") return frappe.utils.escape_html(side.label + "：");
+		return "&nbsp;".repeat((side.indent || 0) * 4 + 4) + frappe.utils.escape_html(side.label);
+	}
+	function side_amount(value, side) {
+		if (!side.label || value === null || value === undefined) return "";
+		return frappe.format(value, {fieldtype: "Currency"});
+	}
+%}
+
+<div class="statutory-report">
+	<h2>资产负债表</h2>
+	<table class="meta">
+		<tr>
+			<td>{%= form_code %}</td>
+			<td class="right">税款所属期起止：{%= filters.from_date %} 至 {%= filters.to_date %}</td>
+		</tr>
+		<tr>
+			<td>纳税人识别号：{%= frappe.utils.escape_html(header_info.tax_id || "") %}</td>
+			<td class="right">报送日期：{%= frappe.datetime.get_today() %}</td>
+		</tr>
+		<tr>
+			<td>编制单位：{%= frappe.utils.escape_html(filters.company) %}</td>
+			<td class="right">单位：元</td>
+		</tr>
+	</table>
+	<table class="grid">
+		<thead>
+			<tr>
+				<th>资 产</th><th>行次</th><th>期末余额</th><th>年初余额</th>
+				<th>负债和所有者权益</th><th>行次</th><th>期末余额</th><th>年初余额</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for (var j = 0; j < sides.length; j++) { %}
+				{% var asset = sides[j][0], liability = sides[j][1]; %}
+				<tr class="{%= (asset.bold || liability.bold) ? "bold" : "" %}">
+					<td>{%= side_label(asset) %}</td>
+					<td class="line-no">{%= asset.no %}</td>
+					<td class="num">{%= side_amount(asset.amount, asset) %}</td>
+					<td class="num">{%= side_amount(asset.opening, asset) %}</td>
+					<td>{%= side_label(liability) %}</td>
+					<td class="line-no">{%= liability.no %}</td>
+					<td class="num">{%= side_amount(liability.amount, liability) %}</td>
+					<td class="num">{%= side_amount(liability.opening, liability) %}</td>
+				</tr>
+			{% } %}
+		</tbody>
+	</table>
+</div>
+
+{% } else { %}
+
+<div class="statutory-report">
+	<h2>{%= __(report.report_name) %}</h2>
+	<table class="meta">
+		<tr>
+			<td>编制单位：{%= frappe.utils.escape_html(filters.company) %></td>
+			<td class="right">{%= filters.from_date %} 至 {%= filters.to_date %}　单位：元</td>
+		</tr>
+	</table>
+	<table class="grid">
+		<thead>
+			<tr>
+				{% for (var c = 0; c < columns.length; c++) { %}
+					<th>{%= columns[c].label %}</th>
+				{% } %}
+			</tr>
+		</thead>
+		<tbody>
+			{% for (var j = 0; j < data.length; j++) { %}
+				{% var row = data[j]; %}
+				<tr class="{%= row.bold ? "bold" : "" %}">
+					<td>{%= "&nbsp;".repeat((row.indent || 0) * 4) + frappe.utils.escape_html(row.label || "") %}</td>
+					{% for (var c = 1; c < columns.length; c++) { %}
+						<td class="num">{%= row[columns[c].fieldname] === null || row[columns[c].fieldname] === undefined ? "" : frappe.format(row[columns[c].fieldname], {fieldtype: "Currency"}) %}</td>
+					{% } %}
+				</tr>
+			{% } %}
+		</tbody>
+	</table>
+</div>
+
+{% } %}
+
+{% if (subtitle) { %}
+	<div class="show-filters">{{ subtitle }}</div>
+{% } %}

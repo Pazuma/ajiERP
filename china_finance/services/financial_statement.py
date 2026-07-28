@@ -196,8 +196,8 @@ def get_mappings(company, template, to_date):
 		"China Financial Statement Mapping",
 		filters={"company": company, "template": template.name, "effective_from": ["<=", to_date]},
 		fields=[
-			"name", "row_code", "account", "sign_multiplier", "reviewed", "effective_from", "effective_to",
-			"cash_inflow_row_code", "cash_outflow_row_code",
+			"name", "row_code", "account", "sign_multiplier", "mapping_source", "reviewed", "effective_from", "effective_to",
+			"supplementary_row_code", "cash_inflow_row_code", "cash_outflow_row_code",
 		],
 	)
 	active = {}
@@ -218,8 +218,8 @@ def get_mapping_revisions(company, template, from_date, to_date):
 			"effective_from": ["<=", to_date],
 		},
 		fields=[
-			"name", "row_code", "account", "sign_multiplier", "reviewed", "effective_from", "effective_to",
-			"cash_inflow_row_code", "cash_outflow_row_code",
+			"name", "row_code", "account", "sign_multiplier", "mapping_source", "reviewed", "effective_from", "effective_to",
+			"supplementary_row_code", "cash_inflow_row_code", "cash_outflow_row_code",
 		],
 		order_by="account, effective_from",
 	)
@@ -260,6 +260,8 @@ def get_period_mapped_values(
 		if get_mapping_direction(template, mapping.row_code) == "Credit Positive":
 			value = -value
 		values[mapping.row_code] += value
+		if mapping.get("supplementary_row_code"):
+			values[mapping.supplementary_row_code] += value
 	return values
 
 
@@ -350,6 +352,8 @@ def get_statement_values(
 		if get_mapping_direction(template, mapping.row_code) == "Credit Positive":
 			value = -value
 		values[mapping.row_code] += value
+		if mapping.get("supplementary_row_code"):
+			values[mapping.supplementary_row_code] += value
 	if statement_type == "Balance Sheet":
 		apply_vat_net_presentation(values, vat_balance)
 		apply_temporary_inventory_accrual_presentation(values, temporary_inventory_accrual_debit)
@@ -432,8 +436,31 @@ def get_cash_flow_values(company, mappings, from_date, to_date, finance_book=Non
 	)
 	values = defaultdict(float, confirmed_values)
 	revisions_by_account = defaultdict(list)
-	for mapping in get_mapping_revisions(company, get_template(company, "Cash Flow", to_date), from_date, to_date):
+	cash_flow_template = get_template(company, "Cash Flow", to_date)
+	for mapping in get_mapping_revisions(company, cash_flow_template, from_date, to_date):
 		revisions_by_account[mapping.account].append(mapping)
+	# Initial automatic mappings may be created on the configuration date, while
+	# the report period can start earlier.  Use those suggestions only as a
+	# historical fallback when no effective-period revision exists.  Reviewed or
+	# manual mappings must remain date-bound and are never back-applied.
+	if cash_flow_template:
+		fallback_mappings = frappe.get_all(
+			"China Financial Statement Mapping",
+			filters={
+				"company": company,
+				"template": cash_flow_template.name,
+				"mapping_source": "Automatic",
+				"reviewed": 0,
+			},
+			fields=[
+				"name", "row_code", "account", "sign_multiplier", "mapping_source", "reviewed", "effective_from", "effective_to",
+				"supplementary_row_code", "cash_inflow_row_code", "cash_outflow_row_code",
+			],
+			order_by="effective_from asc, modified asc",
+		)
+		for mapping in fallback_mappings:
+			if mapping.account not in revisions_by_account:
+				revisions_by_account[mapping.account].append(mapping)
 	conditions, parameters = get_gl_conditions(company, from_date, to_date, finance_book, cost_center, project)
 	conditions.append("gle.is_opening='No'")
 	cash_accounts = get_cash_scope_accounts(company, to_date)
@@ -491,6 +518,15 @@ def get_cash_flow_values(company, mappings, from_date, to_date, finance_book=Non
 			mapping = get_mapping_for_date(
 				revisions_by_account, counterpart.account, cash_row.posting_date
 			)
+			if not mapping:
+				# A newly initialized company may have its first automatic mapping
+				# dated after historical bank activity.  It is safe to use that
+				# suggestion only when it is still unreviewed and there is no
+				# period-specific mapping at all.
+				for candidate in revisions_by_account.get(counterpart.account, ()):
+					if candidate.mapping_source == "Automatic" and not candidate.reviewed:
+						mapping = candidate
+						break
 			row_code = None
 			if mapping:
 				row_code = mapping.cash_inflow_row_code if allocated > 0 else mapping.cash_outflow_row_code

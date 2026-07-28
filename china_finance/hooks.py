@@ -52,6 +52,7 @@ app_include_css = "/assets/china_finance/css/china_finance.css"
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
 doctype_js = {
+	"Bank Statement Import": "public/js/bank_statement_import.js",
 	"Sales Invoice": ["public/js/sales_invoice_invoice_control.js", "public/js/gl_source_snapshot.js"],
 	"Sales Order": "public/js/sales_order_settlement.js",
 	"Delivery Note": ["public/js/delivery_note_settlement.js", "public/js/gl_source_snapshot.js"],
@@ -74,6 +75,22 @@ doctype_list_js = {
 	"China Financial Statement Template": "public/js/china_financial_statement_template_list.js",
 	"China Financial Statement Mapping": "public/js/china_financial_statement_mapping_list.js",
 	"China Sales Settlement": "public/js/china_sales_settlement_list.js",
+}
+page_js = {
+	"bank-reconciliation-tool": "public/js/bank_reconciliation_tool.js",
+}
+
+app_include_js = ["/assets/china_finance/js/bank_reconciliation_tool.js"]
+
+override_whitelisted_methods = {
+	"erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_bank_transactions":
+		"china_finance.services.bank_reconciliation.get_bank_transactions_with_summary",
+}
+
+# Keep ERPNext's bank statement import workflow intact while allowing the
+# China Finance bank adapters to return the complete converted-file preview.
+override_doctype_class = {
+	"Bank Statement Import": "china_finance.overrides.bank_statement_import.ChinaFinanceBankStatementImport",
 }
 
 # Svg Icons
@@ -200,6 +217,7 @@ doc_events = {
 	)
 }
 doc_events["Company"] = {"on_update": "china_finance.api.initialize_profile_company_on_update"}
+doc_events["China Finance Settings"] = {"on_update": "china_finance.api.sync_settings_mappings_on_update"}
 doc_events["Sales Order"] = {"before_insert": "china_finance.services.sales_settlement.apply_sales_order_settlement_mode"}
 doc_events["Delivery Note"] = {
 	"before_submit": [

@@ -9,7 +9,7 @@ from frappe.utils import cint, getdate, now_datetime
 
 CHART_TEMPLATE = "中国企业会计准则－一般纳税人制造业（1.0）"
 CHART_VERSION = "1.0"
-MAPPING_RULE_VERSION = "1.0"
+MAPPING_RULE_VERSION = "1.5"
 
 COMPANY_DEFAULT_ACCOUNTS = {
 	"default_cash_account": "1001",
@@ -503,7 +503,7 @@ def ensure_cash_scope(company, effective_from):
 		"1001": ("库存现金", 1, 0, None),
 		"100201": ("随时可用存款", 1, 0, None),
 		"101201": ("排除项", 0, 1, "银行承兑汇票保证金属于受限资金"),
-		"101299": ("排除项", 0, 0, None),
+		"101299": ("排除项", 0, 0, "其他货币资金是否可随时支用无法由科目编号判断，需财务人员复核。"),
 	}
 	accounts, _duplicates = get_company_accounts_by_number(company)
 	for number, (classification, included, restricted, reason) in rules.items():

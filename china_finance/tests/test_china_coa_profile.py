@@ -14,7 +14,8 @@ from china_finance.setup.china_coa_profile import (
 	sync_china_coa_master_data,
 )
 from china_finance.setup.templates import (
-	_classify_known_profile_fallback, classify_account_number, requires_manual_cash_flow_assignment,
+	_classify_known_profile_fallback, classify_account_number, refine_classification_for_template,
+	requires_manual_cash_flow_assignment,
 )
 
 
@@ -151,3 +152,27 @@ class TestChinaCoaProfile(UnitTestCase):
 		self.assertEqual(classify_account_number("1101", "Cash Flow", account)[2], "CASH_PAID_INVESTMENTS")
 		self.assertEqual(classify_account_number("6115", "Cash Flow", account)[1], "CASH_RECEIVED_ASSET_DISPOSAL")
 		self.assertEqual(classify_account_number("4002", "Cash Flow", account)[1], "CASH_RECEIVED_INVESTMENT")
+
+	def test_small_enterprise_detail_rows_are_selected_only_by_matching_template(self):
+		account = SimpleNamespace(account_number="1131", account_name="应收股利", name="应收股利")
+		self.assertEqual(
+			refine_classification_for_template(
+				account, "Balance Sheet", {"DIVIDENDS_RECEIVABLE": "Mapped Accounts"}, "OTHER_RECEIVABLES"
+			),
+			"DIVIDENDS_RECEIVABLE",
+		)
+		self.assertEqual(
+			refine_classification_for_template(
+				account, "Balance Sheet", {"OTHER_RECEIVABLES": "Mapped Accounts"}, "OTHER_RECEIVABLES"
+			),
+			"OTHER_RECEIVABLES",
+		)
+
+	def test_small_enterprise_profit_detail_uses_account_name(self):
+		account = SimpleNamespace(account_number="640301", account_name="城市维护建设税", name="城市维护建设税")
+		self.assertEqual(
+			refine_classification_for_template(
+				account, "Profit and Loss", {"URBAN_MAINTENANCE_TAX": "Mapped Accounts"}, "TAX_SURCHARGES"
+			),
+			"URBAN_MAINTENANCE_TAX",
+		)

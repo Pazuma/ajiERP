@@ -123,9 +123,15 @@ CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS = (
 
 def after_install():
 	sync_roles()
-	from china_finance.setup.templates import ensure_company_mappings, seed_cash_equivalent_scope, seed_statement_templates
+	from china_finance.setup.templates import (
+		ensure_company_mappings,
+		refresh_small_enterprise_v3_templates,
+		seed_cash_equivalent_scope,
+		seed_statement_templates,
+	)
 
 	seed_statement_templates()
+	refresh_small_enterprise_v3_templates()
 	seed_cash_equivalent_scope()
 	from china_finance.api import initialize_existing_profile_companies
 	initialize_existing_profile_companies()
@@ -134,14 +140,21 @@ def after_install():
 	sync_enabled_company_profiles()
 	sync_sales_settlement_custom_fields()
 	sync_china_financial_statement_report_filters()
+	sync_china_financial_statement_print_format()
 	sync_navigation_metadata()
 
 
 def after_migrate():
 	sync_roles()
-	from china_finance.setup.templates import ensure_company_mappings, seed_cash_equivalent_scope, seed_statement_templates
+	from china_finance.setup.templates import (
+		ensure_company_mappings,
+		refresh_small_enterprise_v3_templates,
+		seed_cash_equivalent_scope,
+		seed_statement_templates,
+	)
 
 	seed_statement_templates()
+	refresh_small_enterprise_v3_templates()
 	seed_cash_equivalent_scope()
 	from china_finance.api import initialize_existing_profile_companies
 	initialize_existing_profile_companies()
@@ -150,6 +163,7 @@ def after_migrate():
 	sync_enabled_company_profiles()
 	sync_sales_settlement_custom_fields()
 	sync_china_financial_statement_report_filters()
+	sync_china_financial_statement_print_format()
 	sync_navigation_metadata()
 	validate_deployment_schema()
 
@@ -196,11 +210,120 @@ def sync_china_financial_statement_report_filters():
 		report.save()
 
 
+def sync_china_financial_statement_print_format():
+	"""Create the report print format used by the China Financial Statements PDF dialog."""
+	if not frappe.db.exists("Report", "China Financial Statements"):
+		return
+
+	name = "中国财务报表法定打印格式"
+	html = r'''{%
+const is_small = filters.accounting_standard === "小企业会计准则";
+const is_balance_sheet = filters.statement_type === "Balance Sheet";
+const is_profit_loss = filters.statement_type === "Profit and Loss";
+const columns = report.get_columns_for_print().filter(col => !col.hidden);
+%}
+<style>
+  body, html { margin: 0; padding: 0; font-family: Inter, sans-serif; color: #171717; font-size: 12px; }
+  .cf-title { text-align: center; font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+  .cf-meta { display: flex; justify-content: space-between; border-bottom: 1px solid #777; padding: 4px 0 8px; margin-bottom: 10px; }
+  .cf-meta span { margin-right: 14px; }
+  .cf-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .cf-table th, .cf-table td { border: 1px solid #999; padding: 5px 6px; vertical-align: middle; word-break: break-word; }
+  .cf-table th { background: #f2f2f2; text-align: center; font-weight: 600; }
+  .cf-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .cf-table tr.cf-bold td { font-weight: 700; }
+  .cf-foot { margin-top: 10px; color: #666; text-align: right; }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print { thead { display: table-header-group; } tr { page-break-inside: avoid; } }
+</style>
+<div>
+  <div class="cf-title">{%= is_small && is_balance_sheet ? "资产负债表　会小企01表" : is_small && is_profit_loss ? "利润表　会小企02表" : __(report.report_name) %}</div>
+  <div class="cf-meta">
+    <div>
+      {% if (is_small) { %}<span><b>编制单位：</b>{%= filters.company || "" %}</span>{% } else { %}<span><b>公司：</b>{%= filters.company || "" %}</span><span><b>报表类型：</b>{%= filters.statement_type || "" %}</span>{% } %}
+    </div>
+    <div>
+      <span><b>{%= is_small ? "税款所属期起止" : "期间" %}：</b>{%= filters.from_date || "" %} 至 {%= filters.to_date || "" %}</span>
+      <span><b>单位：</b>{%= is_small ? "元" : (filters.presentation_currency || "CNY") %}</span>
+    </div>
+  </div>
+  {% if (is_small && is_balance_sheet) { %}
+  <table class="cf-table"><thead><tr>
+    <th>资产行次</th><th>资产项目</th><th>期末余额</th><th>年初余额</th>
+    <th>负债及权益行次</th><th>负债及权益项目</th><th>期末余额</th><th>年初余额</th>
+  </tr></thead><tbody>
+    {% for (let j = 0; j < data.length; j++) { const row = data[j]; %}
+      <tr>
+        <td>{%= row.asset_statutory_line_number || "" %}</td><td>{%= row.asset_label || "" %}</td><td class="num">{%= frappe.format(row.asset_amount || 0, {fieldtype:"Currency"}) %}</td><td class="num">{%= frappe.format(row.asset_opening_amount || 0, {fieldtype:"Currency"}) %}</td>
+        <td>{%= row.liability_equity_statutory_line_number || "" %}</td><td>{%= row.liability_equity_label || "" %}</td><td class="num">{%= frappe.format(row.liability_equity_amount || 0, {fieldtype:"Currency"}) %}</td><td class="num">{%= frappe.format(row.liability_equity_opening_amount || 0, {fieldtype:"Currency"}) %}</td>
+      </tr>
+    {% } %}
+  </tbody></table>
+  {% } else if (is_small && is_profit_loss) { %}
+  <table class="cf-table"><thead><tr><th>项目</th><th>行次</th><th>本期金额</th><th>本年累计金额</th></tr></thead><tbody>
+    {% for (let j = 0; j < data.length; j++) { const row = data[j]; %}
+      <tr><td>{%= row.label || "" %}</td><td>{%= row.statutory_line_number || "" %}</td><td class="num">{%= frappe.format(row.amount || 0, {fieldtype:"Currency"}) %}</td><td class="num">{%= frappe.format(row.year_to_date_amount || row.amount || 0, {fieldtype:"Currency"}) %}</td></tr>
+    {% } %}
+  </tbody></table>
+  {% } else { %}
+  <table class="cf-table">
+    <thead><tr>
+      {% for (let i = 0; i < columns.length; i++) { %}<th>{%= columns[i].label || columns[i].name || "" %}</th>{% } %}
+    </tr></thead>
+    <tbody>
+      {% for (let j = 0; j < data.length; j++) { const row = data[j]; %}
+        <tr class="{%= row.bold == 1 || row.is_total_row == 1 || row.is_group == 1 ? "cf-bold" : "" %}">
+          {% for (let i = 0; i < columns.length; i++) { const col = columns[i]; const value = col.fieldname ? row[col.fieldname] : row[col.id]; %}<td>{%= value == null ? "" : value %}</td>{% } %}
+        </tr>
+      {% } %}
+    </tbody>
+  </table>
+  {% } %}
+  <div class="cf-foot">打印时间：{%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</div>
+</div>'''
+
+	values = {
+		"doctype": "Print Format",
+		"name": name,
+		"print_format_for": "Report",
+		"report": "China Financial Statements",
+		"module": "China Finance",
+		"print_format_type": "JS",
+		"custom_format": 1,
+		"disabled": 0,
+		"standard": "No",
+		"pdf_generator": "chrome",
+		"font_size": 12,
+		"margin_top": 10,
+		"margin_bottom": 10,
+		"margin_left": 10,
+		"margin_right": 10,
+		"page_number": "Hide",
+		"html": html,
+	}
+
+	if frappe.db.exists("Print Format", name):
+		doc = frappe.get_doc("Print Format", name)
+		changed = any(doc.get(field) != value for field, value in values.items() if field not in ("doctype", "name"))
+		if changed:
+			doc.update({k: v for k, v in values.items() if k not in ("doctype", "name")})
+			doc.flags.ignore_permissions = True
+			doc.save()
+	else:
+		doc = frappe.get_doc(values)
+		doc.flags.ignore_permissions = True
+		doc.insert()
+	frappe.clear_cache(doctype="Print Format")
+
+
 def sync_sales_settlement_custom_fields():
 	"""Install only additive metadata for ERPNext sales documents."""
 	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 	create_custom_fields({
+		"Bank Transaction": [
+			{"fieldname": "custom_summary", "label": "摘要", "fieldtype": "Small Text", "insert_after": "description"},
+		],
 		"Sales Order": [
 			{"fieldname": "custom_china_settlement_section", "label": "中国财务结算", "fieldtype": "Section Break", "insert_after": "customer_name"},
 			{"fieldname": "custom_china_settlement_mode", "label": "销售结算模式", "fieldtype": "Select", "options": "直接确认应收\n对账结算后确认应收", "read_only": 1, "insert_after": "custom_china_settlement_section"},

@@ -1,6 +1,8 @@
 import frappe
 from frappe import _
 from frappe.utils import flt, getdate, nowdate
+from frappe.utils.file_manager import save_file
+from frappe.utils.pdf import get_pdf
 
 from china_finance.services.financial_statement import (
 	build_statement,
@@ -160,6 +162,19 @@ def build_balance_sheet_rows(rows):
 		return rows
 	asset_rows = rows[: asset_end + 1]
 	liability_equity_rows = rows[asset_end + 1 :]
+
+	# The small-enterprise statutory form presents liabilities from the top and
+	# fills the owners' equity section upward from the bottom.  Keeping its footer
+	# aligned with "资产合计" also makes the accounting equation auditable on paper.
+	equity_start = next(
+		(index for index, row in enumerate(liability_equity_rows) if row.get("row_code") == "OWNERS_EQUITY_HEADING"),
+		None,
+	)
+	if equity_start is not None:
+		liability_rows = liability_equity_rows[:equity_start]
+		equity_rows = liability_equity_rows[equity_start:]
+		row_count = max(len(asset_rows), len(liability_equity_rows))
+		liability_equity_rows = liability_rows + ([{}] * max(0, row_count - len(liability_rows) - len(equity_rows))) + equity_rows
 	paired_rows = []
 	for index in range(max(len(asset_rows), len(liability_equity_rows))):
 		asset = asset_rows[index] if index < len(asset_rows) else {}
@@ -167,6 +182,7 @@ def build_balance_sheet_rows(rows):
 		paired_rows.append({
 			"indent": max(asset.get("indent", 0), liability_equity.get("indent", 0)),
 			"asset_label": asset.get("label"),
+			"asset_statutory_line_number": asset.get("statutory_line_number"),
 			"asset_row_type": asset.get("row_type"),
 			"asset_opening_amount": asset.get("opening_amount"),
 			"asset_amount": asset.get("amount"),
@@ -174,6 +190,7 @@ def build_balance_sheet_rows(rows):
 			"asset_indent": asset.get("indent", 0),
 			"asset_bold": asset.get("bold", 0),
 			"liability_equity_label": liability_equity.get("label"),
+			"liability_equity_statutory_line_number": liability_equity.get("statutory_line_number"),
 			"liability_equity_row_type": liability_equity.get("row_type"),
 			"liability_equity_opening_amount": liability_equity.get("opening_amount"),
 			"liability_equity_amount": liability_equity.get("amount"),
@@ -182,6 +199,149 @@ def build_balance_sheet_rows(rows):
 			"liability_equity_bold": liability_equity.get("bold", 0),
 		})
 	return paired_rows
+
+
+@frappe.whitelist()
+def export_current_report_pdf(filters=None):
+	"""Generate a report PDF on the server without Query Report's print dialog.
+
+	Frappe 16's browser-side query-report print template path is not compatible
+	with this report's custom balance-sheet rendering.  This endpoint renders the
+	actual report result directly, so the exported values always match the page.
+	"""
+	if isinstance(filters, str):
+		filters = frappe.parse_json(filters)
+	filters = frappe._dict(filters or {})
+	if not filters.company:
+		frappe.throw(_("请选择公司"))
+	frappe.has_permission("Company", doc=filters.company, throw=True)
+
+	columns, rows, message, *_ = execute(filters)
+	filters = frappe._dict(filters)
+	_apply_default_period(filters)
+	html = _render_report_pdf(filters, columns, rows, message)
+	statement_title = _statement_title(filters.statement_type)
+	filename = f"{statement_title}-{filters.company}-{filters.to_date}.pdf"
+	file_doc = save_file(filename, get_pdf(html), "Company", filters.company, is_private=1)
+	return {"file_url": file_doc.file_url, "file_name": file_doc.file_name}
+
+
+def _statement_title(statement_type):
+	return {
+		"Balance Sheet": _("资产负债表"),
+		"Profit and Loss": _("利润表"),
+		"Cash Flow": _("现金流量表"),
+		"Changes in Equity": _("所有者权益变动表"),
+		"Trial Balance": _("试算平衡表"),
+	}.get(statement_type, _("中国财务报表"))
+
+
+FORM_CODES = {
+	"企业会计准则": {
+		"Balance Sheet": "会企01表",
+		"Profit and Loss": "会企02表",
+		"Cash Flow": "会企03表",
+		"Changes in Equity": "会企04表",
+	},
+	"小企业会计准则": {
+		"Balance Sheet": "会小企01表",
+		"Profit and Loss": "会小企02表",
+		"Cash Flow": "会小企03表",
+		"Changes in Equity": "会小企04表",
+	},
+}
+
+
+def _render_report_pdf(filters, columns, rows, message):
+	"""Render the current report data into a self-contained printable document."""
+	statement_type = filters.statement_type
+	template = get_template(filters.company, statement_type, filters.to_date, required=False)
+	standard = template.accounting_standard if template else ""
+	title = _statement_title(statement_type)
+	form_code = FORM_CODES.get(standard, {}).get(statement_type, "")
+
+	escape = frappe.utils.escape_html
+	tax_id = frappe.get_cached_value("Company", filters.company, "tax_id") or ""
+	meta = (
+		"<table class='meta'>"
+		f"<tr><td>{escape(form_code)}</td><td class='right'>税款所属期起止：{filters.from_date} 至 {filters.to_date}</td></tr>"
+		f"<tr><td>纳税人识别号：{escape(tax_id)}</td><td class='right'>报送日期：{nowdate()}</td></tr>"
+		f"<tr><td>编制单位：{escape(filters.company)}</td><td class='right'>单位：元</td></tr>"
+		"</table>"
+	)
+	if statement_type == "Balance Sheet":
+		body = _render_balance_sheet_pdf_rows(rows)
+	else:
+		body = _render_standard_pdf_rows(columns, rows)
+	warning = f"<p class='notice'>{message}</p>" if message else ""
+	return f"""
+	<!doctype html><html><head><meta charset='utf-8'>
+	<style>
+	@page {{ size: A4 landscape; margin: 12mm; }}
+	body {{ font-family: 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif; font-size: 9pt; color: #111; }}
+	h1 {{ text-align:center; font-size:16pt; margin:0 0 8px; }}
+	.meta {{ width:100%; border-collapse:collapse; margin-bottom:8px; }}
+	.meta td {{ font-size:9pt; padding:1px 0; }}
+	.meta td.right {{ text-align:right; }}
+	.notice {{ color:#666; font-size:8pt; }} table {{ width:100%; border-collapse:collapse; table-layout:fixed; }}
+	th, td {{ border:1px solid #777; padding:5px 6px; vertical-align:middle; }} th {{ background:#f2f2f2; text-align:center; }}
+	td.num {{ text-align:right; white-space:nowrap; }} td.line {{ text-align:center; width:36px; }}
+	tr.bold td {{ font-weight:700; }}
+	</style></head><body><h1>{title}</h1>{meta}{warning}{body}</body></html>
+	"""
+
+
+def _amount(value):
+	return f"{flt(value):,.2f}"
+
+
+def _render_balance_sheet_pdf_rows(rows):
+	parts = [
+		"<table><thead><tr><th>项目</th><th>行次</th><th>期末余额</th><th>年初余额</th>"
+		"<th>负债和所有者权益</th><th>行次</th><th>期末余额</th><th>年初余额</th></tr></thead><tbody>"
+	]
+	for row in rows:
+		asset_label = frappe.utils.escape_html(str(row.get("asset_label") or ""))
+		liability_label = frappe.utils.escape_html(str(row.get("liability_equity_label") or ""))
+		if row.get("asset_row_type") == "Heading" and asset_label:
+			asset_label += "："
+		if row.get("liability_equity_row_type") == "Heading" and liability_label:
+			liability_label += "："
+		bold = " class='bold'" if row.get("asset_bold") or row.get("liability_equity_bold") else ""
+		asset_indent = int(row.get("asset_indent") or 0) * 12
+		liability_indent = int(row.get("liability_equity_indent") or 0) * 12
+		asset_opening = "" if row.get("asset_row_type") == "Heading" else _amount(row.get("asset_opening_amount"))
+		asset_amount = "" if row.get("asset_row_type") == "Heading" else _amount(row.get("asset_amount"))
+		liability_opening = "" if row.get("liability_equity_row_type") == "Heading" else _amount(row.get("liability_equity_opening_amount"))
+		liability_amount = "" if row.get("liability_equity_row_type") == "Heading" else _amount(row.get("liability_equity_amount"))
+		parts.append(
+			f"<tr{bold}><td style='padding-left:{asset_indent + 6}px'>{asset_label}</td><td class='line'>{row.get('asset_statutory_line_number') or ''}</td>"
+			f"<td class='num'>{asset_amount}</td><td class='num'>{asset_opening}</td>"
+			f"<td style='padding-left:{liability_indent + 6}px'>{liability_label}</td><td class='line'>{row.get('liability_equity_statutory_line_number') or ''}</td>"
+			f"<td class='num'>{liability_amount}</td><td class='num'>{liability_opening}</td></tr>"
+		)
+	parts.append("</tbody></table>")
+	return "".join(parts)
+
+
+def _render_standard_pdf_rows(columns, rows):
+	visible_columns = [column for column in columns if column.get("fieldname")]
+	head = "".join(f"<th>{frappe.utils.escape_html(str(column.get('label') or ''))}</th>" for column in visible_columns)
+	parts = [f"<table><thead><tr>{head}</tr></thead><tbody>"]
+	for row in rows:
+		is_bold = " class='bold'" if row.get("bold") else ""
+		cells = []
+		for column in visible_columns:
+			fieldname = column["fieldname"]
+			value = row.get(fieldname, "")
+			if column.get("fieldtype") in {"Currency", "Float", "Int"}:
+				cells.append(f"<td class='num'>{_amount(value)}</td>")
+			else:
+				indent = "&nbsp;" * (int(row.get("indent") or 0) * 4)
+				cells.append(f"<td>{indent}{frappe.utils.escape_html(str(value or ''))}</td>")
+		parts.append(f"<tr{is_bold}>{''.join(cells)}</tr>")
+	parts.append("</tbody></table>")
+	return "".join(parts)
 
 
 def get_balance_sheet_chart(rows, company, filters):

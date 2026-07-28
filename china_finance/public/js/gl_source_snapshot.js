@@ -16,6 +16,9 @@ const china_finance_source_snapshot = {
 				if (state?.not_applicable) return;
 				if (!state?.snapshot_ready) {
 					frm.dashboard.add_indicator(__(state?.reason || "审计快照尚未生成"), "orange");
+					if (state?.can_create_assignment) {
+						frm.add_custom_button(__("创建现金流量指定"), () => create_assignment(frm), __("中国财务"));
+					}
 					return;
 				}
 				if (state.statutory_number) {

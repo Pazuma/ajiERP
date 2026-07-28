@@ -15,6 +15,7 @@ from china_finance.services.disclosure import get_submitted_notes
 from china_finance.services.financial_statement import (
 	build_statement,
 	get_comparison_period,
+	get_fiscal_year_start,
 	get_mapping_revisions,
 	get_mappings,
 	get_template,
@@ -30,6 +31,22 @@ STATEMENT_LABELS = {
 	"Balance Sheet": "资产负债表", "Profit and Loss": "利润表",
 	"Cash Flow": "现金流量表", "Changes in Equity": "所有者权益变动表",
 }
+
+
+def _is_small_enterprise_snapshot(payload):
+	return payload.get("accounting_standard") == "小企业会计准则"
+
+
+def _filing_rows(snapshot, payload, rows, company):
+	"""Add filing-specific year-to-date values without changing snapshot data."""
+	if snapshot.statement_type != "Profit and Loss" or not _is_small_enterprise_snapshot(payload):
+		return rows
+	ytd_from = get_fiscal_year_start(company, snapshot.to_date)
+	if getdate(ytd_from) == getdate(snapshot.from_date):
+		return [{**row, "year_to_date_amount": row.get("amount", 0)} for row in rows]
+	ytd = build_statement(company, snapshot.statement_type, ytd_from, snapshot.to_date)
+	ytd_values = {row["row_code"]: row["amount"] for row in ytd["rows"]}
+	return [{**row, "year_to_date_amount": ytd_values.get(row["row_code"], 0)} for row in rows]
 
 
 def _item(code, label, passed, details="", count=0):
@@ -209,12 +226,20 @@ def _build_excel(snapshots, company):
 	text_format = workbook.add_format({"border": 1})
 	for snapshot in snapshots:
 		payload, rows = _snapshot_rows(snapshot)
+		rows = _filing_rows(snapshot, payload, rows, company)
+		standard = payload.get("accounting_standard") or ("小企业会计准则" if "小企业" in snapshot.statement_type else "企业会计准则")
 		worksheet = workbook.add_worksheet(STATEMENT_LABELS[snapshot.statement_type][:31])
 		amount_unit = getattr(snapshot, "amount_unit", None) or "元"
-		worksheet.write_row(0, 0, [company, STATEMENT_LABELS[snapshot.statement_type], f"{snapshot.from_date or ''} 至 {snapshot.to_date}", f"人民币：{amount_unit}"], header)
+		tax_id = frappe.db.get_value("Company", company, "tax_id") or ""
+		if _is_small_enterprise_snapshot(payload):
+			form_code = "会小企01表" if snapshot.statement_type == "Balance Sheet" else "会小企02表" if snapshot.statement_type == "Profit and Loss" else ""
+			worksheet.write_row(0, 0, [STATEMENT_LABELS[snapshot.statement_type], form_code, f"税款所属期起止：{snapshot.from_date or ''} 至 {snapshot.to_date}", f"单位：{amount_unit}"], header)
+			worksheet.write_row(1, 0, [f"纳税人识别号：{tax_id}", f"编制单位：{company}", f"报送日期：{now_datetime().date()}", ""], text_format)
+		else:
+			worksheet.write_row(0, 0, [company, STATEMENT_LABELS[snapshot.statement_type], f"{snapshot.from_date or ''} 至 {snapshot.to_date}", f"人民币：{amount_unit}"], header)
 		worksheet.write_row(
-			1, 0,
-			["企业会计准则", f"模板版本：{snapshot.template_version}", "编制状态：正式法定财务报表", f"批准：{snapshot.approved_by or ''} {snapshot.approved_on or ''}"],
+			2 if _is_small_enterprise_snapshot(payload) else 1, 0,
+			[standard, f"模板版本：{snapshot.template_version}", "编制状态：正式法定财务报表", f"批准：{snapshot.approved_by or ''} {snapshot.approved_on or ''}"],
 			text_format,
 		)
 		if snapshot.statement_type == "Changes in Equity" and payload.get("equity_matrix"):
@@ -240,15 +265,47 @@ def _build_excel(snapshots, company):
 						worksheet.write_number(index, column, flt(row.get(component["fieldname"])), amount)
 					worksheet.write_number(index, len(comparison_matrix["components"]) + 1, flt(row.get("total")), amount)
 			continue
-		worksheet.write_row(2, 0, ["行次", "项目", "本期金额/期末余额", "比较期金额"], header)
-		for index, row in enumerate(rows, 3):
-			worksheet.write(index, 0, row.get("statutory_line_number") or "", text_format)
-			worksheet.write(index, 1, row.get("label") or "", text_format)
-			worksheet.write_number(index, 2, flt(row.get("amount")), amount)
-			worksheet.write_number(index, 3, flt(row.get("comparison_amount")), amount)
-		worksheet.set_column(0, 0, 10)
-		worksheet.set_column(1, 1, 48)
-		worksheet.set_column(2, 3, 20)
+		if snapshot.statement_type == "Balance Sheet":
+			asset_end = next((index for index, row in enumerate(rows) if row.get("row_code") == "TOTAL_ASSETS"), len(rows) - 1)
+			left, right = rows[: asset_end + 1], rows[asset_end + 1 :]
+			worksheet.write_row(3 if _is_small_enterprise_snapshot(payload) else 2, 0, ["资产行次", "资产项目", "期末余额", "年初余额" if _is_small_enterprise_snapshot(payload) else "比较期余额"], header)
+			worksheet.write_row(3 if _is_small_enterprise_snapshot(payload) else 2, 5, ["负债及权益行次", "负债及权益项目", "期末余额", "年初余额" if _is_small_enterprise_snapshot(payload) else "比较期余额"], header)
+			for index in range(max(len(left), len(right))):
+				for offset, row_set in ((0, left), (5, right)):
+					if index >= len(row_set):
+						continue
+					row = row_set[index]
+					start_row = 4 if _is_small_enterprise_snapshot(payload) else 3
+					worksheet.write(index + start_row, offset, row.get("statutory_line_number") or "", text_format)
+					worksheet.write(index + start_row, offset + 1, ("　" * int(row.get("indent", 0))) + (row.get("label") or ""), text_format)
+					worksheet.write_number(index + start_row, offset + 2, flt(row.get("amount")), amount)
+					worksheet.write_number(index + start_row, offset + 3, flt(row.get("comparison_amount")), amount)
+			worksheet.set_column(0, 0, 10)
+			worksheet.set_column(1, 1, 28)
+			worksheet.set_column(2, 3, 18)
+			worksheet.set_column(5, 5, 12)
+			worksheet.set_column(6, 6, 28)
+			worksheet.set_column(7, 8, 18)
+		else:
+			start_row = 3 if _is_small_enterprise_snapshot(payload) else 3
+			if _is_small_enterprise_snapshot(payload):
+				worksheet.write_row(3, 0, ["项目", "行次", "本期金额", "本年累计金额"], header)
+			else:
+				worksheet.write_row(2, 0, ["行次", "项目", "本期金额/期末余额", "比较期金额"], header)
+			for index, row in enumerate(rows, start_row + 1):
+				if _is_small_enterprise_snapshot(payload):
+					worksheet.write(index, 0, ("　" * int(row.get("indent", 0))) + (row.get("label") or ""), text_format)
+					worksheet.write(index, 1, row.get("statutory_line_number") or "", text_format)
+					worksheet.write_number(index, 2, flt(row.get("amount")), amount)
+					worksheet.write_number(index, 3, flt(row.get("year_to_date_amount")), amount)
+					continue
+				worksheet.write(index, 0, row.get("statutory_line_number") or "", text_format)
+				worksheet.write(index, 1, ("　" * int(row.get("indent", 0))) + (row.get("label") or ""), text_format)
+				worksheet.write_number(index, 2, flt(row.get("amount")), amount)
+				worksheet.write_number(index, 3, flt(row.get("comparison_amount")), amount)
+			worksheet.set_column(0, 0, 10)
+			worksheet.set_column(1, 1, 48)
+			worksheet.set_column(2, 3, 20)
 	notes = _get_notes_payload(snapshots)
 	if notes:
 		worksheet = workbook.add_worksheet("财务报表附注")
@@ -292,8 +349,17 @@ def _build_pdf_html(snapshots, company):
 	parts = ["<html><head><meta charset='utf-8'><style>body{font-family:sans-serif;font-size:10px} h1{text-align:center} table{width:100%;border-collapse:collapse;margin-bottom:24px} th,td{border:1px solid #999;padding:5px} .num{text-align:right}</style></head><body>"]
 	for snapshot in snapshots:
 		payload, rows = _snapshot_rows(snapshot)
-		parts.append(f"<h1>{company}<br>{STATEMENT_LABELS[snapshot.statement_type]}</h1>")
-		parts.append(f"<p>报表期间：{snapshot.from_date or ''} 至 {snapshot.to_date}　会计准则：企业会计准则　金额单位：人民币{getattr(snapshot, 'amount_unit', None) or '元'}　模板版本：{snapshot.template_version}　编制状态：正式法定财务报表</p>")
+		rows = _filing_rows(snapshot, payload, rows, company)
+		standard = payload.get("accounting_standard") or ("小企业会计准则" if "小企业" in snapshot.statement_type else "企业会计准则")
+		amount_unit = getattr(snapshot, "amount_unit", None) or "元"
+		if _is_small_enterprise_snapshot(payload):
+			form_code = "会小企01表" if snapshot.statement_type == "Balance Sheet" else "会小企02表" if snapshot.statement_type == "Profit and Loss" else ""
+			tax_id = frappe.db.get_value("Company", company, "tax_id") or ""
+			parts.append(f"<h1>{STATEMENT_LABELS[snapshot.statement_type]}　{form_code}</h1>")
+			parts.append(f"<p>纳税人识别号：{frappe.utils.escape_html(tax_id)}　税款所属期起止：{snapshot.from_date or ''} 至 {snapshot.to_date}　编制单位：{frappe.utils.escape_html(company)}　报送日期：{now_datetime().date()}　单位：{amount_unit}</p>")
+		else:
+			parts.append(f"<h1>{company}<br>{STATEMENT_LABELS[snapshot.statement_type]}</h1>")
+			parts.append(f"<p>报表期间：{snapshot.from_date or ''} 至 {snapshot.to_date}　会计准则：{standard}　金额单位：人民币{amount_unit}　模板版本：{snapshot.template_version}　编制状态：正式法定财务报表</p>")
 		if snapshot.statement_type == "Changes in Equity" and payload.get("equity_matrix"):
 			for matrix_label, matrix in (
 				("本期", payload["equity_matrix"]),
@@ -306,10 +372,29 @@ def _build_pdf_html(snapshots, company):
 					parts.append("<tr><td>" + frappe.utils.escape_html(row.get("label") or "") + "</td>" + "".join(f"<td class='num'>{flt(row.get(item['fieldname'])):,.2f}</td>" for item in matrix["components"]) + f"<td class='num'>{flt(row.get('total')):,.2f}</td></tr>")
 				parts.append("</tbody></table>")
 			continue
-		parts.append("<table><thead><tr><th>行次</th><th>项目</th><th>本期金额/期末余额</th><th>比较期金额</th></tr></thead><tbody>")
-		for row in rows:
-			parts.append(f"<tr><td>{row.get('statutory_line_number') or ''}</td><td>{frappe.utils.escape_html(row.get('label') or '')}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('comparison_amount')):,.2f}</td></tr>")
-		parts.append("</tbody></table>")
+		if snapshot.statement_type == "Balance Sheet":
+			asset_end = next((index for index, row in enumerate(rows) if row.get("row_code") == "TOTAL_ASSETS"), len(rows) - 1)
+			left, right = rows[: asset_end + 1], rows[asset_end + 1 :]
+			comparison_label = "年初余额" if _is_small_enterprise_snapshot(payload) else "比较期"
+			parts.append(f"<table><thead><tr><th>资产行次</th><th>资产项目</th><th>期末余额</th><th>{comparison_label}</th><th>负债及权益行次</th><th>负债及权益项目</th><th>期末余额</th><th>{comparison_label}</th></tr></thead><tbody>")
+			for index in range(max(len(left), len(right))):
+				cells = []
+				for row in ((left[index] if index < len(left) else {}), (right[index] if index < len(right) else {})):
+					cells.extend([row.get("statutory_line_number") or "", ("　" * int(row.get("indent", 0))) + (row.get("label") or ""), f"{flt(row.get('amount')):,.2f}", f"{flt(row.get('comparison_amount')):,.2f}"])
+				parts.append("<tr>" + "".join(f"<td>{frappe.utils.escape_html(str(cell))}</td>" for cell in cells) + "</tr>")
+			parts.append("</tbody></table>")
+		else:
+			if _is_small_enterprise_snapshot(payload):
+				parts.append("<table><thead><tr><th>项目</th><th>行次</th><th>本期金额</th><th>本年累计金额</th></tr></thead><tbody>")
+			else:
+				parts.append("<table><thead><tr><th>行次</th><th>项目</th><th>本期金额/期末余额</th><th>比较期金额</th></tr></thead><tbody>")
+			for row in rows:
+				label = ("　" * int(row.get("indent", 0))) + (row.get("label") or "")
+				if _is_small_enterprise_snapshot(payload):
+					parts.append(f"<tr><td>{frappe.utils.escape_html(label)}</td><td>{row.get('statutory_line_number') or ''}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('year_to_date_amount')):,.2f}</td></tr>")
+				else:
+					parts.append(f"<tr><td>{row.get('statutory_line_number') or ''}</td><td>{frappe.utils.escape_html(label)}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('comparison_amount')):,.2f}</td></tr>")
+			parts.append("</tbody></table>")
 	notes = _get_notes_payload(snapshots)
 	if notes:
 		parts.append("<h1>财务报表附注</h1>")
