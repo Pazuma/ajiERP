@@ -2,7 +2,7 @@
 	if (window.__custom_filters_right_sidebar_loaded) return;
 	window.__custom_filters_right_sidebar_loaded = true;
 
-	const RIGHT_SIDEBAR_VERSION = "2026.07.22.1";
+	const RIGHT_SIDEBAR_VERSION = "2026.07.22.2";
 	const BAR_ID = "custom-filters-right-sidebar";
 	const FLYOUT_ID = "custom-filters-right-sidebar-flyout";
 	const FLYOUT_CLOSE_DELAY = 200;
@@ -80,6 +80,14 @@
 			});
 		}
 
+		is_folder(icon) {
+			// 显式 Folder，或带子图标的 App 类图标（如 DLP Framework）——桌面首页同样按文件夹展开
+			return (
+				icon.icon_type === "Folder" ||
+				(this.children_by_label[icon.label] || []).length > 0
+			);
+		}
+
 		build_container() {
 			const container = document.createElement("div");
 			container.className = "custom-filters-right-sidebar-container";
@@ -120,7 +128,7 @@
 		}
 
 		make_item(icon) {
-			const is_folder = icon.icon_type === "Folder";
+			const is_folder = this.is_folder(icon);
 			const item = document.createElement("button");
 			item.type = "button";
 			item.className = "custom-filters-right-sidebar-item";
