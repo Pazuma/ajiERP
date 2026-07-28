@@ -358,6 +358,7 @@ frappe.ui.form.on("Bank Statement Import", {
 			frm.import_preview.preview_data = preview_data;
 			frm.import_preview.import_log = import_log;
 			frm.import_preview.refresh();
+			limit_import_preview_height(frm);
 			return;
 		}
 
@@ -378,6 +379,7 @@ frappe.ui.form.on("Bank Statement Import", {
 					},
 				},
 			});
+			limit_import_preview_height(frm);
 		});
 	},
 
@@ -594,3 +596,27 @@ frappe.ui.form.on("Bank Statement Import", {
 		});
 	},
 });
+
+// Keep the preview table inside the viewport so its bottom horizontal
+// scrollbar stays visible instead of overlapping the browser's bottom edge.
+function limit_import_preview_height(frm) {
+	inject_import_preview_styles();
+	const datatable = frm.import_preview?.datatable;
+	if (!datatable) return;
+	const top = datatable.bodyScrollable.getBoundingClientRect().top;
+	const height = Math.max(240, Math.floor(window.innerHeight - top - 48));
+	datatable.style.setStyle(".dt-scrollable", { "max-height": `${height}px` });
+}
+
+// The datatable resets inline overflow-x on every column resize, so the
+// override must live in a stylesheet with !important to survive re-renders.
+function inject_import_preview_styles() {
+	if (document.getElementById("bsi-preview-style")) return;
+	$(
+		`<style id="bsi-preview-style">
+			.frappe-control[data-fieldname="import_preview"] .dt-scrollable {
+				overflow-x: auto !important;
+			}
+		</style>`,
+	).appendTo(document.head);
+}
