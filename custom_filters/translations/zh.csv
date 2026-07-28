@@ -500,3 +500,9 @@ Bank Account No,银行账号
 Statement PDF Password,银行对账单PDF密码
 Account Type,银行账户类型
 Bank Account Type,银行账户类型
+Bank Account Subtype,银行账户子类型
+Accounts Setup,财务设置
+Match Against Voucher,匹配已有凭证
+Create Voucher,新建凭证
+Update Bank Transaction,更新银行流水
+Create Purchase Invoice,创建采购发票
