@@ -12,6 +12,15 @@
   "document_type",
   "company",
   "trigger_event",
+  "trigger_type",
+  "status_field",
+  "status_field_label",
+  "target_status",
+  "date_field",
+  "date_field_label",
+  "date_offset_days",
+  "repeat_interval_days",
+  "condition_scope",
   "recipient_section",
   "recipient_type",
   "role",
@@ -80,6 +89,75 @@
    "label": "Trigger Event",
    "options": "After Insert\nOn Update\nOn Submit\nOn Cancel",
    "reqd": 1
+  },
+  {
+   "default": "Document Event",
+   "fieldname": "trigger_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger Type",
+   "options": "Document Event\nStatus Change\nDate Condition\nPurchase Order Received Complete",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Status Change'",
+   "fieldname": "status_field",
+   "fieldtype": "Data",
+   "default": "status",
+   "hidden": 1
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Status Change'",
+   "fieldname": "status_field_label",
+   "fieldtype": "Select",
+   "label": "Status Field",
+   "mandatory_depends_on": "eval:doc.trigger_type=='Status Change'"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Status Change'",
+   "fieldname": "target_status",
+   "fieldtype": "Data",
+   "label": "Target Status",
+   "mandatory_depends_on": "eval:doc.trigger_type=='Status Change'"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Date Condition'",
+   "fieldname": "date_field",
+   "fieldtype": "Data",
+   "hidden": 1
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Date Condition'",
+   "fieldname": "date_field_label",
+   "fieldtype": "Select",
+   "label": "Date Field",
+   "mandatory_depends_on": "eval:doc.trigger_type=='Date Condition'"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Date Condition'",
+   "fieldname": "date_offset_days",
+   "fieldtype": "Int",
+   "label": "Date Offset Days",
+   "description": "Positive values trigger after the date; negative values trigger before the date.",
+   "mandatory_depends_on": "eval:doc.trigger_type=='Date Condition'"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Date Condition'",
+   "default": "1",
+   "fieldname": "repeat_interval_days",
+   "fieldtype": "Int",
+   "label": "Repeat Interval Days",
+   "description": "Use 0 to notify only once.",
+   "mandatory_depends_on": "eval:doc.trigger_type=='Date Condition'"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type in ['Date Condition','Purchase Order Received Complete']",
+   "default": "Document",
+   "fieldname": "condition_scope",
+   "fieldtype": "Select",
+   "label": "Condition Scope",
+   "options": "Document\nChild Table\nPurchase Order",
+   "mandatory_depends_on": "eval:doc.trigger_type in ['Date Condition','Purchase Order Received Complete']"
   },
   {
    "fieldname": "recipient_section",

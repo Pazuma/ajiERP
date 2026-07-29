@@ -15,6 +15,7 @@
   "column_break_1",
   "reference_doctype",
   "reference_name",
+  "notification_period",
   "dingtalk_status",
   "dingtalk_open_ding_id",
   "dingtalk_error",
@@ -92,6 +93,12 @@
    "in_standard_filter": 1,
    "label": "Reference Name",
    "options": "reference_doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notification_period",
+   "fieldtype": "Data",
+   "label": "Notification Period",
    "read_only": 1
   },
   {

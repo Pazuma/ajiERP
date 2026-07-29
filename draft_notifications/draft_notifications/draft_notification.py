@@ -2,7 +2,7 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import get_url_to_form
+from frappe.utils import add_days, getdate, get_url_to_form, nowdate
 
 
 RULE_DOCTYPE = "Draft Notification Rule"
@@ -16,18 +16,47 @@ def handle_after_insert(doc, method=None):
 
 
 def handle_on_update(doc, method=None):
-	handle_document_event(doc, "On Update")
+	handle_document_event(doc, "On Update", doc.get_doc_before_save())
 
 
 def handle_on_submit(doc, method=None):
-	handle_document_event(doc, "On Submit")
+	handle_document_event(doc, "On Submit", doc.get_doc_before_save())
 
 
 def handle_on_cancel(doc, method=None):
-	handle_document_event(doc, "On Cancel")
+	handle_document_event(doc, "On Cancel", doc.get_doc_before_save())
 
 
-def handle_document_event(doc, trigger_event):
+def handle_purchase_receipt_submit(doc, method=None):
+	_enqueue_purchase_order_notifications(doc, "On Submit")
+
+
+def handle_purchase_receipt_cancel(doc, method=None):
+	_enqueue_purchase_order_notifications(doc, "On Cancel")
+
+
+def _enqueue_purchase_order_notifications(receipt, trigger_event):
+	for purchase_order in unique(row.purchase_order for row in receipt.get("items") or [] if row.purchase_order):
+		if not frappe.db.exists("Purchase Order", purchase_order):
+			continue
+		po = frappe.get_doc("Purchase Order", purchase_order)
+		if not has_enabled_rules("Purchase Order", trigger_event):
+			continue
+		frappe.enqueue(
+			"draft_notifications.draft_notifications.draft_notification.send_draft_notifications",
+			queue="short",
+			enqueue_after_commit=True,
+			job_id=f"draft-notification::{trigger_event}::Purchase Order::{purchase_order}",
+			deduplicate=True,
+			doctype="Purchase Order",
+			name=purchase_order,
+			trigger_event=trigger_event,
+			company=po.get("company"),
+			previous_values={"per_received": 0},
+		)
+
+
+def handle_document_event(doc, trigger_event, previous_doc=None):
 	if not frappe.db.exists("DocType", RULE_DOCTYPE):
 		return
 
@@ -45,10 +74,11 @@ def handle_document_event(doc, trigger_event):
 		name=doc.name,
 		trigger_event=trigger_event,
 		company=doc.get("company") if hasattr(doc, "get") else None,
+		previous_values=get_previous_values(previous_doc),
 	)
 
 
-def send_draft_notifications(doctype, name, trigger_event="After Insert", company=None):
+def send_draft_notifications(doctype, name, trigger_event="After Insert", company=None, previous_values=None):
 	if not frappe.db.exists(doctype, name) or not frappe.db.exists("DocType", RULE_DOCTYPE):
 		return
 
@@ -56,12 +86,36 @@ def send_draft_notifications(doctype, name, trigger_event="After Insert", compan
 
 	for rule in get_enabled_rules(doctype, trigger_event, company):
 		try:
-			send_for_rule(doc, rule)
+			if rule_matches_trigger(doc, rule, previous_values):
+				send_for_rule(doc, rule)
 		except Exception:
 			frappe.log_error(
 				title=f"Draft notification rule failed: {rule.name}",
 				message=frappe.get_traceback(),
 			)
+
+
+def get_previous_values(previous_doc):
+	if not previous_doc:
+		return None
+	return {
+		field.fieldname: previous_doc.get(field.fieldname)
+		for field in frappe.get_meta(previous_doc.doctype).fields
+		if field.fieldname
+	}
+
+
+def rule_matches_trigger(doc, rule, previous_values=None):
+	trigger_type = rule.get("trigger_type") or "Document Event"
+	if trigger_type == "Document Event":
+		return True
+	if trigger_type == "Purchase Order Received Complete":
+		return doc.doctype == "Purchase Order" and float(doc.get("per_received") or 0) >= 100 and float((previous_values or {}).get("per_received") or 0) < 100
+	if trigger_type == "Status Change":
+		fieldname = rule.get("status_field") or "status"
+		previous = (previous_values or {}).get(fieldname)
+		return previous != rule.get("target_status") and doc.get(fieldname) == rule.get("target_status")
+	return False
 
 
 def send_for_rule(doc, rule):
@@ -274,54 +328,84 @@ def channel_uses_frappe_users(channel):
 
 
 def has_enabled_rules(doctype, trigger_event="After Insert"):
-	return bool(
-		frappe.db.exists(
-			RULE_DOCTYPE,
-			{
-				"enabled": 1,
-				"document_type": doctype,
-				"trigger_event": trigger_event,
-			},
+	if not frappe.db.has_column(RULE_DOCTYPE, "trigger_type"):
+		return bool(
+			frappe.db.exists(
+				RULE_DOCTYPE,
+				{"enabled": 1, "document_type": doctype, "trigger_event": trigger_event},
+			)
 		)
+
+	rules = frappe.get_all(
+		RULE_DOCTYPE,
+		filters={"enabled": 1, "document_type": doctype},
+		fields=["trigger_event", "trigger_type"],
+		limit=100,
+	)
+	return any(
+		(r.get("trigger_type") or "Document Event") in ("Status Change", "Purchase Order Received Complete")
+		or r.trigger_event == trigger_event
+		for r in rules
 	)
 
 
 def get_enabled_rules(doctype, trigger_event="After Insert", company=None):
+	advanced_rules = frappe.db.has_column(RULE_DOCTYPE, "trigger_type")
+	filters = {"enabled": 1, "document_type": doctype}
+	if not advanced_rules:
+		filters["trigger_event"] = trigger_event
+
+	fields = [
+		"name",
+		"trigger_event",
+		"recipient_type",
+		"role",
+		"user_field",
+		"custom_method",
+		"respect_permissions",
+		"include_owner",
+		"deduplicate",
+		"subject",
+		"message",
+		"subject_zh",
+		"message_zh",
+		"subject_en",
+		"message_en",
+		"subject_es",
+		"message_es",
+		"notification_channel",
+		"dingtalk_config",
+		"dingtalk_message_template",
+		"dingtalk_message_zh",
+		"dingtalk_message_en",
+		"dingtalk_message_es",
+		"company",
+	]
+	if advanced_rules:
+		fields[2:2] = [
+			"trigger_type",
+			"status_field",
+			"target_status",
+			"date_field",
+			"date_offset_days",
+			"repeat_interval_days",
+			"condition_scope",
+		]
+
 	rules = frappe.get_all(
 		RULE_DOCTYPE,
-		filters={
-			"enabled": 1,
-			"document_type": doctype,
-			"trigger_event": trigger_event,
-		},
-		fields=[
-			"name",
-			"trigger_event",
-			"recipient_type",
-			"role",
-			"user_field",
-			"custom_method",
-			"respect_permissions",
-			"include_owner",
-			"deduplicate",
-			"subject",
-			"message",
-			"subject_zh",
-			"message_zh",
-			"subject_en",
-			"message_en",
-			"subject_es",
-			"message_es",
-			"notification_channel",
-			"dingtalk_config",
-			"dingtalk_message_template",
-			"dingtalk_message_zh",
-			"dingtalk_message_en",
-			"dingtalk_message_es",
-			"company",
-		],
+		filters=filters,
+		fields=fields,
 	)
-	return [r for r in rules if not r.company or r.company == company]
+	return [
+		r
+		for r in rules
+		if (not r.company or r.company == company)
+		and (
+			(r.get("trigger_type") or "Document Event") in ("Status Change", "Purchase Order Received Complete")
+			or r.trigger_event == trigger_event
+		)
+	]
 
 
 def get_candidate_users(doc, rule):
@@ -402,18 +486,16 @@ def already_sent(doc, rule, user):
 	if not frappe.db.exists("DocType", LOG_DOCTYPE):
 		return False
 
-	return bool(
-		frappe.db.exists(
-			LOG_DOCTYPE,
-			{
-				"rule": rule.name,
-				"reference_doctype": doc.doctype,
-				"reference_name": doc.name,
-				"user": user,
-				"status": ["in", ["Queued", "Sent"]],
-			},
-		)
-	)
+	filters = {
+		"rule": rule.name,
+		"reference_doctype": doc.doctype,
+		"reference_name": doc.name,
+		"user": user,
+		"status": ["in", ["Queued", "Sent"]],
+	}
+	if rule.get("trigger_type") == "Date Condition" and frappe.db.has_column(LOG_DOCTYPE, "notification_period"):
+		filters["notification_period"] = rule.get("_notification_period")
+	return bool(frappe.db.exists(LOG_DOCTYPE, filters))
 
 
 def create_desk_notification(doc, rule, user, user_email, subject, message):
@@ -513,27 +595,31 @@ def create_log(
 	dingtalk_status=None,
 	dingtalk_open_ding_id=None,
 	dingtalk_error=None,
+	notification_period=None,
 ):
 	if not frappe.db.exists("DocType", LOG_DOCTYPE):
 		return
 
 	try:
+		log_data = {
+			"doctype": LOG_DOCTYPE,
+			"rule": rule.name,
+			"notification_channel": notification_channel or get_notification_channel(rule),
+			"status": status,
+			"user": user,
+			"email": email,
+			"email_queue": email_queue,
+			"reference_doctype": doc.doctype,
+			"reference_name": doc.name,
+			"dingtalk_status": dingtalk_status,
+			"dingtalk_open_ding_id": dingtalk_open_ding_id,
+			"dingtalk_error": dingtalk_error,
+			"reason": reason,
+		}
+		if frappe.db.has_column(LOG_DOCTYPE, "notification_period"):
+			log_data["notification_period"] = notification_period or rule.get("_notification_period")
 		return frappe.get_doc(
-			{
-				"doctype": LOG_DOCTYPE,
-				"rule": rule.name,
-				"notification_channel": notification_channel or get_notification_channel(rule),
-				"status": status,
-				"user": user,
-				"email": email,
-				"email_queue": email_queue,
-				"reference_doctype": doc.doctype,
-				"reference_name": doc.name,
-				"dingtalk_status": dingtalk_status,
-				"dingtalk_open_ding_id": dingtalk_open_ding_id,
-				"dingtalk_error": dingtalk_error,
-				"reason": reason,
-			}
+			log_data
 		).insert(ignore_permissions=True)
 	except Exception:
 		frappe.log_error(title="Failed to create Draft Notification Log", message=frappe.get_traceback())
@@ -579,6 +665,57 @@ def sync_queued_logs():
 
 	for log in logs:
 		sync_log_from_email_queue(log)
+
+
+def process_date_condition_notifications():
+	"""Send due date-condition notifications once per configured period."""
+	if not frappe.db.exists("DocType", RULE_DOCTYPE) or not frappe.db.has_column(RULE_DOCTYPE, "trigger_type"):
+		return
+
+	rules = frappe.get_all(
+		RULE_DOCTYPE,
+		filters={"enabled": 1, "trigger_type": "Date Condition"},
+		fields="*",
+	)
+	today = getdate(nowdate())
+	for rule in rules:
+		if not rule.date_field or not frappe.db.exists("DocType", rule.document_type):
+			continue
+		for name in frappe.get_all(rule.document_type, pluck="name"):
+			try:
+				doc = frappe.get_doc(rule.document_type, name)
+				if should_skip_date_condition(doc, rule):
+					continue
+				due_date = get_rule_date(doc, rule)
+				if not due_date:
+					continue
+				target_date = add_days(due_date, int(rule.date_offset_days or 0))
+				if today < getdate(target_date):
+					continue
+				interval = int(rule.repeat_interval_days or 0)
+				period = "once" if interval <= 0 else str((today - getdate(target_date)).days // interval)
+				rule._notification_period = period
+				send_for_rule(doc, rule)
+			except Exception:
+				frappe.log_error(
+					title=f"Draft date notification failed: {rule.name} {name}",
+					message=frappe.get_traceback(),
+				)
+
+
+def get_rule_date(doc, rule):
+	if rule.condition_scope == "Child Table" or (
+		doc.doctype == "Purchase Order" and rule.date_field == "schedule_date"
+	):
+		values = [row.get(rule.date_field) for row in doc.get("items") or [] if row.get(rule.date_field)]
+		return max(values) if values else None
+	return doc.get(rule.date_field)
+
+
+def should_skip_date_condition(doc, rule):
+	return doc.doctype == "Purchase Order" and (
+		float(doc.get("per_received") or 0) >= 100 or doc.get("status") in ("Cancelled", "Closed")
+	)
 
 
 @frappe.whitelist()

@@ -3,6 +3,71 @@ AppSecret,AppSecret
 Call Voice,Voz de llamada
 "Check whether the DingTalk app has the qyapi_robot_sendmsg permission, the RobotCode belongs to this app, and the robot is enabled.","Compruebe si la aplicación de DingTalk tiene el permiso qyapi_robot_sendmsg, si el RobotCode pertenece a esta aplicación y si el robot está habilitado."
 Config Name,Nombre de configuración
+Enabled,Habilitado
+Rule Name,Nombre de la regla
+Document Type,Tipo de documento
+Trigger Event,Evento desencadenante
+Trigger Type,Tipo de desencadenante
+Document Event,Evento de documento
+Status Change,Cambio de estado
+Date Condition,Condición de fecha
+Purchase Order Received Complete,Pedido de compra recibido por completo
+Status Field,Campo de estado
+Target Status,Estado objetivo
+Date Field,Campo de fecha
+Date Offset Days,Días de desplazamiento de fecha
+Positive values trigger after the date; negative values trigger before the date.,Los valores positivos activan después de la fecha; los negativos antes de la fecha.
+Repeat Interval Days,Días del intervalo de repetición
+Use 0 to notify only once.,Use 0 para notificar una sola vez.
+Condition Scope,Ámbito de condición
+Child Table,Tabla secundaria
+Purchase Order,Pedido de compra
+After Insert,Después de insertar
+On Update,Al actualizar
+On Submit,Al enviar
+On Cancel,Al cancelar
+Recipients,Destinatarios
+Recipient Type,Tipo de destinatario
+Fixed Users,Usuarios fijos
+Users With Role,Usuarios con rol
+User Field,Campo de usuario
+Owner,Propietario
+Role,Rol
+Field on the target document that stores a User id.,Campo del documento de destino que almacena un ID de usuario.
+Custom Method,Método personalizado
+Python dotted path. The method receives the document and returns one user or a list of users.,Ruta de Python. El método recibe el documento y devuelve un usuario o una lista de usuarios.
+Fixed Recipients,Destinatarios fijos
+Permission,Permiso
+Respect Document Read Permission,Respetar el permiso de lectura del documento
+Include Owner,Incluir propietario
+Do Not Send Twice For Same Document And User,No enviar dos veces al mismo usuario para el mismo documento
+Chinese DingTalk Message,Mensaje de DingTalk en chino
+Chinese DingTalk private chat template. Used when recipient language starts with zh.,Plantilla de chat privado de DingTalk en chino. Se usa cuando el idioma del destinatario comienza con zh.
+English DingTalk Message,Mensaje de DingTalk en inglés
+English DingTalk private chat template. Used when recipient language starts with en.,Plantilla de chat privado de DingTalk en inglés. Se usa cuando el idioma del destinatario comienza con en.
+Spanish DingTalk Message,Mensaje de DingTalk en español
+Spanish DingTalk private chat template. Used when recipient language starts with es.,Plantilla de chat privado de DingTalk en español. Se usa cuando el idioma del destinatario comienza con es.
+Subject,Asunto
+Jinja template. The current document is available as doc.,Plantilla Jinja. El documento actual está disponible como doc.
+Chinese Subject,Asunto en chino
+Chinese Message,Mensaje en chino
+Chinese Jinja template. Used when recipient language starts with zh.,Plantilla Jinja en chino. Se usa cuando el idioma del destinatario comienza con zh.
+English Subject,Asunto en inglés
+English Message,Mensaje en inglés
+English Jinja template. Used when recipient language starts with en.,Plantilla Jinja en inglés. Se usa cuando el idioma del destinatario comienza con en.
+Spanish Subject,Asunto en español
+Spanish Message,Mensaje en español
+Spanish Jinja template. Used when recipient language starts with es.,Plantilla Jinja en español. Se usa cuando el idioma del destinatario comienza con es.
+User,Usuario
+Rule,Regla
+Status,Estado
+Queued,En cola
+Skipped,Omitido
+Email Queue,Cola de correo electrónico
+Reference Doctype,Tipo de documento de referencia
+Reference Name,Nombre de referencia
+Notification Period,Período de notificación
+Reason,Motivo
 Connection succeeded.,Conexión correcta.
 DING Type,Tipo de DING
 Default Recipients,Destinatarios predeterminados
@@ -31,6 +96,9 @@ DingTalk user ID used by Draft Notification Rules when sending DingTalk private 
 DingTalk {0} failed ({1}): {2},DingTalk {0} falló ({1}): {2}
 DingTalk {0} request failed: {1},La solicitud {0} de DingTalk falló: {1}
 Draft Notification,Notificación de borrador
+Draft Notification Log,Registro de notificaciones de borrador
+Draft Notification Rule,Regla de notificación de borrador
+Draft Notification Recipient,Destinatario de notificación de borrador
 Draft Notifications,Notificaciones de borradores
 Draft Notifications Test,Prueba de Notificaciones de borradores
 Email,Correo electrónico

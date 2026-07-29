@@ -2,7 +2,74 @@ AppKey,AppKey
 AppSecret,AppSecret
 Call Voice,电话音色
 "Check whether the DingTalk app has the qyapi_robot_sendmsg permission, the RobotCode belongs to this app, and the robot is enabled.",请检查钉钉应用是否已开通 qyapi_robot_sendmsg 企业内机器人发送消息权限、RobotCode 是否属于该应用，以及机器人是否已启用。
+Enabled,启用
+Rule Name,规则名称
+Document Type,文档类型
+Trigger Event,触发事件
+Trigger Type,触发类型
+Document Event,文档事件
+Status Change,状态变化
+Date Condition,日期条件
+Purchase Order Received Complete,采购订单全部到货
+Status Field,状态字段
+Target Status,目标状态
+Date Field,日期字段
+Date Offset Days,日期偏移天数
+Positive values trigger after the date; negative values trigger before the date.,正数表示日期之后触发，负数表示日期之前触发。
+Repeat Interval Days,重复间隔天数
+Use 0 to notify only once.,设置为 0 表示仅通知一次。
+Condition Scope,条件范围
+Child Table,子表
+Purchase Order,采购订单
+After Insert,插入后
+On Update,更新时
+On Submit,提交时
+On Cancel,取消时
+Recipients,接收人
+Recipient Type,接收人类型
+Fixed Users,固定用户
+Users With Role,具有角色的用户
+User Field,用户字段
+Owner,所有者
+Role,角色
+Field on the target document that stores a User id.,目标文档中存储用户 ID 的字段。
+Custom Method,自定义方法
+Python dotted path. The method receives the document and returns one user or a list of users.,Python 点号路径。该方法接收文档并返回一个或多个用户。
+Fixed Recipients,固定接收人
+Permission,权限
+Respect Document Read Permission,遵循文档读取权限
+Include Owner,包含所有者
+Do Not Send Twice For Same Document And User,同一文档和用户不重复发送
+Chinese DingTalk Message,中文钉钉消息
+Chinese DingTalk private chat template. Used when recipient language starts with zh.,中文钉钉私聊模板。接收人语言以 zh 开头时使用。
+English DingTalk Message,英文钉钉消息
+English DingTalk private chat template. Used when recipient language starts with en.,英文钉钉私聊模板。接收人语言以 en 开头时使用。
+Spanish DingTalk Message,西班牙文钉钉消息
+Spanish DingTalk private chat template. Used when recipient language starts with es.,西班牙文钉钉私聊模板。接收人语言以 es 开头时使用。
+Subject,主题
+Jinja template. The current document is available as doc.,Jinja 模板。当前文档可通过 doc 使用。
+Chinese Subject,中文主题
+Chinese Message,中文消息
+Chinese Jinja template. Used when recipient language starts with zh.,中文 Jinja 模板。接收人语言以 zh 开头时使用。
+English Subject,英文主题
+English Message,英文消息
+English Jinja template. Used when recipient language starts with en.,英文 Jinja 模板。接收人语言以 en 开头时使用。
+Spanish Subject,西班牙文主题
+Spanish Message,西班牙文消息
+Spanish Jinja template. Used when recipient language starts with es.,西班牙文 Jinja 模板。接收人语言以 es 开头时使用。
+User,用户
 Config Name,配置名称
+Rule,规则
+Status,状态
+Queued,已排队
+Sent,已发送
+Skipped,已跳过
+Failed,失败
+Email Queue,邮件队列
+Reference Doctype,引用文档类型
+Reference Name,引用文档名称
+Notification Period,通知周期
+Reason,原因
 Connection succeeded.,连接成功。
 DING Type,DING 类型
 Default Recipients,默认接收人
@@ -31,6 +98,9 @@ DingTalk user ID used by Draft Notification Rules when sending DingTalk private 
 DingTalk {0} failed ({1}): {2},钉钉 {0} 失败（{1}）：{2}
 DingTalk {0} request failed: {1},钉钉 {0} 请求失败：{1}
 Draft Notification,草稿通知
+Draft Notification Log,草稿通知日志
+Draft Notification Rule,草稿通知规则
+Draft Notification Recipient,草稿通知接收人
 Draft Notifications,草稿通知
 Draft Notifications Test,Draft Notifications 测试
 Email,邮件

@@ -14,15 +14,19 @@ doc_events = {
 		"on_submit": "draft_notifications.draft_notifications.draft_notification.handle_on_submit",
 		"on_cancel": "draft_notifications.draft_notifications.draft_notification.handle_on_cancel",
 	},
+	"Purchase Receipt": {
+		"on_submit": "draft_notifications.draft_notifications.draft_notification.handle_purchase_receipt_submit",
+		"on_cancel": "draft_notifications.draft_notifications.draft_notification.handle_purchase_receipt_cancel",
+	},
 }
 
 scheduler_events = {
 	"all": [
 		"draft_notifications.draft_notifications.draft_notification.sync_queued_logs",
+		"draft_notifications.draft_notifications.draft_notification.process_date_condition_notifications",
 	],
 }
 
 override_whitelisted_methods = {
 	"frappe.desk.doctype.notification_log.notification_log.get_notification_logs": "draft_notifications.notification_log.get_notification_logs",
 }
-
