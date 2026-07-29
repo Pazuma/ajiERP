@@ -141,6 +141,7 @@ def after_install():
 	sync_sales_settlement_custom_fields()
 	sync_china_financial_statement_report_filters()
 	sync_china_financial_statement_print_format()
+	backfill_bank_transaction_summaries()
 	sync_navigation_metadata()
 
 
@@ -164,6 +165,7 @@ def after_migrate():
 	sync_sales_settlement_custom_fields()
 	sync_china_financial_statement_report_filters()
 	sync_china_financial_statement_print_format()
+	backfill_bank_transaction_summaries()
 	sync_navigation_metadata()
 	validate_deployment_schema()
 
@@ -346,6 +348,24 @@ def sync_sales_settlement_custom_fields():
 			{"fieldname": "custom_china_sales_settlement", "label": "销售结算单", "fieldtype": "Link", "options": "China Sales Settlement", "read_only": 1, "insert_after": "customer_name"},
 		],
 	}, update=True)
+
+
+def backfill_bank_transaction_summaries():
+	"""Backfill imported summaries after the additive custom field exists."""
+	if not frappe.db.has_column("Bank Transaction", "custom_summary"):
+		return
+	rows = frappe.get_all(
+		"Bank Transaction",
+		filters={"custom_summary": ["in", ["", None]]},
+		fields=["name", "description"],
+	)
+	for row in rows:
+		description = (row.description or "").strip()
+		if "｜" not in description:
+			continue
+		summary = description.split("｜", 1)[0].strip()
+		if summary:
+			frappe.db.set_value("Bank Transaction", row.name, "custom_summary", summary, update_modified=False)
 
 
 def sync_navigation_metadata():

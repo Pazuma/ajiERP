@@ -4,6 +4,10 @@ import frappe
 
 
 def execute():
+	# The custom field is created by after_migrate and may not exist yet when
+	# post-model patches run during the first migration.
+	if not frappe.db.has_column("Bank Transaction", "custom_summary"):
+		return
 	rows = frappe.get_all(
 		"Bank Transaction",
 		filters={"custom_summary": ["in", ["", None]]},
