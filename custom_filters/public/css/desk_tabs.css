@@ -433,3 +433,18 @@ body.custom-filters-desk-tabs-ready .page-head {
 		transition: none !important;
 	}
 }
+
+/* Item > Manufacturing: the HTML report follows a right-hand column break,
+ * but the report itself must use the full form row like the pricing report. */
+[data-fieldname="custom_cf_bom_where_used_html"],
+[data-fieldname="custom_cf_bom_where_used_html"] .frappe-control {
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: 0 0 100% !important;
+}
+
+.form-column:has([data-fieldname="custom_cf_bom_where_used_html"]) {
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: 0 0 100% !important;
+}

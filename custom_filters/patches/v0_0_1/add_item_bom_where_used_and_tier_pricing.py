@@ -15,6 +15,7 @@ def execute():
                     "fieldname": "custom_cf_bom_where_used_html",
                     "label": "关联成品",
                     "fieldtype": "HTML",
+                    "columns": 0,
                     "insert_after": "customer_code",
                     "translatable": 0,
                 },

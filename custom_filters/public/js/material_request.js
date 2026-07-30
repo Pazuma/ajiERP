@@ -21,6 +21,10 @@ function set_deeplinkerp_material_request_warehouse_queries(frm) {
 }
 
 function get_deeplinkerp_warehouse_query_with_actual_qty(frm, row) {
+	if (window.custom_filters_get_warehouse_query_with_actual_qty) {
+		return custom_filters_get_warehouse_query_with_actual_qty(frm, row);
+	}
+
 	const query = {
 		filters: [
 			["Warehouse", "company", "in", ["", cstr(frm.doc.company)]],

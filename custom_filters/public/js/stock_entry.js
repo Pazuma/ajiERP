@@ -7,8 +7,15 @@ frappe.ui.form.on("Stock Entry", {
 		set_deeplinkerp_stock_entry_warehouse_queries(frm);
 	},
 
+	onload_post_render: function(frm) {
+		set_deeplinkerp_stock_entry_warehouse_queries(frm);
+	},
+
 	refresh: function(frm) {
 		set_deeplinkerp_stock_entry_warehouse_queries(frm);
+		setTimeout(function() {
+			set_deeplinkerp_stock_entry_warehouse_queries(frm);
+		}, 0);
 	}
 });
 
@@ -21,6 +28,10 @@ function set_deeplinkerp_stock_entry_warehouse_queries(frm) {
 }
 
 function get_deeplinkerp_stock_entry_warehouse_query_with_actual_qty(frm, row) {
+	if (window.custom_filters_get_warehouse_query_with_actual_qty) {
+		return custom_filters_get_warehouse_query_with_actual_qty(frm, row);
+	}
+
 	const query = {
 		filters: [
 			["Warehouse", "company", "in", ["", cstr(frm.doc.company)]],

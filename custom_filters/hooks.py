@@ -33,6 +33,8 @@ app_include_js = [
 	"/assets/custom_filters/js/desk_tabs.js",
 	"/assets/custom_filters/js/desktop_user_menu.js",
 	"/assets/custom_filters/js/right_sidebar.js",
+	"/assets/custom_filters/js/info_card_i18n.js",
+	"/assets/custom_filters/js/warehouse_query.js",
 ]
 
 # include js, css files in header of web template
@@ -58,12 +60,18 @@ doctype_js = {
 	"Purchase Order": "public/js/purchase_order.js",
 	"Supplier Quotation": "public/js/supplier_quotation.js",
 	"Item": "public/js/item.js",
+	"Production Plan": "public/js/production_plan.js",
 }
 
 doctype_list_js = {
 	"Item": "public/js/item_list.js",
 	"Bin": "public/js/bin_list.js",
 	"Sales Order": "public/js/sales_order_list.js",
+}
+
+override_whitelisted_methods = {
+	"erpnext.manufacturing.doctype.production_plan.production_plan.get_items_for_material_requests":
+		"custom_filters.production_plan.get_items_for_material_requests",
 }
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}

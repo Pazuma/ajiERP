@@ -36,6 +36,24 @@ function get_cf_item_wrapper(frm, fieldname) {
     return $wrapper && $wrapper.length ? $wrapper : null;
 }
 
+function expand_cf_bom_where_used_field(frm) {
+    const $wrapper = get_cf_item_wrapper(frm, "custom_cf_bom_where_used_html");
+    if (!$wrapper) return;
+
+    // The field follows a column break in Item's Manufacturing section. Frappe
+    // changes the exact wrapper nesting between releases, so widen the field
+    // wrapper and its layout containers rather than relying on one selector.
+    let $node = $wrapper;
+    for (let level = 0; level < 4 && $node.length; level++) {
+        $node.css({
+            width: "100%",
+            maxWidth: "100%",
+            flex: "0 0 100%",
+        });
+        $node = $node.parent();
+    }
+}
+
 function clear_cf_item_detail_caches(frm) {
     if (!frm) return;
     destroy_cf_item_datatable(frm, "_cf_bom_dt");
@@ -75,10 +93,11 @@ function cf_item_datatable(frm, key, container, columns, data, no_data_message, 
     const row_height = 35;
     const header_height = 42;
     const max_height = 500;
-    const calculated_height = Math.min(
-        Math.max((data || []).length, 1) * row_height + header_height,
-        max_height
-    );
+    const empty_body_height = 60;
+    const is_empty = !(data || []).length;
+    const calculated_height = is_empty
+        ? header_height + empty_body_height
+        : Math.min(data.length * row_height + header_height, max_height);
     container.style.height = `${calculated_height}px`;
 
     frm[key] = new frappe.DataTable(container, {
@@ -95,6 +114,26 @@ function cf_item_datatable(frm, key, container, columns, data, no_data_message, 
         translations: frappe.utils.datatable.get_translations(),
         direction: frappe.utils.is_rtl() ? "rtl" : "ltr",
     });
+
+    if (is_empty) {
+        fix_cf_item_empty_datatable(container, empty_body_height, no_data_message || __("暂无数据"));
+    }
+}
+
+// frappe-datatable 空数据时 .dt-scrollable 保持 CSS 默认 40vw 高（setBodyStyle 无首行直接返回），
+// 空态提示又按该高度绝对定位，位置不可控；直接整体替换为自适应高度的居中文本，不依赖其内部样式。
+function fix_cf_item_empty_datatable(container, body_height, message_text) {
+    const scrollable = container.querySelector(".dt-scrollable");
+    if (!scrollable) {
+        return;
+    }
+    scrollable.style.height = `${body_height}px`;
+    scrollable.style.overflow = "hidden";
+    scrollable.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 12px; box-sizing: border-box; color: var(--text-muted, #6b7280); font-size: 13px; text-align: center; border-left: 1px solid var(--dt-border-color, #dfe3e8); border-right: 1px solid var(--dt-border-color, #dfe3e8);">
+            ${cf_item_escape(message_text)}
+        </div>
+    `;
 }
 
 function cf_item_doc_link(value, row, column, data, doctype) {
@@ -130,6 +169,7 @@ function load_bom_where_used(frm) {
     }
 
     const $wrapper = get_cf_item_wrapper(frm, "custom_cf_bom_where_used_html");
+    expand_cf_bom_where_used_field(frm);
     if (!$wrapper || frm._cf_bom_loading) {
         return;
     }
@@ -167,7 +207,7 @@ function get_bom_where_used_columns() {
         {
             id: "bom_no",
             name: __("BOM 编号"),
-            width: 180,
+            width: 300,
             editable: false,
             focusable: false,
             format: (value, row, column, data) => cf_item_doc_link(value, row, column, data, "BOM"),
@@ -207,6 +247,7 @@ function get_bom_where_used_columns() {
 
 function render_bom_where_used_html(frm) {
     const $wrapper = get_cf_item_wrapper(frm, "custom_cf_bom_where_used_html");
+    expand_cf_bom_where_used_field(frm);
     if (!$wrapper) {
         return;
     }

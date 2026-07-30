@@ -52,3 +52,7 @@ Purchase Delivery Details,Detalles de Entrega
 缺少 Purchase Order 读取权限,Falta permiso de lectura para Orden de Compra.
 采购交货详情,Detalles de Entrega de Compra
 导出报表,Exportar informe
+Create Work Orders for Available Stock,Crear órdenes de trabajo según el stock disponible
+Only submitted Production Plans can create Work Orders.,Solo los planes de producción enviados pueden crear órdenes de trabajo.
+This action is only available for Production Plans created from Sales Orders.,Esta acción solo está disponible para planes de producción creados desde órdenes de venta.
+No complete set of raw materials is currently available for production.,No hay materias primas suficientes para producir un conjunto completo.
