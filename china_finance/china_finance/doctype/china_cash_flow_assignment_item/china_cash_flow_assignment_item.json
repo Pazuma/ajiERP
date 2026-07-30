@@ -3,7 +3,7 @@
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
- "field_order": ["gl_entry", "cash_account", "cash_direction", "cash_amount", "counterpart_accounts", "suggested_row_code", "suggested_row_label", "cash_flow_row_code", "assigned_amount", "split_row", "remarks"],
+ "field_order": ["gl_entry", "cash_account", "cash_direction", "cash_amount", "counterpart_accounts", "suggested_row_code", "suggested_row_label", "cash_flow_row_code", "cash_flow_row_label", "assigned_amount", "split_row", "remarks"],
  "fields": [
   {"fieldname":"gl_entry","fieldtype":"Link","label":"现金总账分录","options":"GL Entry","read_only":1,"reqd":1,"in_list_view":1},
   {"fieldname":"cash_account","fieldtype":"Link","label":"现金或银行科目","options":"Account","read_only":1,"reqd":1,"in_list_view":1},
@@ -12,7 +12,8 @@
   {"fieldname":"counterpart_accounts","fieldtype":"Small Text","label":"对方科目","read_only":1},
   {"fieldname":"suggested_row_code","fieldtype":"Data","label":"系统建议项目编码","read_only":1,"hidden":1},
   {"fieldname":"suggested_row_label","fieldtype":"Data","label":"系统建议项目","read_only":1,"in_list_view":1},
-  {"fieldname":"cash_flow_row_code","fieldtype":"Autocomplete","label":"现金流量项目","reqd":1,"in_list_view":1},
+  {"fieldname":"cash_flow_row_code","fieldtype":"Autocomplete","label":"现金流量项目编码","reqd":1,"in_list_view":1},
+  {"fieldname":"cash_flow_row_label","fieldtype":"Data","label":"现金流量项目","read_only":1,"in_list_view":1},
   {"fieldname":"assigned_amount","fieldtype":"Currency","label":"指定金额","reqd":1,"in_list_view":1},
   {"fieldname":"split_row","fieldtype":"Button","label":"拆分","in_list_view":1},
   {"fieldname":"remarks","fieldtype":"Small Text","label":"指定说明"}

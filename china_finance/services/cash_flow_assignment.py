@@ -315,11 +315,18 @@ def _validate_assignment_rows(doc):
 
 def prepare_cash_flow_assignment_confirmation(doc):
 	_require_roles(CONFIRM_ROLES)
-	if doc.status != "Draft" or doc.docstatus != 0:
+	# Frappe sets docstatus=1 before calling before_submit. Validate the
+	# business status here and only reject an already cancelled document.
+	if doc.status != "Draft" or doc.docstatus == 2:
 		frappe.throw(_("只有草稿现金流量指定单可执行此操作"))
 	voucher = _get_voucher(doc.china_accounting_voucher)
 	_refresh_draft_cash_legs(doc, get_cash_legs_for_voucher(voucher))
 	_validate_assignment_rows(doc)
+	valid_rows, template = _valid_cash_flow_rows(doc.company, doc.posting_date)
+	labels = {row.row_code: row.label for row in template.rows if row.row_code in valid_rows}
+	labels[INTERNAL_TRANSFER] = INTERNAL_TRANSFER_LABEL
+	for row in doc.items:
+		row.cash_flow_row_label = labels.get(row.cash_flow_row_code, row.cash_flow_row_code)
 	settings = get_company_settings(doc.company)
 	if settings and settings.enforce_role_separation and doc.assigned_by == frappe.session.user:
 		frappe.throw(_("启用职责分离时，现金流量指定人与确认人不能为同一用户"))

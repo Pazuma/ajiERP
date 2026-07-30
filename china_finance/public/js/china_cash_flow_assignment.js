@@ -6,10 +6,18 @@ frappe.ui.form.on("China Cash Flow Assignment", {
 			method: "china_finance.services.cash_flow_assignment.get_cash_flow_row_options",
 			args: { name: frm.doc.name },
 			callback: (result) => {
+				const options = result.message || [];
+				const labels = Object.fromEntries(options.map((option) => [option.value, option.label]));
 				const grid = frm.fields_dict.items?.grid;
 				if (!grid) return;
-				grid.update_docfield_property("cash_flow_row_code", "options", result.message || []);
+				grid.update_docfield_property("cash_flow_row_code", "options", options);
+				grid.update_docfield_property("cash_flow_row_code", "hidden", frm.doc.docstatus > 0);
+				grid.update_docfield_property("cash_flow_row_label", "hidden", frm.doc.docstatus === 0);
+				(frm.doc.items || []).forEach((row) => {
+					if (labels[row.cash_flow_row_code]) row.cash_flow_row_label = labels[row.cash_flow_row_code];
+				});
 				grid.refresh();
+				frm.refresh_field("items");
 			},
 		});
 
@@ -34,7 +42,7 @@ frappe.ui.form.on("China Cash Flow Assignment", {
 				method: `china_finance.services.cash_flow_assignment.${method}`,
 				args: { name: frm.doc.name },
 				freeze: true,
-				callback: () => frm.reload_doc(),
+			callback: () => frm.reload_doc(),
 			});
 		}
 	},
