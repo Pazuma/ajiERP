@@ -119,7 +119,7 @@ class BOMConfigurator {
 								btnClass: "hidden-xs",
 							},
 							{
-								label: __(frappe.utils.icon("add", "sm") + " Raw Material"),
+								label: __(frappe.utils.icon("add", "sm") + " 原材料"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 									view.events.add_item(node, view);
@@ -130,7 +130,7 @@ class BOMConfigurator {
 								btnClass: "hidden-xs",
 							},
 							{
-								label: __(frappe.utils.icon("add", "sm") + " Sub Assembly"),
+								label: __(frappe.utils.icon("add", "sm") + " 子装配件"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 									view.events.add_sub_assembly(node, view);
@@ -141,7 +141,7 @@ class BOMConfigurator {
 								btnClass: "hidden-xs",
 							},
 							{
-								label: __(frappe.utils.icon("add", "sm") + " Phantom Item"),
+								label: __(frappe.utils.icon("add", "sm") + " 虚拟物料"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 									view.events.add_sub_assembly(node, view, true);
@@ -152,17 +152,17 @@ class BOMConfigurator {
 								btnClass: "hidden-xs",
 							},
 							{
-								label: __("Collapse All"),
+								label: __("全部折叠"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 
 									if (!node.expanded) {
 										view.tree.load_children(node, true);
 										$(node.parent[0]).find(".tree-children").show();
-										node.$toolbar.find(".expand-all-btn").html(__("Collapse All"));
+										node.$toolbar.find(".expand-all-btn").html(__("全部折叠"));
 									} else {
 										node.$tree_link.trigger("click");
-										node.$toolbar.find(".expand-all-btn").html(__("Expand All"));
+										node.$toolbar.find(".expand-all-btn").html(__("全部展开"));
 									}
 								},
 								condition: function (node) {
@@ -171,7 +171,7 @@ class BOMConfigurator {
 								btnClass: "hidden-xs expand-all-btn",
 							},
 							{
-								label: __(frappe.utils.icon("move", "sm") + " Sub Assembly"),
+								label: __(frappe.utils.icon("move", "sm") + " 子装配件"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 									view.events.convert_to_sub_assembly(node, view);
@@ -182,7 +182,7 @@ class BOMConfigurator {
 								btnClass: "hidden-xs",
 							},
 							{
-								label: __(frappe.utils.icon("move", "sm") + " Phantom Item"),
+								label: __(frappe.utils.icon("move", "sm") + " 虚拟物料"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 									view.events.convert_to_sub_assembly(node, view, true);
@@ -206,17 +206,17 @@ class BOMConfigurator {
 					  ]
 					: [
 							{
-								label: __("Expand All"),
+								label: __("全部展开"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 
 									if (!node.expanded) {
 										view.tree.load_children(node, true);
 										$(node.parent[0]).find(".tree-children").show();
-										node.$toolbar.find(".expand-all-btn").html(__("Collapse All"));
+										node.$toolbar.find(".expand-all-btn").html(__("全部折叠"));
 									} else {
 										node.$tree_link.trigger("click");
-										node.$toolbar.find(".expand-all-btn").html(__("Expand All"));
+										node.$toolbar.find(".expand-all-btn").html(__("全部展开"));
 									}
 								},
 								condition: function (node) {

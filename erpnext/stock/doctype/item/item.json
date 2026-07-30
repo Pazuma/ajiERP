@@ -217,7 +217,7 @@
   },
   {
    "default": "0",
-   "description": "Disabled items cannot be selected in any transaction.",
+   "description": "禁用的物料不能在任何单据中选择。",
    "fieldname": "disabled",
    "fieldtype": "Check",
    "label": "Disabled",
@@ -226,7 +226,7 @@
   },
   {
    "default": "0",
-   "description": "Allow substituting this item with an alternative from the Item Alternative list when stock is unavailable.",
+   "description": "库存不足时，允许用\"替代物料\"列表中的替代物料替换此物料。",
    "fieldname": "allow_alternative_item",
    "fieldtype": "Check",
    "label": "Allow Alternative Item",
@@ -365,7 +365,7 @@
   {
    "default": "2099-12-31",
    "depends_on": "is_stock_item",
-   "description": "Defines the date after which the item can no longer be used in transactions or manufacturing",
+   "description": "定义此日期之后物料不能再用于交易或生产",
    "fieldname": "end_of_life",
    "fieldtype": "Date",
    "label": "End of Life",
@@ -455,7 +455,7 @@
   {
    "default": "0",
    "depends_on": "eval:doc.is_stock_item",
-   "description": "Track this item in batches. Cannot be changed after a stock transaction exists.",
+   "description": "按批次跟踪此物料。存在库存交易后不可更改。",
    "fieldname": "has_batch_no",
    "fieldtype": "Check",
    "label": "Has Batch No",
@@ -473,7 +473,7 @@
   },
   {
    "depends_on": "eval:doc.has_batch_no==1 && doc.create_new_batch==1",
-   "description": "Example: ABCD.#####. If series is set and Batch No is not mentioned in transactions, then automatic batch number will be created based on this series. If you always want to explicitly mention Batch No for this item, leave this blank. Note: this setting will take priority over the Naming Series Prefix in Stock Settings.",
+   "description": "例如：ABCD.##### 如果已设置批号模板且单据中未手工输入批号，则将根据此批号模板创建批号。如果您希望手工输入此物料的批号，请将此栏位留空。注意：此设置将优先于库存设置中的批号模板前缀。",
    "fieldname": "batch_number_series",
    "fieldtype": "Data",
    "label": "Batch Number Series",
@@ -491,7 +491,7 @@
   {
    "default": "0",
    "depends_on": "has_batch_no",
-   "description": "Enable to reserve a small sample from each batch for any analysis arising ahead",
+   "description": "启用后，从每个批次中预留少量样品，以备后续分析使用",
    "documentation_url": "https://docs.frappe.io/erpnext/retain-sample-stock",
    "fieldname": "retain_sample",
    "fieldtype": "Check",
@@ -512,7 +512,7 @@
   {
    "default": "0",
    "depends_on": "eval:doc.is_stock_item",
-   "description": "Track each unit with a unique serial number for warranty and return tracking. Cannot be changed after a stock transaction exists.",
+   "description": "使用唯一序列号跟踪每件产品，用于保修和退货跟踪。存在库存交易后不可更改。",
    "fieldname": "has_serial_no",
    "fieldtype": "Check",
    "label": "Has Serial No",
@@ -522,7 +522,7 @@
   },
   {
    "depends_on": "has_serial_no",
-   "description": "Example: ABCD.#####\nIf series is set and Serial No is not mentioned in transactions, then automatic serial number will be created based on this series. If you always want to explicitly mention Serial Nos for this item. leave this blank.",
+   "description": "示例：ABCD.#####\n如果设置了编号规则，且交易中未指定序列号，则根据此规则自动创建序列号。如果您希望始终为此物料明确指定序列号，请留空。",
    "fieldname": "serial_no_series",
    "fieldtype": "Data",
    "label": "Serial Number Series",
@@ -539,7 +539,7 @@
   {
    "default": "0",
    "depends_on": "eval:!doc.variant_of",
-   "description": "If this item has variants, then it cannot be selected in sales orders etc.",
+   "description": "勾选表示该物料不能用于实际业务，是仅用于生成多规格物料的模板",
    "fieldname": "has_variants",
    "fieldtype": "Check",
    "in_standard_filter": 1,
@@ -571,7 +571,7 @@
   },
   {
    "default": "1",
-   "description": "Allow this item to be used in purchase transactions.",
+   "description": "允许此物料用于采购交易。",
    "fieldname": "is_purchase_item",
    "fieldtype": "Check",
    "label": "Allow Purchase",
@@ -629,7 +629,7 @@
   },
   {
    "default": "0",
-   "description": "Enable if this item is provided by a customer and received via Stock Entry.",
+   "description": "如果此物料由客户提供并通过库存单据入库，请勾选。",
    "fieldname": "is_customer_provided_item",
    "fieldtype": "Check",
    "label": "Is Customer Provided Item",
@@ -697,7 +697,7 @@
   },
   {
    "default": "1",
-   "description": "Allow this item to be used in sales transactions.",
+   "description": "允许此物料用于销售交易。",
    "fieldname": "is_sales_item",
    "fieldtype": "Check",
    "label": "Allow Sales",
@@ -776,7 +776,7 @@
   },
   {
    "default": "0",
-   "description": "A quality inspection must be completed before generating a Purchase Receipt for this item.",
+   "description": "此物料必须先完成质量检验，才能生成采购收货单。",
    "fieldname": "inspection_required_before_purchase",
    "fieldtype": "Check",
    "label": "Inspection Required before Purchase",
@@ -786,7 +786,7 @@
   },
   {
    "default": "0",
-   "description": "A quality inspection must be completed before generating a Delivery Note for this item.",
+   "description": "此物料必须先完成质量检验，才能生成交货单。",
    "fieldname": "inspection_required_before_delivery",
    "fieldtype": "Check",
    "label": "Inspection Required before Delivery",
@@ -886,7 +886,7 @@
   },
   {
    "default": "1",
-   "description": "If enabled, sales from this item will be included in Sales Person and Sales Partner commission calculations",
+   "description": "启用后，此物料的销售额将计入销售员和销售合作伙伴的佣金计算",
    "fieldname": "grant_commission",
    "fieldtype": "Check",
    "label": "Grant Commission",
@@ -895,7 +895,7 @@
   {
    "default": "0",
    "depends_on": "eval: doc.is_fixed_asset && doc.auto_create_assets",
-   "description": "Creates a single grouped asset instead of individual assets when purchased in bulk.",
+   "description": "批量采购时创建单个组合资产，而不是多个单独资产。",
    "fieldname": "is_grouped_asset",
    "fieldtype": "Check",
    "label": "Create Grouped Asset",
