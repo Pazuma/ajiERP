@@ -7,43 +7,66 @@ STAR = "⭐"
 
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
-	if not filters.get("item_code") or not flt(filters.get("qty")):
-		return (
-			get_columns(),
-			[],
-			_("Please select an Item and enter a demanded quantity."),
-			None,
-			[],
-			1,
-		)
+	mode = filters.get("compare_by") or "Single Item"
 
-	data = get_recommendation_rows(filters)
-	message = None
-	if not data:
-		message = _("No quotations or pricing rules found for this item.")
-	return get_columns(), data, message, None, get_summary(data), 1
+	if mode == "Single Item":
+		if not filters.get("item_code") or not flt(filters.get("qty")):
+			return (
+				get_columns(filters),
+				[],
+				_("Please select an Item and enter a demanded quantity."),
+				None,
+				[],
+				1,
+			)
+		data = get_recommendation_rows(filters)
+		message = None if data else _("No quotations or pricing rules found for this item.")
+		return get_columns(filters), data, message, None, get_summary(data), 1
+
+	items, error_message = _get_basket_items(filters)
+	if error_message:
+		return get_columns(filters), [], error_message, None, [], 1
+
+	data = get_basket_rows(filters, items)
+	message = None if data else _("No quotations or pricing rules found for the selected items.")
+	return get_columns(filters), data, message, None, get_basket_summary(data, items), 1
 
 
-def get_columns():
-	return [
+def get_columns(filters=None):
+	mode = (filters or {}).get("compare_by") or "Single Item"
+	columns = [
 		{"label": _("Best"), "fieldname": "recommended", "fieldtype": "Data", "width": 60},
 		{"label": _("Supplier"), "fieldname": "supplier", "fieldtype": "Link", "options": "Supplier", "width": 140},
-		{"label": _("Supplier Name"), "fieldname": "supplier_name", "fieldtype": "Data", "width": 180},
-		{"label": _("Price Source"), "fieldname": "price_source", "fieldtype": "Data", "width": 120},
+		{"label": _("Supplier Name"), "fieldname": "supplier_name", "fieldtype": "Data", "width": 170},
+	]
+	if mode != "Single Item":
+		columns += [
+			{"label": _("Coverage"), "fieldname": "coverage", "fieldtype": "Data", "width": 70},
+			{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 140},
+			{"label": _("Item Name"), "fieldname": "item_name", "fieldtype": "Data", "width": 150},
+		]
+	columns += [
+		{"label": _("Price Source"), "fieldname": "price_source", "fieldtype": "Data", "width": 110},
 		{"label": _("Demanded Qty"), "fieldname": "demanded_qty", "fieldtype": "Float", "width": 100},
-		{"label": _("Recommended Qty"), "fieldname": "recommended_qty", "fieldtype": "Float", "width": 120},
+		{"label": _("Recommended Qty"), "fieldname": "recommended_qty", "fieldtype": "Float", "width": 115},
 		{"label": _("Direct Rate"), "fieldname": "direct_rate", "fieldtype": "Currency", "width": 100},
 		{"label": _("Direct Total"), "fieldname": "direct_total", "fieldtype": "Currency", "width": 110},
 		{"label": _("Recommended Rate"), "fieldname": "recommended_rate", "fieldtype": "Currency", "width": 100},
 		{"label": _("Recommended Total"), "fieldname": "recommended_total", "fieldtype": "Currency", "width": 110},
 		{"label": _("Savings"), "fieldname": "savings", "fieldtype": "Currency", "width": 100},
 		{"label": _("MOQ"), "fieldname": "min_order_qty", "fieldtype": "Float", "width": 80},
-		{"label": _("Last PO Rate"), "fieldname": "last_transaction_rate", "fieldtype": "Currency", "width": 100},
-		{"label": _("Quote Valid Till"), "fieldname": "quote_valid_till", "fieldtype": "Date", "width": 110},
-		{"label": _("Lead Time (Days)"), "fieldname": "lead_time_days", "fieldtype": "Int", "width": 100},
-		{"label": _("Payment Terms"), "fieldname": "payment_terms", "fieldtype": "Link", "options": "Payment Terms Template", "width": 140},
-		{"label": _("Note"), "fieldname": "note", "fieldtype": "Data", "width": 180},
 	]
+	if mode == "Single Item":
+		columns += [
+			{"label": _("Last PO Rate"), "fieldname": "last_transaction_rate", "fieldtype": "Currency", "width": 100},
+			{"label": _("Lead Time (Days)"), "fieldname": "lead_time_days", "fieldtype": "Int", "width": 100},
+		]
+	columns.append({"label": _("Quote Valid Till"), "fieldname": "quote_valid_till", "fieldtype": "Date", "width": 110})
+	columns.append({"label": _("Payment Terms"), "fieldname": "payment_terms", "fieldtype": "Link", "options": "Payment Terms Template", "width": 130})
+	if mode != "Single Item":
+		columns.append({"label": _("Missing Items"), "fieldname": "missing_items", "fieldtype": "Data", "width": 160})
+	columns.append({"label": _("Note"), "fieldname": "note", "fieldtype": "Data", "width": 180})
+	return columns
 
 
 def get_summary(data):
@@ -58,6 +81,29 @@ def get_summary(data):
 		{"label": _("Recommended Qty"), "value": best.get("recommended_qty"), "datatype": "Float", "indicator": "Green"},
 		{"label": _("Savings"), "value": savings, "datatype": "Currency", "indicator": "Green" if savings > 0 else "Blue"},
 		{"label": _("Suppliers Compared"), "value": len(priced), "datatype": "Int", "indicator": "Blue"},
+	]
+
+
+def get_basket_summary(data, items):
+	total_rows = [row for row in data if row.get("row_type") == "supplier_total"]
+	if not total_rows:
+		return []
+
+	best = next((row for row in total_rows if row.get("recommended") == STAR), None)
+	unquoted = sum(
+		1
+		for item in items
+		if not any(
+			row.get("row_type") == "detail" and row.get("item_code") == item["item_code"] and row.get("price_source")
+			for row in data
+		)
+	)
+	savings = flt(best.get("savings")) if best else 0
+	return [
+		{"label": _("Basket Best Supplier"), "value": (best.get("supplier_name") or best.get("supplier")) if best else "—", "datatype": "Data", "indicator": "Green" if best else "Gray"},
+		{"label": _("Basket Recommended Total"), "value": best.get("recommended_total") if best else 0, "datatype": "Currency", "indicator": "Green" if best else "Gray"},
+		{"label": _("Total Savings"), "value": savings, "datatype": "Currency", "indicator": "Green" if savings > 0 else "Blue"},
+		{"label": _("Items Without Any Quote"), "value": unquoted, "datatype": "Int", "indicator": "Red" if unquoted else "Blue"},
 	]
 
 
@@ -156,21 +202,227 @@ def _best_purchase(tiers, demanded_qty):
 
 def get_recommendation_rows(filters):
 	on_date = getdate(today())
-	demanded_qty = flt(filters.qty)
 	company_currency = (
 		frappe.get_cached_value("Company", filters.company, "default_currency")
 		if filters.get("company")
 		else None
 	)
+	item_codes = [filters.item_code]
 
-	rules = _get_item_tier_rules(filters.item_code, filters.get("company"), on_date)
-	quotes = _get_quotation_rows(filters.item_code)
-	prices = _get_latest_item_prices(filters.item_code, on_date)
-	po_rates = _get_last_po_rates(filters.item_code)
+	rules_by_item = _get_tier_rules_by_item(item_codes, filters.get("company"), on_date)
+	quotes = _get_quotation_rows_by_item(item_codes)
+	prices = _get_item_prices_by_item(item_codes, on_date)
+	po_rates = _get_po_rates_by_item(item_codes)
+	suppliers = _get_suppliers_universe(rules_by_item, quotes, prices, filters.get("supplier"))
 
-	supplier_names = {rule.supplier for rule in rules if rule.supplier}
-	supplier_names |= set(quotes) | set(prices)
-	group_names = {rule.supplier_group for rule in rules if not rule.supplier and rule.supplier_group}
+	rows = [
+		_build_supplier_row(
+			name,
+			supplier,
+			filters.item_code,
+			flt(filters.qty),
+			rules_by_item.get(filters.item_code, []),
+			quotes.get((filters.item_code, name)),
+			prices.get((filters.item_code, name)),
+			po_rates.get((filters.item_code, name)),
+			company_currency,
+			on_date,
+		)
+		for name, supplier in suppliers.items()
+	]
+	_sort_and_star(rows)
+	return rows
+
+
+def get_basket_rows(filters, items):
+	on_date = getdate(today())
+	company_currency = (
+		frappe.get_cached_value("Company", filters.company, "default_currency")
+		if filters.get("company")
+		else None
+	)
+	item_codes = [item["item_code"] for item in items]
+
+	rules_by_item = _get_tier_rules_by_item(item_codes, filters.get("company"), on_date)
+	quotes = _get_quotation_rows_by_item(item_codes)
+	prices = _get_item_prices_by_item(item_codes, on_date)
+	po_rates = _get_po_rates_by_item(item_codes)
+	suppliers = _get_suppliers_universe(rules_by_item, quotes, prices, filters.get("supplier"))
+	if not suppliers:
+		return []
+
+	detail_rows = []
+	for item in items:
+		item_rows = []
+		for name, supplier in suppliers.items():
+			row = _build_supplier_row(
+				name,
+				supplier,
+				item["item_code"],
+				item["qty"],
+				rules_by_item.get(item["item_code"], []),
+				quotes.get((item["item_code"], name)),
+				prices.get((item["item_code"], name)),
+				po_rates.get((item["item_code"], name)),
+				company_currency,
+				on_date,
+			)
+			row["row_type"] = "detail"
+			row["item_code"] = item["item_code"]
+			row["item_name"] = item.get("item_name")
+			item_rows.append(row)
+		_sort_and_star(item_rows)
+		detail_rows.extend(item_rows)
+
+	total_rows = [
+		_build_supplier_total(
+			name,
+			supplier,
+			len(items),
+			[row for row in detail_rows if row["supplier"] == name],
+		)
+		for name, supplier in suppliers.items()
+	]
+	total_rows.sort(
+		key=lambda row: (
+			row["coverage_count"] < row["item_count"],
+			row["recommended_total"] is None,
+			row["recommended_total"] if row["recommended_total"] is not None else 0,
+			row["supplier"],
+		)
+	)
+	best_index = _pick_basket_best(total_rows)
+	if best_index is not None:
+		total_rows[best_index]["recommended"] = STAR
+
+	return (
+		[{"row_type": "section", "supplier": _("Supplier Basket Summary")}]
+		+ total_rows
+		+ [{"row_type": "section", "supplier": _("Item Details")}]
+		+ detail_rows
+	)
+
+
+def _build_supplier_total(name, supplier, item_count, rows):
+	"""Aggregate one supplier's per-item rows into a basket-level comparison row.
+
+	Pure function (unit-testable): coverage counts items with any price source;
+	totals only sum items where the figure is computable.
+	"""
+	covered = [row for row in rows if row.get("price_source")]
+	direct_values = [row["direct_total"] for row in covered if row.get("direct_total") is not None]
+	recommended_values = [row["recommended_total"] for row in covered if row.get("recommended_total") is not None]
+	savings_values = [row["savings"] for row in covered if row.get("savings") is not None]
+	missing = [row["item_code"] for row in rows if not row.get("price_source")]
+
+	notes = []
+	if missing:
+		notes.append(_("Missing prices for {0} item(s)").format(len(missing)))
+
+	return {
+		"row_type": "supplier_total",
+		"recommended": "",
+		"supplier": name,
+		"supplier_name": supplier.supplier_name,
+		"coverage_count": len(covered),
+		"item_count": item_count,
+		"coverage": f"{len(covered)}/{item_count}",
+		"direct_total": sum(direct_values) if direct_values else None,
+		"recommended_total": sum(recommended_values) if recommended_values else None,
+		"savings": sum(savings_values) if savings_values else None,
+		"missing_items": ", ".join(missing[:3]) + (" …" if len(missing) > 3 else ""),
+		"payment_terms": supplier.payment_terms,
+		"note": "; ".join(notes),
+	}
+
+
+def _pick_basket_best(total_rows):
+	"""Return the index of the cheapest fully-covering supplier, or None."""
+	best_index = None
+	for index, row in enumerate(total_rows):
+		if row["coverage_count"] < row["item_count"] or row["recommended_total"] is None:
+			continue
+		if best_index is None or row["recommended_total"] < total_rows[best_index]["recommended_total"] - 1e-9:
+			best_index = index
+	return best_index
+
+
+def _get_basket_items(filters):
+	"""Resolve the item basket [{item_code, item_name, qty}] for non-single modes."""
+	mode = filters.get("compare_by")
+
+	if mode == "Multiple Items":
+		item_codes = filters.get("items") or []
+		if isinstance(item_codes, str):
+			# Route options / deep links arrive as a JSON array string.
+			try:
+				import json
+
+				parsed = json.loads(item_codes)
+				item_codes = parsed if isinstance(parsed, list) else [item_codes]
+			except ValueError:
+				item_codes = [code.strip() for code in item_codes.split(",") if code.strip()]
+		if not item_codes or not flt(filters.get("qty")):
+			return None, _("Please select at least one Item and enter a demanded quantity.")
+		names = _get_item_names(item_codes)
+		return (
+			[{"item_code": code, "item_name": names.get(code), "qty": flt(filters.qty)} for code in item_codes],
+			None,
+		)
+
+	if mode == "BOM":
+		if not filters.get("bom"):
+			return None, _("Please select a BOM.")
+		bom_doc = frappe.get_doc("BOM", filters.bom)
+		bom_doc.get_exploded_items()
+		bom_qty = flt(filters.get("bom_qty")) or 1
+		merged = {}
+		for key, row in (bom_doc.cur_exploded_items or {}).items():
+			item_code = key if isinstance(key, str) else key[0]
+			entry = merged.setdefault(
+				item_code, {"item_code": item_code, "item_name": row.get("item_name"), "qty": 0}
+			)
+			entry["qty"] += flt(row.get("stock_qty")) * bom_qty
+		items = list(merged.values())
+		if not items:
+			return None, _("The selected BOM has no material items.")
+		return items, None
+
+	if mode == "Material Request":
+		if not filters.get("material_request"):
+			return None, _("Please select a Material Request.")
+		mr = frappe.get_doc("Material Request", filters.material_request)
+		if mr.docstatus == 2:
+			return None, _("The selected Material Request is cancelled.")
+		items = [
+			{"item_code": row.item_code, "item_name": row.item_name, "qty": flt(row.qty)}
+			for row in mr.items
+			if row.item_code
+		]
+		if not items:
+			return None, _("The selected Material Request has no items.")
+		return items, None
+
+	return None, _("Please select an Item and enter a demanded quantity.")
+
+
+def _get_item_names(item_codes):
+	if not item_codes:
+		return {}
+	return {
+		row.name: row.item_name
+		for row in frappe.get_all("Item", filters={"name": ("in", item_codes)}, fields=["name", "item_name"])
+	}
+
+
+def _get_suppliers_universe(rules_by_item, quotes, prices, supplier_filter=None):
+	supplier_names = set()
+	group_names = set()
+	for rules in rules_by_item.values():
+		supplier_names |= {rule.supplier for rule in rules if rule.supplier}
+		group_names |= {rule.supplier_group for rule in rules if not rule.supplier and rule.supplier_group}
+	supplier_names |= {supplier for (_item_code, supplier) in quotes}
+	supplier_names |= {supplier for (_item_code, supplier) in prices}
 
 	suppliers = {}
 	if supplier_names or group_names:
@@ -183,24 +435,12 @@ def get_recommendation_rows(filters):
 			):
 				suppliers[supplier.name] = supplier
 
-	if filters.get("supplier"):
-		suppliers = {filters.supplier: suppliers[filters.supplier]} if filters.supplier in suppliers else {}
+	if supplier_filter:
+		suppliers = {supplier_filter: suppliers[supplier_filter]} if supplier_filter in suppliers else {}
+	return suppliers
 
-	rows = [
-		_build_supplier_row(
-			name,
-			supplier,
-			demanded_qty,
-			rules,
-			quotes,
-			prices,
-			po_rates,
-			company_currency,
-			on_date,
-		)
-		for name, supplier in suppliers.items()
-	]
 
+def _sort_and_star(rows):
 	rows.sort(
 		key=lambda row: (
 			row["recommended_total"] is None,
@@ -210,11 +450,10 @@ def get_recommendation_rows(filters):
 	)
 	if rows and rows[0]["recommended_total"] is not None:
 		rows[0]["recommended"] = STAR
-	return rows
 
 
 def _build_supplier_row(
-	name, supplier, demanded_qty, rules, quotes, prices, po_rates, company_currency, on_date
+	name, supplier, item_code, demanded_qty, rules, quote, price, po_rate, company_currency, on_date
 ):
 	def currency_ok(currency):
 		return not currency or not company_currency or currency == company_currency
@@ -226,8 +465,6 @@ def _build_supplier_row(
 		if not rule.supplier and rule.supplier_group and rule.supplier_group == supplier.supplier_group
 	]
 	tier_rules = direct_rules or group_rules
-	quote = quotes.get(name)
-	price = prices.get(name)
 
 	row = {
 		"recommended": "",
@@ -242,7 +479,7 @@ def _build_supplier_row(
 		"recommended_total": None,
 		"savings": None,
 		"min_order_qty": None,
-		"last_transaction_rate": po_rates[name]["rate"] if name in po_rates else None,
+		"last_transaction_rate": po_rate["rate"] if po_rate else None,
 		"quote_valid_till": quote["valid_till"] if quote else None,
 		"lead_time_days": price["lead_time_days"] if price else None,
 		"payment_terms": supplier.payment_terms,
@@ -292,13 +529,13 @@ def _build_supplier_row(
 
 	if row["direct_total"] is None and row.get("price_source"):
 		notes.append(_("Demand matches no price tier"))
-		baseline_qty = flt(row.get("baseline_qty"))
-		if baseline_qty and flt(row.get("recommended_qty")) > baseline_qty:
-			notes.append(
-				_("Buying {0} units costs less in total than the {1}-unit minimum").format(
-					"{:g}".format(flt(row["recommended_qty"])), "{:g}".format(baseline_qty)
-				)
+	baseline_qty = flt(row.get("baseline_qty"))
+	if baseline_qty and flt(row.get("recommended_qty")) > baseline_qty:
+		notes.append(
+			_("Buying {0} units costs less in total than the {1}-unit minimum").format(
+				"{:g}".format(flt(row["recommended_qty"])), "{:g}".format(baseline_qty)
 			)
+		)
 
 	row["note"] = "; ".join(notes)
 	return row
@@ -308,7 +545,7 @@ def _build_supplier_row(
 # --------------
 
 
-def _get_item_tier_rules(item_code, company, on_date):
+def _get_tier_rules_by_item(item_codes, company, on_date):
 	rules = frappe.get_all(
 		"Pricing Rule",
 		filters={
@@ -339,33 +576,47 @@ def _get_item_tier_rules(item_code, company, on_date):
 		and (not rule.valid_upto or getdate(rule.valid_upto) >= on_date)
 	]
 	if not rules:
-		return []
+		return {}
 
-	matched_parents = set(
-		frappe.get_all(
-			"Pricing Rule Item Code",
-			filters={"parent": ("in", [rule.name for rule in rules]), "item_code": item_code},
-			pluck="parent",
-		)
+	matched = frappe.get_all(
+		"Pricing Rule Item Code",
+		filters={"parent": ("in", [rule.name for rule in rules]), "item_code": ("in", item_codes)},
+		fields=["parent", "item_code"],
 	)
-	return [rule for rule in rules if rule.name in matched_parents]
+	items_by_parent = {}
+	for row in matched:
+		items_by_parent.setdefault(row.parent, []).append(row.item_code)
+
+	rules_by_item = {code: [] for code in item_codes}
+	for rule in rules:
+		for code in items_by_parent.get(rule.name, []):
+			rules_by_item[code].append(rule)
+	return rules_by_item
 
 
-def _get_quotation_rows(item_code):
-	"""Return quantity price points from every submitted Supplier Quotation, per supplier."""
+def _get_quotation_rows_by_item(item_codes):
+	"""Return quantity price points from every submitted Supplier Quotation, per (item, supplier)."""
 	rows = frappe.db.sql(
 		"""
 		SELECT sq.supplier, sq.name AS quotation, sq.valid_till, sq.currency,
-			sqi.idx, sqi.qty, sqi.rate
+			sqi.item_code, sqi.idx, sqi.qty, sqi.rate
 		FROM `tabSupplier Quotation` sq
 		JOIN `tabSupplier Quotation Item` sqi ON sqi.parent = sq.name
-		WHERE sq.docstatus = 1 AND sqi.item_code = %s
+		WHERE sq.docstatus = 1 AND sqi.item_code IN %(item_codes)s
 		ORDER BY sq.transaction_date DESC, sq.modified DESC, sqi.idx ASC
 		""",
-		(item_code,),
+		{"item_codes": tuple(item_codes)},
 		as_dict=True,
 	)
-	return _merge_quotation_rows(rows)
+	by_item = {}
+	for row in rows:
+		by_item.setdefault(row["item_code"], []).append(row)
+
+	quotes = {}
+	for code, item_rows in by_item.items():
+		for supplier, quote in _merge_quotation_rows(item_rows).items():
+			quotes[(code, supplier)] = quote
+	return quotes
 
 
 def _merge_quotation_rows(rows):
@@ -413,12 +664,13 @@ def _quotation_tiers(quote):
 	)
 
 
-def _get_latest_item_prices(item_code, on_date):
+def _get_item_prices_by_item(item_codes, on_date):
 	prices = frappe.get_all(
 		"Item Price",
-		filters={"item_code": item_code, "buying": 1, "supplier": ("is", "set")},
+		filters={"item_code": ("in", item_codes), "buying": 1, "supplier": ("is", "set")},
 		fields=[
 			"supplier",
+			"item_code",
 			"price_list_rate",
 			"currency",
 			"valid_from",
@@ -433,23 +685,23 @@ def _get_latest_item_prices(item_code, on_date):
 			continue
 		if price.valid_upto and getdate(price.valid_upto) < on_date:
 			continue
-		latest.setdefault(price.supplier, price)
+		latest.setdefault((price.item_code, price.supplier), price)
 	return latest
 
 
-def _get_last_po_rates(item_code):
+def _get_po_rates_by_item(item_codes):
 	rows = frappe.db.sql(
 		"""
-		SELECT po.supplier, poi.rate
+		SELECT po.supplier, poi.item_code, poi.rate
 		FROM `tabPurchase Order` po
 		JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
-		WHERE po.docstatus = 1 AND poi.item_code = %s
+		WHERE po.docstatus = 1 AND poi.item_code IN %(item_codes)s
 		ORDER BY po.transaction_date DESC, po.modified DESC
 		""",
-		(item_code,),
+		{"item_codes": tuple(item_codes)},
 		as_dict=True,
 	)
 	latest = {}
 	for row in rows:
-		latest.setdefault(row.supplier, row)
+		latest.setdefault((row["item_code"], row["supplier"]), row)
 	return latest

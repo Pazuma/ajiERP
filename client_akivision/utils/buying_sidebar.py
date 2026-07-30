@@ -23,6 +23,35 @@ def sync_buying_sidebar_entries():
 		)
 		masters_section.label = "Masters"
 
+	# The Purchase Recommendation report link is superseded by Purchase Comparison.
+	_remove_links("Report", "Purchase Recommendation")
+	items = _get_items()
+
+	# Keep purchasing users focused on purchase requests while retaining the
+	# native DocType link so the sidebar item remains visible in Desk.
+	material_request = next(
+		(
+			item
+			for item in items
+			if item.type == "Link"
+			and (
+				(item.link_type == "DocType" and item.link_to == "Material Request")
+				or (item.link_type == "URL" and "material-request" in (item.link_to or ""))
+			)
+		),
+		None,
+	)
+	if material_request:
+		frappe.db.set_value(
+			"Workspace Sidebar Item",
+			material_request.name,
+			{"label": "Purchase Request", "link_type": "DocType", "link_to": "Material Request"},
+			update_modified=False,
+		)
+		material_request.label = "Purchase Request"
+		material_request.link_type = "DocType"
+		material_request.link_to = "Material Request"
+
 	purchase_receipt = _ensure_single_link(
 		items,
 		link_type="DocType",
@@ -43,15 +72,15 @@ def sync_buying_sidebar_entries():
 	)
 	items = _move_after(items, supplier_quote_import.name, "Supplier Quotation")
 
-	purchase_recommendation = _ensure_single_link(
+	purchase_comparison = _ensure_single_link(
 		items,
-		link_type="Report",
-		link_to="Purchase Recommendation",
-		label="Purchase Recommendation",
-		icon="thumbs-up",
+		link_type="DocType",
+		link_to="Purchase Comparison",
+		label="Purchase Comparison",
+		icon="chart-candlestick",
 		child=0,
 	)
-	items = _move_after(items, purchase_recommendation.name, "Supplier Quote Import")
+	items = _move_after(items, purchase_comparison.name, "Supplier Quote Import")
 
 	purchase_taxes_template = _ensure_single_link(
 		items,
@@ -90,6 +119,13 @@ def _get_items():
 def _find_section(items, labels):
 	section_types = {"Section Break", "Card Break", "Sidebar Item Group"}
 	return next((item for item in items if item.type in section_types and item.label in labels), None)
+
+
+def _remove_links(link_type, link_to):
+	"""Delete every sidebar link matching (link_type, link_to). Idempotent."""
+	for item in _get_items():
+		if item.type == "Link" and item.link_type == link_type and item.link_to == link_to:
+			frappe.delete_doc("Workspace Sidebar Item", item.name, force=True, ignore_permissions=True)
 
 
 def _ensure_single_link(items, *, link_type, link_to, label, icon, child, parent=SIDEBAR_NAME):

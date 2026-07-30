@@ -33,10 +33,10 @@ function inject_styles() {
 }
 
 function setup_actions(frm) {
-	frm.page.clear_primary_action();
 	if (frm.is_new()) {
 		return;
 	}
+	frm.page.clear_primary_action();
 
 	const status = frm.doc.status || "Draft";
 	const can_parse = frm.doc.quote_file && ["Draft", "Parsed"].includes(status);

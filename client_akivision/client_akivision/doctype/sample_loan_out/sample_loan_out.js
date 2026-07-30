@@ -11,6 +11,11 @@ frappe.ui.form.on("Sample Loan Out", {
 
     items_add(frm, cdt, cdn) {
         frappe.model.set_value(cdt, cdn, "loaned_by", frappe.session.user);
+        frappe.db.get_single_value("Stock Settings", "custom_customer_loan_warehouse").then((warehouse) => {
+            if (warehouse && !locals[cdt][cdn].loan_warehouse) {
+                frappe.model.set_value(cdt, cdn, "loan_warehouse", warehouse);
+            }
+        });
     },
 });
 

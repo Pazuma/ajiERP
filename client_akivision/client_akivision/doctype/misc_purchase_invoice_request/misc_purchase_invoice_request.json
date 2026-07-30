@@ -1,0 +1,11 @@
+{
+ "doctype": "DocType",
+ "name": "Misc Purchase Invoice Request",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "fields": [
+  {"fieldname": "material_request", "fieldtype": "Link", "label": "零星采购需求", "options": "Material Request", "reqd": 1, "in_list_view": 1}
+ ],
+ "permissions": []
+}

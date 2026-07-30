@@ -6,7 +6,7 @@ def execute():
     create_item_custom_fields()
     create_serial_no_custom_fields()
     create_stock_entry_custom_fields()
-    create_warehouse_and_stock_entry_types()
+    create_stock_entry_types()
 
 
 def create_item_custom_fields():
@@ -122,29 +122,7 @@ def create_custom_fields(fields):
         ).insert()
 
 
-def create_warehouse_and_stock_entry_types():
-    company = frappe.defaults.get_user_default("Company") or frappe.db.get_value(
-        "Company", {"is_group": 0}, "name"
-    )
-    if not company:
-        return
-
-    abbr = frappe.db.get_value("Company", company, "abbr")
-    warehouse_name = f"Customer Loan - {abbr}"
-
-    if not frappe.db.exists("Warehouse", warehouse_name):
-        root_warehouse = frappe.db.get_value(
-            "Warehouse", {"company": company, "is_group": 1, "parent_warehouse": ""}, "name"
-        )
-        frappe.get_doc(
-            {
-                "doctype": "Warehouse",
-                "warehouse_name": "Customer Loan",
-                "company": company,
-                "parent_warehouse": root_warehouse,
-            }
-        ).insert()
-
+def create_stock_entry_types():
     for entry_type, purpose in [
         ("Sample Loan Out", "Material Transfer"),
         ("Sample Loan Out Return", "Material Transfer"),

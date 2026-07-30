@@ -19,6 +19,9 @@ MAPPING_FIELDS = ("supplier_part_no", "item_code", "qty", "rate", "currency")
 
 SPREADSHEET_EXTENSIONS = (".xlsx", ".xls", ".csv")
 
+# Cap the per-supplier part-number memory so it cannot grow without bound.
+MAX_SUPPLIER_ITEM_MAPPINGS = 500
+
 
 def is_spreadsheet_file(file_url):
 	"""Whether the uploaded file is a spreadsheet parsed via column mapping."""
@@ -107,7 +110,18 @@ def match_item_code(supplier_part_no, raw_item_code, supplier=None):
 		if not value:
 			continue
 		for field in ("custom_internal_model", "custom_external_model"):
-			item = frappe.db.get_value("Item", {field: value}, "name")
+			item = next(
+				iter(
+					frappe.get_all(
+						"Item",
+						filters={field: value},
+						pluck="name",
+						order_by="name",
+						limit=1,
+					)
+				),
+				None,
+			)
 			if item:
 				return item
 	return ""
@@ -167,6 +181,9 @@ def save_supplier_item_mappings(supplier, mappings):
 		item_code = (item_code or "").strip()
 		if part_no and item_code:
 			current[part_no] = item_code
+	if len(current) > MAX_SUPPLIER_ITEM_MAPPINGS:
+		# Keep the most recent pairs so the JSON memory stays bounded.
+		current = dict(list(current.items())[-MAX_SUPPLIER_ITEM_MAPPINGS:])
 	frappe.db.set_value(
 		"Supplier",
 		supplier,

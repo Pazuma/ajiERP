@@ -46,7 +46,8 @@ def create_sample_loan_stock_entry(
         loan_warehouse = row.get("loan_warehouse") if isinstance(row, dict) else row.loan_warehouse
 
         from_wh = loan_warehouse if is_return else source_warehouse
-        to_wh = source_warehouse if is_return else loan_warehouse
+        return_warehouse = frappe.db.get_single_value("Stock Settings", "sample_retention_warehouse") if is_return else None
+        to_wh = (return_warehouse or source_warehouse) if is_return else loan_warehouse
         key = (item_code, from_wh, to_wh)
         grouped.setdefault(key, {"serial_nos": [], "source_warehouse": source_warehouse, "loan_warehouse": loan_warehouse})
         grouped[key]["serial_nos"].append(serial_no)

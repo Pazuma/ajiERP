@@ -419,6 +419,21 @@ Purchase On-time Rate,采购到货及时率
 Realtime Inventory Amount,实时库存总金额
 Safety Stock Warning Count,安全库存预警物料数量
 Purchase In-transit Amount,采购在途金额
+Purchase In-transit Qty,采购在途数量
+Purchase Request,采购需求
+Engineering Drawing,工程图纸
+Drawing No,图纸编号
+Drawing Revision,图纸版本
+Source BOM,来源 BOM
+Source Production Plan,来源生产计划
+Supplier Summary,供应商汇总
+Coverage Count,覆盖物料数
+Coverage Rate,覆盖率
+Recommended Total,推荐总价
+Full Coverage,覆盖全部物料
+Preferred Whole Order,整单优先推荐
+Supplier {0} covers all items and is preferred with a recommended total of {1}.,供应商 {0} 覆盖全部物料，推荐总价为 {1}，已优先选中。
+Supplier {0} is preferred for its matching item set with a recommended total of {1}.,供应商 {0} 在相同物料覆盖范围内总价最低，推荐总价为 {1}，已优先选中。
 Material Over-consumption Rate,生产领料超耗率
 Total Revenue,本年总营收总额
 RD Project Count,研发项目数量
@@ -612,3 +627,127 @@ Generated,已生成
 Create Purchase Order Draft,创建采购订单草稿
 Create,创建
 No purchasable recommendation rows.,没有可生成的推荐行。
+Compare By,比价方式
+Single Item,单物料
+Multiple Items,多物料
+BOM Qty,BOM 数量
+Supplier Basket Summary,供应商整体汇总
+Item Details,物料明细
+Coverage,覆盖
+Missing Items,缺价物料
+Basket Best Supplier,整篮最优供应商
+Basket Recommended Total,整篮推荐总价
+Total Savings,总节省
+Items Without Any Quote,无报价物料数
+Missing prices for {0} item(s),缺价 {0} 项物料
+Please select at least one Item and enter a demanded quantity.,请至少选择一个物料并输入需求数量。
+Please select a BOM.,请选择 BOM。
+The selected BOM has no material items.,所选 BOM 没有物料明细。
+Please select a Material Request.,请选择物料需求单。
+The selected Material Request is cancelled.,所选物料需求单已取消。
+The selected Material Request has no items.,所选物料需求单没有明细行。
+No quotations or pricing rules found for the selected items.,所选物料暂无有效报价或阶梯价。
+Purchase Comparison,采购比价单
+Compare Suppliers,比价供应商
+Run Comparison,运行比价
+Running comparison...,比价计算中…
+Re-running clears the existing comparison rows. Continue?,"重新比价会清空现有比价明细,是否继续?"
+No quotations for: {0},以下物料暂无报价:{0}
+Create Purchase Order drafts for the selected rows?,为勾选的行生成采购订单草稿?
+Generated Purchase Orders,生成的采购订单
+Open Material Request,打开物料需求
+Open BOM,打开 BOM
+Please select at least one comparison row.,请至少勾选一行比价明细。
+Rows without a recommended price were skipped: {0},以下行无推荐价格已跳过:{0}
+No Purchase Order could be created from the selected rows.,所选行未能生成任何采购订单。
+Selected,勾选
+Best For Item,最优
+Demand Items,需求物料
+Comparison Rows,比价明细
+Source,来源
+Material Request Item,物料需求行
+Compared,已比价
+PO Created,已生成采购订单
+Supplier comparison is only available for Purchase Material Requests.,仅采购类型的物料需求单支持供应商比价。
+Fetch Items,获取需求物料
+Fetched {0} demand items.,已获取 {0} 行需求物料。
+The source document's items will replace the current demand items and clear comparison rows. Continue?,"来源单据的物料将覆盖当前需求行并清空比价明细,是否继续?"
+Please set a Material Request or a BOM first.,请先选择物料需求单或 BOM。
+This comparison has already generated Purchase Orders.,该比价单已生成采购订单。
+The source document has no items.,来源单据没有物料行。
+"No comparison rows were generated. Add demand items or set a Material Request / BOM, and make sure the items have quotations.","未生成比价明细:请添加需求物料或设置物料需求单/BOM,并确保物料已有报价。"
+The current quotation has prices higher than the latest matching historical quotation. Continue submitting?,本次报价高于最近的匹配历史报价，是否继续提交？
+Current Rate,当前报价
+Historical Rate,历史报价
+Historical Quotation,历史报价单
+Open Purchase Invoice,打开采购发票
+Create Purchase Invoice,创建采购发票
+Create Miscellaneous Purchase Invoice,创建零星采购采购发票
+Miscellaneous Purchase,零星采购
+Maintained automatically; see the miscellaneous purchase items for details.,系统自动维护，具体内容请查看零星采购明细。
+Supplier comparison is not available for miscellaneous purchase requests.,零星采购需求不支持供应商比价。
+Default Labor Hourly Rate,默认人工小时费率
+Actual Labor Hours,实际人工工时
+Labor Hourly Rate,人工小时费率
+Actual Labor Cost,实际人工成本
+The actual labor hours for this Work Order.,整张生产工单的实际人工工时。
+Maintain Default Labor Rate,维护默认人工费率
+Labor Cost,人工成本
+Please set a default expense account in Company settings before bringing in labor cost.,请先在公司设置中维护默认费用科目，才能带入人工成本。
+Miscellaneous Purchase Requests,零星采购需求
+Select Miscellaneous Purchase Requests,选择零星采购需求
+Add to Invoice,添加到发票
+No available miscellaneous purchase requests.,没有可用的零星采购需求。
+Please select at least one miscellaneous purchase request.,请至少选择一条零星采购需求。
+Labor Details,人工明细
+Employee,员工
+Actual Hours,实际工时
+Department,部门
+Engineering Drawing Settings,工程图纸设置
+Server Drawing,服务器图纸
+Enable Drawing Preview,启用图纸预览
+Allow Local Drawing Download,允许下载本地图纸
+External Drawing Service URL,外部图纸服务地址
+Local Drawing Directory,本机图纸目录
+Sample Retention Warehouse,样品仓
+Customer Loan Warehouse,客户借出仓库
+The batch already belongs to another item.,批号已属于其他物料。
+Manual Batch No.,手动填写批号
+Drawing Preview,图纸预览
+Preview Drawing,预览图纸
+Download Drawing,下载图纸
+Link Expiry Seconds,访问链接有效期（秒）
+Only draft Purchase Invoices can add miscellaneous purchase requests.,只有草稿采购发票可以添加零星采购需求。
+对账金额,对账金额
+是否已对账,是否已对账
+已对账,已对账
+未对账,未对账
+Sync Tier Prices,同步阶梯价
+Tier pricing rules synced for {0} item(s).,已为 {0} 个物料同步阶梯价规则。
+No quantity tiers found in this quotation.,该报价单没有数量阶梯行。
+Tier prices can only be synced for submitted quotations.,仅已提交的报价单可同步阶梯价。
+Tier price sync failed; the quotation was submitted. Use the Sync Tier Prices button to retry.,"阶梯价同步失败,报价单已提交;可点击""同步阶梯价""按钮重试。"
+Tier Sync,阶梯价同步
+Synced,已同步
+Sync Failed,同步失败
+Quote prices synced for {0} item(s).,已为 {0} 个物料同步报价。
+No price rows were found to sync in this quotation.,该报价单没有可同步的报价行。
+The following items have fewer quantity tiers than the latest quotation. Continue submitting?,"以下物料的数量档少于最近报价,仍要提交吗?"
+Tiers (Latest → Current),档数(最近 → 本次)
+Latest Quotation,最近报价单
+Prices rolled back to quotation {0}.,价格已回滚至报价单 {0}。
+Rollback to the previous quotation failed; only the cancelled quotation's prices were removed.,回滚上一张报价失败;已仅清除被取消报价的价格。
+Suppliers,供应商
+Order Qty,下单量
+Order Total,下单总价
+Quote Expired,报价已过期
+Create RFQ,创建询价单
+Request for quotation of unquoted items ({0}),缺价物料询价(比价单 {0})
+Please select at least one supplier.,请至少选择一个供应商。
+No unquoted items to request for quotation.,没有缺价物料可询价。
+Please submit the Material Request before comparing suppliers.,请先提交物料需求单再进行供应商比价。
+Supplier Quotation Warehouse,供应商报价默认仓库
+You do not have permission to create Supplier Quotations.,没有创建供应商报价单的权限。
+You do not have permission to write {0}.,没有写入 {0} 的权限。
+Price Check Skipped,价格检查已跳过
+The price check failed and was skipped. Submission continues.,"价格检查失败,已跳过检查,提交将继续。"

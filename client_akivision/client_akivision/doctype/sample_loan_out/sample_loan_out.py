@@ -38,6 +38,11 @@ class SampleLoanOut(Document):
             self.loan_date = today()
         if not self.loaned_by:
             self.loaned_by = frappe.session.user
+        customer_loan_warehouse = frappe.db.get_single_value("Stock Settings", "custom_customer_loan_warehouse")
+        if customer_loan_warehouse:
+            for row in self.items:
+                if not row.loan_warehouse:
+                    row.loan_warehouse = customer_loan_warehouse
 
     def validate_serial_numbers(self):
         seen_serials = set()

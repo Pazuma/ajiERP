@@ -3,6 +3,7 @@ import re
 import frappe
 from frappe import _
 from frappe.utils import today
+from client_akivision.utils.drawing_service import get_adapter
 
 
 def get_finalized_drawing(drawing_name):
@@ -10,6 +11,28 @@ def get_finalized_drawing(drawing_name):
     if drawing.status != "Finalized":
         frappe.throw(_("只有已定稿图纸才能创建采购或生产单据。"))
     return drawing
+
+
+@frappe.whitelist()
+def drawing_file_action(drawing_name, action="preview"):
+	drawing = get_finalized_drawing(drawing_name)
+	if action not in {"preview", "download"}:
+		frappe.throw(_("不支持的图纸操作。"))
+	if not frappe.has_permission("Engineering Drawing", "read"):
+		frappe.throw(_("没有查看图纸的权限。"), frappe.PermissionError)
+	settings = frappe.get_single("Engineering Drawing Settings")
+	if not settings.enable_preview:
+		frappe.throw(_("工程图纸预览功能已关闭。"))
+	if drawing.file_source not in ("服务器图纸", "客户图纸服务器"):
+		if not drawing.drawing_file:
+			frappe.throw(_("当前图纸没有本地附件。"))
+		if action == "download" and not settings.allow_download:
+			frappe.throw(_("本地图纸下载功能已关闭。"))
+		return {"source": "local", "url": drawing.drawing_file, "status": "可用"}
+	url = get_adapter().signed_url(drawing.external_file_id, frappe.session.user, action)
+	if not url:
+		return {"source": "external", "status": "不可用", "message": "图纸代理服务尚未配置或外部文件 ID 为空。"}
+	return {"source": "external", "url": url, "status": "可用"}
 
 
 def get_linked_submitted_bom(drawing):

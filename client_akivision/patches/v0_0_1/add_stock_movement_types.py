@@ -7,6 +7,7 @@ def execute():
         {"name": "组装领料", "purpose": "Material Issue"},
         {"name": "组装退料", "purpose": "Material Issue"},
         {"name": "生产补料", "purpose": "Material Issue"},
+        {"name": "生产制造", "purpose": "Manufacture"},
         {"name": "外发领料", "purpose": "Send to Subcontractor"},
         {"name": "产线借用", "purpose": "Material Issue"},
         {"name": "其它领用", "purpose": "Material Issue"},

@@ -2,6 +2,7 @@ const AKIVISION_VISIBLE_STOCK_ENTRY_TYPES = [
 	"组装领料",
 	"组装退料",
 	"生产补料",
+	"生产制造",
 	"外发领料",
 	"产线借用",
 	"其它领用",

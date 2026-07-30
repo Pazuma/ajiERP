@@ -10,6 +10,7 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.stock.doctype.item.item import get_item_defaults
 
 from client_akivision.utils import quote_llm, quote_parser, quote_pricing
+from client_akivision.utils.deployment_defaults import SAMPLE_LOAN_WAREHOUSES
 
 
 class SupplierQuoteImport(Document):
@@ -112,6 +113,10 @@ class SupplierQuoteImport(Document):
 	@frappe.whitelist()
 	def generate_quotation(self):
 		"""Create a Supplier Quotation draft from the valid, matched rows."""
+		if not frappe.has_permission("Supplier Quotation", "create"):
+			frappe.throw(
+				_("You do not have permission to create Supplier Quotations."), frappe.PermissionError
+			)
 		if self.supplier_quotation:
 			frappe.throw(_("A Supplier Quotation has already been generated: {0}", [self.supplier_quotation]))
 
@@ -124,7 +129,6 @@ class SupplierQuoteImport(Document):
 			sq = frappe.get_doc(
 				{
 					"doctype": "Supplier Quotation",
-					"naming_series": "PUR-SQTN-.YYYY.-",
 					"supplier": self.supplier,
 					"company": self.company,
 					"transaction_date": getdate(self.quote_date or today()),
@@ -172,16 +176,20 @@ class SupplierQuoteImport(Document):
 def _default_warehouse(item_code, company):
 	"""Resolve the warehouse for a generated Supplier Quotation row.
 
-	Mirrors ERPNext's own chain (get_item_warehouse_): Item Default -> Item
-	Group Default -> Brand Default -> Stock Settings default warehouse. Falls
-	back to the company's first non-group warehouse so a quote draft is never
-	blocked by the stock-item warehouse validation.
+	Chain: Item Default -> Item Group Default -> Brand Default -> Buying
+	Settings' configured Supplier Quotation Warehouse -> Stock Settings default
+	warehouse. Falls back to the company's first non-group warehouse (excluding
+	loan warehouses) so a quote draft is never blocked by warehouse validation.
 	"""
 	warehouse = (
 		get_item_defaults(item_code, company).get("default_warehouse")
 		or get_item_group_defaults(item_code, company).get("default_warehouse")
 		or get_brand_defaults(item_code, company).get("default_warehouse")
 	)
+	if not warehouse:
+		configured = frappe.get_single_value("Buying Settings", "custom_supplier_quotation_warehouse")
+		if configured and frappe.get_cached_value("Warehouse", configured, "company") == company:
+			warehouse = configured
 	if not warehouse:
 		default = frappe.get_single_value("Stock Settings", "default_warehouse")
 		if default and frappe.get_cached_value("Warehouse", default, "company") == company:
@@ -191,7 +199,13 @@ def _default_warehouse(item_code, company):
 			iter(
 				frappe.get_all(
 					"Warehouse",
-					filters={"company": company, "is_group": 0, "disabled": 0},
+					filters={
+						"company": company,
+						"is_group": 0,
+						"disabled": 0,
+						# Loan warehouses are never a valid stock-in target.
+						"warehouse_name": ("not in", SAMPLE_LOAN_WAREHOUSES),
+					},
 					order_by="name",
 					pluck="name",
 					limit=1,

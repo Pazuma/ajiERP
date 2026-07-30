@@ -6,7 +6,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "naming_series", "drawing_no", "title", "status", "column_break_1", "revision", "previous_revision", "section_break_reference", "item", "bom", "column_break_2", "drawing_file", "drawing_preview", "section_break_approval", "approved_by", "approved_on", "remarks"
+  "naming_series", "drawing_no", "title", "status", "column_break_1", "revision", "previous_revision", "section_break_reference", "item", "bom", "column_break_2", "drawing_file", "file_source", "external_file_id", "external_file_path", "external_file_version", "external_file_checksum", "proxy_status", "drawing_preview", "section_break_approval", "approved_by", "approved_on", "remarks"
  ],
  "fields": [
   {"fieldname": "naming_series", "fieldtype": "Select", "label": "图纸编号模板", "options": "DRW-.YYYY.-.#####", "default": "DRW-.YYYY.-.#####", "reqd": 1},
@@ -21,7 +21,13 @@
   {"fieldname": "bom", "fieldtype": "Link", "label": "关联BOM", "options": "BOM"},
   {"fieldname": "column_break_2", "fieldtype": "Column Break"},
   {"fieldname": "drawing_file", "fieldtype": "Attach", "label": "图纸文件", "reqd": 1},
-  {"fieldname": "drawing_preview", "fieldtype": "Attach Image", "label": "图纸预览"},
+  {"fieldname": "file_source", "fieldtype": "Select", "label": "文件来源", "options": "本地附件\n服务器图纸", "default": "本地附件", "insert_after": "drawing_file"},
+  {"fieldname": "external_file_id", "fieldtype": "Data", "label": "外部文件 ID", "description": "只保存文件标识，不保存解密密钥。", "insert_after": "file_source"},
+  {"fieldname": "external_file_path", "fieldtype": "Data", "label": "外部资源标识", "insert_after": "external_file_id"},
+  {"fieldname": "external_file_version", "fieldtype": "Data", "label": "外部文件版本", "insert_after": "external_file_path"},
+  {"fieldname": "external_file_checksum", "fieldtype": "Data", "label": "文件校验值", "read_only": 1, "insert_after": "external_file_version"},
+  {"fieldname": "proxy_status", "fieldtype": "Select", "label": "图纸服务状态", "options": "未检查\n可用\n不可用", "default": "未检查", "read_only": 1, "insert_after": "external_file_checksum"},
+  {"fieldname": "drawing_preview", "fieldtype": "Attach Image", "label": "图纸预览", "hidden": 1, "read_only": 1},
   {"fieldname": "section_break_approval", "fieldtype": "Section Break", "label": "审批信息"},
   {"fieldname": "approved_by", "fieldtype": "Link", "label": "定稿人", "options": "User", "read_only": 1},
   {"fieldname": "approved_on", "fieldtype": "Datetime", "label": "定稿时间", "read_only": 1},

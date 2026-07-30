@@ -3,6 +3,15 @@ frappe.ui.form.on("Engineering Drawing", {
 		frm.set_query("bom", () => ({ filters: { docstatus: ["in", [0, 1]] } }));
 
 		if (frm.doc.status !== "Finalized") return;
+		if (frm.doc.drawing_file || frm.doc.external_file_id) {
+			frappe.db.get_single_value("Engineering Drawing Settings", "enable_preview").then((enabled) => {
+				if (!enabled) return;
+				frm.add_custom_button(__("预览图纸"), () => drawing_action(frm, "preview"), __("图纸"));
+				frappe.db.get_single_value("Engineering Drawing Settings", "allow_download").then((allow) => {
+					if (allow) frm.add_custom_button(__("下载图纸"), () => drawing_action(frm, "download"), __("图纸"));
+				});
+			});
+		}
 
 		frm.add_custom_button(__("创建修订版"), () => create_drawing_revision(frm), __("操作"));
 		if (!frm.doc.item || !frm.doc.bom) {
@@ -14,6 +23,13 @@ frappe.ui.form.on("Engineering Drawing", {
 		}
 	},
 });
+
+function drawing_action(frm, action) {
+	frappe.call({ method: "client_akivision.client_akivision.api.engineering_drawing.drawing_file_action", args: { drawing_name: frm.doc.name, action }, freeze: true }).then((r) => {
+		if (r.message?.url) window.open(r.message.url, "_blank");
+		else frappe.msgprint(r.message?.message || __("图纸服务不可用。"));
+	});
+}
 
 function create_drawing_revision(frm) {
 	frappe.call({

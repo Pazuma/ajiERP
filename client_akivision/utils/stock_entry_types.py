@@ -5,6 +5,7 @@ STOCK_ENTRY_TYPE_PURPOSES = {
 	"组装领料": "Material Issue",
 	"组装退料": "Material Receipt",
 	"生产补料": "Material Issue",
+	"生产制造": "Manufacture",
 	"外发领料": "Send to Subcontractor",
 	"产线借用": "Material Issue",
 	"其它领用": "Material Issue",
@@ -43,4 +44,3 @@ def validate_stock_entry_types():
 
 	if invalid:
 		frappe.throw("Invalid client_akivision Stock Entry Types:\n" + "\n".join(invalid))
-

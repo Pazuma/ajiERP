@@ -1,0 +1,18 @@
+{
+ "doctype": "DocType",
+ "name": "Engineering Drawing Settings",
+ "module": "Client Akivision",
+ "issingle": 1,
+ "fields": [
+  {"fieldname": "enable_preview", "fieldtype": "Check", "label": "启用图纸预览", "default": 1},
+  {"fieldname": "allow_download", "fieldtype": "Check", "label": "允许下载本地图纸", "default": 1},
+  {"fieldname": "proxy_url", "fieldtype": "Data", "label": "外部图纸服务地址", "description": "预留给后续客户服务器图纸代理服务。"},
+  {"fieldname": "local_proxy_root", "fieldtype": "Data", "label": "本机图纸目录", "description": "测试用代理目录；ERP 只保存外部文件 ID，不保存图纸文件。"},
+  {"fieldname": "link_expiry_seconds", "fieldtype": "Int", "label": "访问链接有效期（秒）", "default": 600}
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1},
+  {"role": "Manufacturing User", "read": 1},
+  {"role": "Manufacturing Manager", "read": 1}
+ ]
+}

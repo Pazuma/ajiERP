@@ -33,7 +33,8 @@ def execute(filters=None):
         )
     )
 
-    return get_columns(), summarize_by_item(stock_rows, to_date)
+    in_transit = get_purchase_in_transit(company, to_date, warehouse, item_group)
+    return get_columns(), summarize_by_item(stock_rows, to_date, in_transit)
 
 
 def get_columns():
@@ -47,18 +48,48 @@ def get_columns():
         {"label": "总入库", "fieldname": "in_qty", "fieldtype": "Float", "width": 90},
         {"label": "总出库", "fieldname": "out_qty", "fieldtype": "Float", "width": 90},
         {"label": "期末库存", "fieldname": "actual_qty", "fieldtype": "Float", "width": 100},
+        {"label": "采购在途数量", "fieldname": "in_transit_qty", "fieldtype": "Float", "width": 110},
         {"label": "仓库", "fieldname": "warehouses", "fieldtype": "Data", "width": 180},
         {"label": "截止日期", "fieldname": "count_date", "fieldtype": "Date", "width": 100},
         {"label": "单位成本", "fieldname": "valuation_rate", "fieldtype": "Currency", "width": 100},
         {"label": "库存金额", "fieldname": "stock_value", "fieldtype": "Currency", "width": 110},
         {"label": "理论余数", "fieldname": "theoretical_qty", "fieldtype": "Float", "width": 100},
         {"label": "差值", "fieldname": "difference_qty", "fieldtype": "Float", "width": 80},
-        {"label": "含税库存金额", "fieldname": "tax_inclusive_value", "fieldtype": "Currency", "width": 120},
     ]
 
 
-def summarize_by_item(stock_rows, to_date):
-    item_codes = list({row.item_code for row in stock_rows})
+def get_purchase_in_transit(company, to_date, warehouse=None, item_group=None):
+    conditions = [
+        "po.docstatus = 1",
+        "po.status != 'Closed'",
+        "po.company = %(company)s",
+        "po.transaction_date <= %(to_date)s",
+    ]
+    params = {"company": company, "to_date": to_date}
+    if warehouse:
+        conditions.append("poi.warehouse = %(warehouse)s")
+        params["warehouse"] = warehouse
+    if item_group:
+        conditions.append("i.item_group = %(item_group)s")
+        params["item_group"] = item_group
+
+    rows = frappe.db.sql(
+        f"""SELECT poi.item_code, SUM(GREATEST(poi.qty - IFNULL(poi.received_qty, 0), 0)) AS in_transit_qty
+        FROM `tabPurchase Order` po
+        INNER JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
+        INNER JOIN `tabItem` i ON i.name = poi.item_code
+        WHERE {' AND '.join(conditions)}
+        GROUP BY poi.item_code
+        HAVING SUM(GREATEST(poi.qty - IFNULL(poi.received_qty, 0), 0)) > 0""",
+        params,
+        as_dict=True,
+    )
+    return {row.item_code: flt(row.in_transit_qty) for row in rows}
+
+
+def summarize_by_item(stock_rows, to_date, in_transit=None):
+    in_transit = in_transit or {}
+    item_codes = list({row.item_code for row in stock_rows} | set(in_transit))
     if not item_codes:
         return []
 
@@ -96,6 +127,7 @@ def summarize_by_item(stock_rows, to_date):
                     "stock_value": 0.0,
                     "warehouses": [],
                     "count_date": to_date,
+                    "in_transit_qty": flt(in_transit.get(row.item_code, 0)),
                 },
             ),
         )
@@ -113,7 +145,34 @@ def summarize_by_item(stock_rows, to_date):
         row.valuation_rate = flt(row.stock_value / row.actual_qty) if row.actual_qty else 0.0
         row.theoretical_qty = flt(row.opening_qty + row.in_qty - row.out_qty)
         row.difference_qty = flt(row.actual_qty - row.theoretical_qty)
-        row.tax_inclusive_value = flt(row.stock_value * 1.13)
         result.append(row)
+
+    for item_code, qty in in_transit.items():
+        if item_code in summary:
+            continue
+        item = frappe.db.get_value("Item", item_code, ["item_name", "item_group"], as_dict=True) or {}
+        details = item_details.get(item_code, {})
+        result.append(
+            frappe._dict(
+                {
+                    "item_code": item_code,
+                    "item_name": item.get("item_name") or item_code,
+                    "version": details.get("custom_version") or "",
+                    "applicable_model": details.get("custom_applicable_model") or "",
+                    "item_group": item.get("item_group") or "",
+                    "opening_qty": 0.0,
+                    "in_qty": 0.0,
+                    "out_qty": 0.0,
+                    "actual_qty": 0.0,
+                    "stock_value": 0.0,
+                    "warehouses": "",
+                    "count_date": to_date,
+                    "valuation_rate": 0.0,
+                    "theoretical_qty": 0.0,
+                    "difference_qty": 0.0,
+                    "in_transit_qty": flt(qty),
+                }
+            )
+        )
 
     return sorted(result, key=lambda row: row.item_code)

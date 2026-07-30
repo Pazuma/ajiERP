@@ -14,7 +14,7 @@ WORKFLOW_TRANSITIONS = {
     ("Rejected", "Draft"),
     (FINALIZED, "Obsolete"),
 }
-FINALIZED_FIELDS = ("drawing_no", "title", "item", "bom", "drawing_file", "drawing_preview", "revision", "remarks", "previous_revision")
+FINALIZED_FIELDS = ("drawing_no", "title", "item", "bom", "drawing_file", "drawing_preview", "file_source", "external_file_id", "external_file_path", "external_file_version", "external_file_checksum", "revision", "remarks", "previous_revision")
 
 
 class EngineeringDrawing(Document):
@@ -45,7 +45,10 @@ class EngineeringDrawing(Document):
             return
         if previous.status == "Pending Approval":
             changed = [field for field in FINALIZED_FIELDS if self.get(field) != previous.get(field)]
-            if changed:
+            # The workflow grants Manufacturing Manager edit rights while a
+            # drawing is pending approval. Keep the server-side guard aligned
+            # with that rule; other users remain read-only in this state.
+            if changed and not self.can_approve():
                 frappe.throw(_("图纸正在审批中，不能修改内容；请等待驳回后修改并重新提交。"))
         if previous.status == FINALIZED:
             changed = [field for field in FINALIZED_FIELDS if self.get(field) != previous.get(field)]
@@ -73,8 +76,10 @@ class EngineeringDrawing(Document):
     def validate_finalized_document(self):
         if self.status != FINALIZED:
             return
-        if not self.drawing_file:
+        if not self.drawing_file and not self.external_file_id:
             frappe.throw(_("图纸定稿前必须上传图纸文件。"))
+        if self.file_source in ("服务器图纸", "客户图纸服务器") and not self.external_file_id:
+            frappe.throw(_("使用服务器图纸时必须填写外部文件 ID。"))
         if not self.approved_by:
             self.approved_by = frappe.session.user
         if not self.approved_on:

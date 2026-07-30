@@ -41,6 +41,13 @@ frappe.query_reports["Purchase List"] = {
 		if (column.fieldname === "name" && data && data.name_display) {
 			value = data.name_display;
 		}
+		if (column.fieldname === "reconciled_status" && data && data.reconciled_status) {
+			const color_map = { 已对账: "green", 未对账: "orange" };
+			const color = color_map[data.reconciled_status] || "gray";
+			return `<span class="indicator-pill ${color} no-indicator-dot ellipsis"><span class="ellipsis">${frappe.utils.escape_html(
+				__(data.reconciled_status)
+			)}</span></span>`;
+		}
 		return default_formatter(value, row, column, data);
 	},
 };

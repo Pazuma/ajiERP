@@ -64,6 +64,7 @@ SIDEBAR_LINKS = {
 
 HIDDEN_SIDEBAR_LINKS = {
 	"Selling": {("Report", "High-tech Revenue Analysis")},
+	"Buying": {("Report", "Purchase Recommendation")},
 }
 
 OBSOLETE_EMPTY_SECTIONS = {

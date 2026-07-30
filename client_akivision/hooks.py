@@ -48,13 +48,20 @@ app_include_js = [
 # include js in doctype views
 doctype_js = {
 	"Supplier Scorecard": "public/js/supplier_scorecard.js",
-	"Stock Entry": "public/js/stock_entry.js",
+	"Supplier Quotation": "public/js/supplier_quotation.js",
+	"Material Request": "public/js/material_request.js",
+	"Work Order": "public/js/work_order.js",
+	"Purchase Invoice": "public/js/purchase_invoice.js",
+	"Stock Entry": "public/js/stock_entry_labor.js",
+	"Engineering Drawing": "public/js/engineering_drawing.js",
 }
 doctype_list_js = {
+	"Material Request": "public/js/material_request_list.js",
 	"Supplier": "public/js/supplier_list.js",
 	"Customer": "public/js/customer_list.js",
 	"Purchase Receipt": "public/js/purchase_receipt_list.js",
 	"Finished Goods Status": "public/js/finished_goods_status_list.js",
+	"Supplier Quotation": "public/js/supplier_quotation_list.js",
 }
 
 # Keep the Selling workspace configuration in the database, but limit what is
@@ -64,11 +71,15 @@ after_migrate = [
 	"client_akivision.utils.custom_field_schema.sync_standard_custom_fields",
 	"client_akivision.utils.stock_entry_types.sync_stock_entry_types",
 	"client_akivision.utils.deployment_defaults.sync_deployment_defaults",
+	"client_akivision.utils.misc_purchase.sync_misc_purchase_item_name",
 	"client_akivision.utils.operations_management.sync_operations_management_desktop_icon",
 	"client_akivision.utils.selling_sidebar.sync_selling_sidebar_entries",
 	"client_akivision.utils.buying_sidebar.sync_buying_sidebar_entries",
 	"client_akivision.utils.stock_sidebar.sync_stock_sidebar_entries",
 	"client_akivision.utils.report_sidebar.sync_report_sidebar_entries",
+	"client_akivision.utils.misc_purchase.ensure_schema",
+	"client_akivision.utils.work_order_labor.ensure_schema",
+	"client_akivision.utils.purchase_order_drawing.ensure_schema",
 ]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -165,6 +176,10 @@ after_migrate = [
 
 doc_events = {
 	"Stock Entry": {
+		"before_validate": "client_akivision.utils.stock_entry_batch.ensure_inward_batches",
+		"validate": [
+			"client_akivision.utils.stock_entry_labor.apply_work_order_labor_cost",
+		],
 		"on_submit": [
 			"client_akivision.utils.sample_loan.on_stock_entry_submit",
 			"client_akivision.utils.sample_loan.on_stock_entry_submit_for_fgs",
@@ -177,6 +192,9 @@ doc_events = {
 		"on_submit": "client_akivision.utils.sample_loan.on_purchase_receipt_submit",
 		"validate": "client_akivision.utils.purchase_receipt.set_purchase_order_from_items",
 	},
+	"Purchase Order": {
+		"before_validate": "client_akivision.utils.purchase_order_drawing.sync_drawings",
+	},
 	"Supplier Scorecard": {
 		"on_update": "client_akivision.utils.supplier_scorecard.update_supplier_rating",
 	},
@@ -184,14 +202,30 @@ doc_events = {
 		"on_submit": "client_akivision.utils.supplier_scorecard.refresh_supplier_rating_from_period",
 		"on_cancel": "client_akivision.utils.supplier_scorecard.refresh_supplier_rating_from_period",
 	},
+	"Supplier Quotation": {
+		"on_submit": "client_akivision.utils.quote_pricing.sync_quotation_tiers_on_submit",
+		"on_cancel": "client_akivision.utils.quote_pricing.disable_quotation_tiers_on_cancel",
+	},
 	"BOM": {
 		"validate": "client_akivision.utils.engineering_drawing.validate_bom_drawing",
 	},
 	"Material Request": {
-		"validate": "client_akivision.utils.engineering_drawing.set_material_request_drawing_reference",
+		"validate": [
+			"client_akivision.utils.engineering_drawing.set_material_request_drawing_reference",
+			"client_akivision.utils.misc_purchase.validate_misc_purchase_request",
+		],
+	},
+	"Purchase Invoice": {
+		"on_submit": "client_akivision.utils.misc_purchase.mark_request_completed_on_invoice_submit",
+		"on_update": "client_akivision.utils.misc_purchase.sync_misc_purchase_request_links",
+		"on_cancel": "client_akivision.utils.misc_purchase.reset_request_after_invoice_removed",
+		"on_trash": "client_akivision.utils.misc_purchase.reset_request_after_invoice_removed",
 	},
 	"Work Order": {
-		"validate": "client_akivision.utils.engineering_drawing.set_work_order_drawing_reference",
+		"validate": [
+			"client_akivision.utils.engineering_drawing.set_work_order_drawing_reference",
+			"client_akivision.utils.work_order_labor.calculate_labor_cost",
+		],
 	},
 	"Supplier": {
 		"after_insert": "client_akivision.utils.supplier_scorecard.create_supplier_scorecard",
@@ -242,9 +276,10 @@ doc_events = {
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "client_akivision.task.get_dashboard_data"
-# }
+override_doctype_dashboards = {
+	"Material Request": "client_akivision.utils.purchase_comparison.get_material_request_dashboard",
+	"Purchase Comparison": "client_akivision.utils.purchase_comparison.get_purchase_comparison_dashboard",
+}
 
 # exempt linked doctypes from being automatically cancelled
 #
