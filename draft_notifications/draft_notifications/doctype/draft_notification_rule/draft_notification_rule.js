@@ -1,6 +1,7 @@
 frappe.ui.form.on("Draft Notification Rule", {
 	refresh(frm) {
 		toggle_dingtalk_fields(frm);
+		toggle_trigger_event(frm);
 		load_condition_fields(frm);
 	},
 
@@ -8,6 +9,11 @@ frappe.ui.form.on("Draft Notification Rule", {
 		if (frm.doc.company) {
 			frm.set_value("company", "");
 		}
+		load_condition_fields(frm);
+	},
+
+	trigger_type(frm) {
+		toggle_trigger_event(frm);
 		load_condition_fields(frm);
 	},
 
@@ -27,6 +33,19 @@ frappe.ui.form.on("Draft Notification Rule", {
 		toggle_dingtalk_fields(frm);
 	},
 });
+
+function toggle_trigger_event(frm) {
+	const is_document_event = (frm.doc.trigger_type || "Document Event") === "Document Event";
+	frm.toggle_display("trigger_event", is_document_event);
+	frm.toggle_reqd("trigger_event", is_document_event);
+
+	if (!is_document_event) {
+		const event = frm.doc.trigger_type === "Date Condition" ? "After Insert" : "On Update";
+		if (frm.doc.trigger_event !== event) {
+			frm.set_value("trigger_event", event);
+		}
+	}
+}
 
 function toggle_dingtalk_fields(frm) {
 	const channel = frm.doc.notification_channel || "Email";

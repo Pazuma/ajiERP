@@ -6,8 +6,8 @@ Config Name,Nombre de configuración
 Enabled,Habilitado
 Rule Name,Nombre de la regla
 Document Type,Tipo de documento
-Trigger Event,Evento desencadenante
-Trigger Type,Tipo de desencadenante
+Document Event,Evento del documento
+Notification Trigger,Condición de notificación
 Document Event,Evento de documento
 Status Change,Cambio de estado
 Date Condition,Condición de fecha

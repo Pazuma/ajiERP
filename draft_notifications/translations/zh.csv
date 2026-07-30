@@ -5,8 +5,8 @@ Call Voice,电话音色
 Enabled,启用
 Rule Name,规则名称
 Document Type,文档类型
-Trigger Event,触发事件
-Trigger Type,触发类型
+Document Event,单据事件
+Notification Trigger,通知触发条件
 Document Event,文档事件
 Status Change,状态变化
 Date Condition,日期条件

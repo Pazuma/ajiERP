@@ -11,8 +11,8 @@
   "rule_name",
   "document_type",
   "company",
-  "trigger_event",
   "trigger_type",
+  "trigger_event",
   "status_field",
   "status_field_label",
   "target_status",
@@ -82,11 +82,12 @@
   },
   {
    "default": "After Insert",
+   "depends_on": "eval:doc.trigger_type=='Document Event'",
    "fieldname": "trigger_event",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Trigger Event",
+   "label": "Document Event",
    "options": "After Insert\nOn Update\nOn Submit\nOn Cancel",
    "reqd": 1
   },
@@ -95,7 +96,7 @@
    "fieldname": "trigger_type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Trigger Type",
+   "label": "Notification Trigger",
    "options": "Document Event\nStatus Change\nDate Condition\nPurchase Order Received Complete",
    "reqd": 1
   },
