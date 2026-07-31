@@ -25,6 +25,16 @@ def sync_buying_sidebar_entries():
 
 	# The Purchase Recommendation report link is superseded by Purchase Comparison.
 	_remove_links("Report", "Purchase Recommendation")
+
+	# Native scorecard masters are superseded by the auto rating engine
+	# (Supplier Rating Settings); hide them from purchasing users.
+	for scorecard_doctype in (
+		"Supplier Scorecard",
+		"Supplier Scorecard Criteria",
+		"Supplier Scorecard Variable",
+		"Supplier Scorecard Standing",
+	):
+		_remove_links("DocType", scorecard_doctype)
 	items = _get_items()
 
 	# Keep purchasing users focused on purchase requests while retaining the
@@ -101,6 +111,26 @@ def sync_buying_sidebar_entries():
 		child=1,
 	)
 	items = _move_before_section(items, quote_llm_settings.name, {"Reports", "报表"})
+
+	# 默认评级配置已并入采购设置页签，不再需要独立侧边栏入口。
+	_remove_links("DocType", "Supplier Rating Settings")
+	items = _get_items()
+
+	supplier_rating_standard = _ensure_single_link(
+		items,
+		link_type="DocType",
+		link_to="Supplier Rating Standard",
+		label="Supplier Rating Standard",
+		icon="",
+		child=1,
+	)
+	if any(
+		item.type == "Link" and item.link_type == "DocType" and item.link_to == "Supplier Group"
+		for item in items
+	):
+		items = _move_after(items, supplier_rating_standard.name, "Supplier Group")
+	else:
+		items = _move_before_section(items, supplier_rating_standard.name, {"Reports", "报表"})
 	_reindex(items)
 
 	frappe.cache.delete_key("bootinfo")

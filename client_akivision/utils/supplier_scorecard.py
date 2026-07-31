@@ -69,6 +69,14 @@ def update_supplier_rating(doc, method=None):
     if not doc.supplier:
         return
 
+    # 自动评级引擎启用后，评级字段由 supplier_rating.update_all_supplier_ratings 维护，
+    # 原生记分卡不再回写，避免两条链路互相覆盖。默认配置已迁入
+    # Buying Settings；旧的 Supplier Rating Settings DocType 会在迁移中被删除。
+    from client_akivision.utils.supplier_rating import get_settings
+
+    if get_settings().get("enabled"):
+        return
+
     has_formal_period = frappe.db.exists(
         "Supplier Scorecard Period", {"scorecard": doc.name, "docstatus": 1}
     )

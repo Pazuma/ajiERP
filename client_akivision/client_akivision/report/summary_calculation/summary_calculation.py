@@ -20,9 +20,19 @@ def execute(filters=None):
 		1,
 	)
 	query = query.replace("COALESCE(fgs.sample_qty, 0)", "COALESCE(sample_stock.sample_qty, 0)")
+	query = query.replace("COALESCE(loan_out.loan_qty, 0)", "COALESCE(loan_stock.loan_qty, 0)")
+	query = query.replace(
+		"COALESCE(sample_stock.sample_qty, 0) + COALESCE(loan_stock.loan_qty, 0) +",
+		"COALESCE(sample_stock.sample_qty, 0) +",
+	)
 	query = query.replace(
 		"WHERE (COALESCE(%(company)s, '') = '' OR stock_warehouse.company = %(company)s)\n    GROUP BY item_code\n) stock",
-		"WHERE (COALESCE(%(company)s, '') = '' OR stock_warehouse.company = %(company)s)\n      AND stock_warehouse.name <> COALESCE((SELECT value FROM `tabSingles` WHERE doctype = 'Stock Settings' AND field = 'sample_retention_warehouse'), '')\n    GROUP BY item_code\n) stock",
+		"WHERE (COALESCE(%(company)s, '') = '' OR stock_warehouse.company = %(company)s)\n      AND stock_warehouse.name <> COALESCE((SELECT value FROM `tabSingles` WHERE doctype = 'Stock Settings' AND field = 'sample_retention_warehouse'), '')\n      AND stock_warehouse.name <> COALESCE((SELECT value FROM `tabSingles` WHERE doctype = 'Stock Settings' AND field = 'custom_customer_loan_warehouse'), '')\n    GROUP BY item_code\n) stock",
+		1,
+	)
+	query = query.replace(
+		"LEFT JOIN (\n    SELECT item_code, COUNT(*) AS loan_qty\n    FROM `tabSample Loan Out Item` loi\n    INNER JOIN `tabSample Loan Out` lo ON lo.name = loi.parent\n    WHERE lo.docstatus = 1 AND IFNULL(loi.returned, 0) = 0\n      AND (COALESCE(%(company)s, '') = '' OR lo.company = %(company)s)\n    GROUP BY item_code\n) loan_out",
+		"LEFT JOIN (\n    SELECT b.item_code, SUM(b.actual_qty) AS loan_qty\n    FROM `tabBin` b\n    INNER JOIN `tabWarehouse` lw ON lw.name = b.warehouse\n    INNER JOIN (SELECT value AS loan_warehouse FROM `tabSingles` WHERE doctype = 'Stock Settings' AND field = 'custom_customer_loan_warehouse') ls ON 1=1\n    WHERE lw.name = ls.loan_warehouse\n      AND (COALESCE(%(company)s, '') = '' OR lw.company = %(company)s)\n    GROUP BY b.item_code\n) loan_stock",
 		1,
 	)
 	query = query.replace(

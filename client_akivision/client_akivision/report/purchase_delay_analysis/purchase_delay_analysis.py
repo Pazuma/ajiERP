@@ -21,7 +21,10 @@ def get_columns():
 		{"label": _("Pending Evaluation Orders"), "fieldname": "pending_order_count", "fieldtype": "Int", "width": 120},
 		{"label": _("On-time Orders"), "fieldname": "on_time_order_count", "fieldtype": "Int", "width": 115},
 		{"label": _("Delayed Orders"), "fieldname": "delayed_order_count", "fieldtype": "Int", "width": 110},
+		{"label": _("Open Overdue Orders"), "fieldname": "open_overdue_order_count", "fieldtype": "Int", "width": 115},
+		{"label": _("Max Open Overdue (Days)"), "fieldname": "max_open_overdue_days", "fieldtype": "Int", "width": 125},
 		{"label": _("Average Delay Days"), "fieldname": "average_delay_days", "fieldtype": "Float", "width": 130},
+		{"label": _("Average Lead Time (Days)"), "fieldname": "average_lead_time_days", "fieldtype": "Float", "width": 130},
 		{"label": _("Risk Level"), "fieldname": "risk_level", "fieldtype": "Data", "width": 100},
 	]
 

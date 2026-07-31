@@ -9,6 +9,81 @@ Realtime Inventory,实时库存
 Delivery List,送货清单
 Supplier Performance Evaluation,供应商回顾
 Average Delay Days,平均延迟天数
+Open Overdue Orders,在途逾期订单数
+Unevaluable Orders,无法评估订单数
+Max Open Overdue (Days),最长在途逾期(天)
+Average Lead Time (Days),平均实际交期(天)
+Supplier Rating Settings,供应商评级设置
+Supplier Rating Standard,供应商评级标准
+Standard Name,标准名称
+Is Default,默认标准
+Suppliers without a linked standard fall back to the default standard,未指定标准的供应商使用默认标准兜底
+Rating Standard,评级标准
+Applied Suppliers,适用供应商
+Suppliers listed here use this standard. Suppliers not listed in any standard fall back to the default standard.,此处列出的供应商使用本标准；未列入任何标准的供应商使用默认标准兜底。
+Rating Frequency,评级周期
+How often suppliers are automatically rated,多久自动评级一次
+Data window in months evaluated on each rating run,每次评级回看的数据窗口（月）
+Previous Score Weight (%),上期得分权重(%)
+Final score = current score x (100 - weight)% + previous score x weight%. Suppliers without rating history use the current score directly. 0 disables smoothing.,最终得分 = 本期得分 ×(100−权重)% + 上期得分 ×权重%；无评级历史的供应商直接采用本期得分；0 表示不结合历史。
+Supplier Rating Record,供应商评级记录
+Rating Date,评级日期
+Period From,评估开始日期
+Period To,评估截止日期
+Dimension Scores,维度得分
+On-time Score,及时率得分
+Delay Score,延迟得分
+Lead Time Score,交期得分
+Return Score,质量得分
+Current Score,本期得分
+Rating Result,评级结果
+Previous Score,上期得分
+Composite Score,综合得分
+Grade,等级
+Rating History,评级历史
+Enable Auto Rating,启用自动评级
+Automatically rate suppliers on the configured frequency and write the grade back to the supplier. Replaces the native scorecard rating while enabled.,按设定的评级周期自动评定供应商等级并写回供应商档案。启用期间替代原生记分卡评级。
+Evaluation Period (Months),评估周期(月)
+How many recent months of purchase data are evaluated,评估最近几个月的采购数据
+Minimum Evaluated Orders,最少已评估订单数
+Suppliers with fewer evaluated orders keep their current rating,已评估订单数不足的供应商维持当前评级不变
+Dimension Weights,维度权重
+On-time Rate Weight (%),到货及时率权重(%)
+Delay Days Weight (%),延迟天数权重(%)
+Lead Time Weight (%),实际交期权重(%)
+Return Rate Weight (%),退货率权重(%)
+Scoring Parameters,评分参数
+On-time Full Score Rate (%),及时率满分线(%)
+On-time rate at or above this gets full score,及时率达到该线即满分
+On-time Zero Score Rate (%),及时率零分线(%)
+On-time rate at or below this gets zero score,及时率低于该线记 0 分
+Delay Full Score Days,延迟满分天数
+Average delay days at or below this gets full score,平均延迟不超过该天数即满分
+Delay Zero Score Days,延迟零分天数
+Average delay days at or above this gets zero score,平均延迟达到该天数记 0 分
+Delay Tolerance Ratio (%),延迟容差比例(%)
+Allowed delay per order line = promised lead time x this ratio before counting as delay for scoring,每个订单行的允许延迟 = 承诺交期 × 该比例；超出部分才计入评分延迟
+Delay Tolerance Floor (Days),延迟容差保底(天)
+Minimum tolerance in days applied to short or zero lead time items,容差下限；适用于短周期或零交期物料
+Delay Tolerance Cap (Days),延迟容差封顶(天)
+Maximum tolerance in days. 0 means no cap,容差上限；0 表示不封顶
+Lead Time Full Score Days,交期满分天数
+Average actual lead time at or below this gets full score,平均实际交期不超过该天数即满分
+Lead Time Zero Score Days,交期零分天数
+Average actual lead time at or above this gets zero score,平均实际交期达到该天数记 0 分
+Return Full Score Rate (%),退货率满分线(%)
+Return rate at or below this gets full score,退货率不超过该线即满分
+Return Zero Score Rate (%),退货率零分线(%)
+Return rate at or above this gets zero score,退货率达到该线记 0 分
+Grade Thresholds,等级阈值
+Grade A Minimum Score,A级最低分
+Grade B Minimum Score,B级最低分
+Grade C Minimum Score,C级最低分
+Scores below Grade C minimum are rated D,低于 C 级最低分的评为 D 级
+Recalculate Ratings,重算评级
+Recalculating supplier ratings...,正在重算供应商评级...
+Updated ratings for {0} suppliers,已更新 {0} 个供应商的评级
+Rating Settings,评级设置
 Supplier Rating,供应商评级
 Sub Status,子状态
 Serial No,序列号
@@ -749,5 +824,18 @@ Please submit the Material Request before comparing suppliers.,请先提交物�
 Supplier Quotation Warehouse,供应商报价默认仓库
 You do not have permission to create Supplier Quotations.,没有创建供应商报价单的权限。
 You do not have permission to write {0}.,没有写入 {0} 的权限。
+Suppliers listed here use this standard. Suppliers not listed in any standard fall back to the default configuration in Buying Settings.,此处列出的供应商使用本标准；未列入任何标准的供应商使用采购设置中的默认配置。
+Leave blank to use the default frequency / window from Buying Settings.,留空时使用采购设置中的默认评级周期和评估窗口。
+Rating Operation,评级运行设置
+Rating Schedule,评级计划
+How often suppliers on this standard are rated. Blank uses the default.,本标准下供应商的评级频率；留空时使用默认设置。
+Data window in months. 0 uses the default.,按月计算的数据窗口；填写 0 时使用默认设置。
+Dimension Weights,维度权重
+On-time Rate Scoring,到货及时率评分
+Delay Days Scoring,延迟天数评分
+Delay Tolerance,延迟容差
+Lead Time Scoring,实际交期评分
+Return Rate Scoring,退货率评分
+Rating Grades,评级等级
 Price Check Skipped,价格检查已跳过
 The price check failed and was skipped. Submission continues.,"价格检查失败,已跳过检查,提交将继续。"

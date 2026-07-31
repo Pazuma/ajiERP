@@ -28,13 +28,22 @@ REQUIRED_FIELDS = {
 		"custom_akivision_sample_loan_doc",
 	),
 	"Stock Entry Detail": ("custom_manual_batch_no",),
-	"Supplier": ("custom_supplier_rating", "custom_quote_column_mapping", "custom_quote_item_mapping"),
+	"Supplier": ("custom_supplier_rating", "custom_rating_standard", "custom_quote_column_mapping", "custom_quote_item_mapping"),
 	"Sales Order": ("custom_is_high_tech_revenue", "custom_remarks"),
 	"Delivery Note": ("custom_remarks",),
 	"Purchase Receipt": ("custom_purchase_order",),
 	"Purchase Order": ("custom_purchase_comparison",),
 	"Supplier Quotation": ("custom_tier_sync_status",),
-	"Buying Settings": ("custom_supplier_quotation_warehouse", "custom_misc_purchase_item"),
+	"Buying Settings": (
+		"custom_supplier_quotation_warehouse",
+		"custom_misc_purchase_item",
+		"custom_rating_enabled",
+		"custom_rating_rating_frequency",
+		"custom_rating_evaluation_period_months",
+		"custom_rating_weight_on_time",
+		"custom_rating_delay_zero_score_days",
+		"custom_rating_grade_a_min",
+	),
 	"Stock Settings": ("custom_customer_loan_warehouse",),
 	"BOM": (
 		"custom_engineering_drawing",
@@ -78,6 +87,8 @@ def sync_standard_custom_fields():
 		add_supplier_quote_item_mapping_field,
 		add_supplier_quotation_tier_sync_field,
 		add_supplier_rating_field,
+		add_supplier_rating_standard_field,
+		add_rating_settings_to_buying_settings,
 		ensure_item_report_fields,
 	)
 	from client_akivision.utils.purchase_order_drawing import ensure_schema as ensure_purchase_order_drawing_schema
@@ -99,6 +110,8 @@ def sync_standard_custom_fields():
 	add_purchase_comparison_po_link.execute()
 	add_engineering_drawing_custom_fields.execute()
 	add_supplier_rating_field.execute()
+	add_supplier_rating_standard_field.execute()
+	add_rating_settings_to_buying_settings.execute()
 	add_sample_management_custom_fields.create_item_custom_fields()
 	add_sample_management_custom_fields.create_serial_no_custom_fields()
 	add_sample_management_custom_fields.create_stock_entry_custom_fields()

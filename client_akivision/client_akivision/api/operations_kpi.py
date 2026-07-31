@@ -483,10 +483,12 @@ def get_production_trend(filters):
 	return rows
 
 
-def get_purchase_delay_rows(filters):
-	rows = frappe.db.sql(
+def get_purchase_delay_item_rows(filters):
+	"""Raw PO item rows with receipt aggregates, shared by delay reports and the rating engine."""
+	return frappe.db.sql(
 		"""
 		SELECT po.supplier, po.supplier_name, po.name AS purchase_order,
+			po.transaction_date AS order_date,
 			poi.name AS purchase_order_item, poi.qty, poi.schedule_date AS expected_date,
 			COALESCE(SUM(CASE WHEN pr.name IS NOT NULL THEN pri.qty ELSE 0 END), 0) AS received_qty,
 			MAX(pr.posting_date) AS receipt_date
@@ -496,11 +498,15 @@ def get_purchase_delay_rows(filters):
 		LEFT JOIN `tabPurchase Receipt` pr ON pr.name = pri.parent
 			AND pr.docstatus = 1 AND pr.posting_date <= %(to_date)s
 		WHERE po.docstatus = 1 AND po.company = %(company)s AND po.transaction_date BETWEEN %(from_date)s AND %(to_date)s
-		GROUP BY po.supplier, po.supplier_name, po.name, poi.name, poi.qty, poi.schedule_date
+		GROUP BY po.supplier, po.supplier_name, po.name, po.transaction_date, poi.name, poi.qty, poi.schedule_date
 		""",
 		filters,
 		as_dict=True,
 	)
+
+
+def get_purchase_delay_rows(filters):
+	rows = get_purchase_delay_item_rows(filters)
 	orders = get_purchase_order_delay_status(rows, filters.to_date)
 	suppliers = defaultdict(
 		lambda: {
@@ -509,7 +515,16 @@ def get_purchase_delay_rows(filters):
 			"on_time_order_count": 0,
 			"delayed_order_count": 0,
 			"pending_order_count": 0,
+			"unevaluable_order_count": 0,
 			"total_delay_days": 0,
+			"total_delivered_delay_days": 0,
+			"open_overdue_days": [],
+			"open_overdue_order_count": 0,
+			"max_open_overdue_days": 0,
+			"completed_order_count": 0,
+			"total_lead_time_days": 0,
+			"open_overdue_lead_days": 0,
+			"max_lead_time_days": 0,
 		}
 	)
 	for row in orders:
@@ -517,18 +532,35 @@ def get_purchase_delay_rows(filters):
 		entry.update({"supplier": row.supplier, "supplier_name": row.supplier_name})
 		entry["order_count"] += 1
 		if row.status == "on_time":
-			entry["evaluated_order_count"] += 1
 			entry["on_time_order_count"] += 1
 		elif row.status == "delayed":
-			entry["evaluated_order_count"] += 1
 			entry["delayed_order_count"] += 1
 			entry["total_delay_days"] += row.delay_days
+			entry["total_delivered_delay_days"] += row.delivered_delay_days
+			if row.open_overdue_days > 0:
+				entry["open_overdue_days"].append(row.open_overdue_days)
+				entry["open_overdue_order_count"] += 1
+				entry["max_open_overdue_days"] = max(entry["max_open_overdue_days"], row.open_overdue_days)
+		elif row.status == "unevaluable":
+			entry["unevaluable_order_count"] += 1
 		else:
 			entry["pending_order_count"] += 1
+		entry["evaluated_order_count"] = entry["on_time_order_count"] + entry["delayed_order_count"]
+		if row.lead_time_days is not None:
+			entry["max_lead_time_days"] = max(entry["max_lead_time_days"], row.lead_time_days)
+			if row.open_overdue_days > 0:
+				entry["open_overdue_lead_days"] += row.lead_time_days
+			else:
+				entry["completed_order_count"] += 1
+				entry["total_lead_time_days"] += row.lead_time_days
 	result = []
 	risk_rules = get_purchase_delay_risk_rules()
 	for row in suppliers.values():
 		row["average_delay_days"] = percent(row["total_delay_days"], row["delayed_order_count"])
+		row["average_lead_time_days"] = percent(
+			row["total_lead_time_days"] + row["open_overdue_lead_days"],
+			row["completed_order_count"] + row["open_overdue_order_count"],
+		)
 		row["risk_level"] = resolve_purchase_delay_risk_rule(row["average_delay_days"], risk_rules)
 		result.append(frappe._dict(row))
 	return sorted(result, key=lambda row: (row.delayed_order_count, row.average_delay_days), reverse=True)
@@ -541,6 +573,9 @@ def get_purchase_order_delay_status(item_rows, cutoff_date):
 	unscheduled items stay pending evaluation; this prevents a zero-day delay
 	from being displayed as an overdue order. A delayed order uses the greatest
 	delay among its delayed items.
+
+	Orders whose items are all fully received also expose the actual lead time
+	(last receipt date minus order date), independent of the schedule date.
 	"""
 	orders = defaultdict(list)
 	for row in item_rows:
@@ -548,29 +583,71 @@ def get_purchase_order_delay_status(item_rows, cutoff_date):
 			orders[row.purchase_order].append(row)
 
 	result = []
-	cutoff_date = getdate(cutoff_date)
+	# Overdue days for unreceived items only accrue up to today: a future
+	# cutoff must not count time that has not elapsed yet.
+	cutoff_date = min(getdate(cutoff_date), getdate(nowdate()))
 	for purchase_order, rows in orders.items():
-		max_delay = 0
+		delivered_delay = 0
+		open_overdue = 0
 		all_on_time = True
+		fully_delivered = True
+		all_qty_received = True
+		has_due_item = False
+		any_overdue = False
+		last_receipt_date = None
+		open_overdue_lead_days = None
 		for row in rows:
 			expected_date = getdate(row.expected_date) if row.expected_date else None
 			fully_received = flt(row.received_qty) >= flt(row.qty)
-			if not expected_date:
-				all_on_time = False
-				continue
+			if not fully_received:
+				all_qty_received = False
 			if fully_received and row.receipt_date:
-				max_delay = max(max_delay, max(0, date_diff(row.receipt_date, expected_date)))
+				receipt_date = getdate(row.receipt_date)
+				last_receipt_date = max(last_receipt_date, receipt_date) if last_receipt_date else receipt_date
+			else:
+				fully_delivered = False
+			if not expected_date:
+				# 无承诺交期的行无法判定准时：已收齐则不影响整单评估，
+				# 未收齐则整单不能算作按时。
+				if not fully_received:
+					all_on_time = False
+				continue
+			has_due_item = True
+			if fully_received and row.receipt_date:
+				delivered_delay = max(delivered_delay, max(0, date_diff(row.receipt_date, expected_date)))
 			elif fully_received:
 				# Receipt quantities without a submitted receipt date cannot be
 				# evaluated reliably as on-time.
 				all_on_time = False
 			elif expected_date < cutoff_date:
-				max_delay = max(max_delay, date_diff(cutoff_date, expected_date))
+				open_overdue = max(open_overdue, date_diff(cutoff_date, expected_date))
+				any_overdue = True
+				if first.get("order_date"):
+					open_overdue_lead_days = max(
+						open_overdue_lead_days or 0,
+						max(0, date_diff(cutoff_date, first.order_date)),
+					)
 			else:
 				all_on_time = False
 
-		status = "delayed" if max_delay > 0 else "on_time" if all_on_time else "pending"
+		max_delay = max(delivered_delay, open_overdue)
+		# 到期订单总数 = 按期交付 + 逾期补交 + 截止日仍未交但已逾期；
+		# 未到承诺交期的未交订单为待评估，无承诺交期的订单无法评估，两者均不计入及时率。
+		if any_overdue or delivered_delay > 0:
+			status = "delayed"
+		elif has_due_item and all_on_time:
+			status = "on_time"
+		elif not has_due_item and all_qty_received:
+			status = "unevaluable"
+		else:
+			status = "pending"
 		first = rows[0]
+		lead_time_days = None
+		if fully_delivered and last_receipt_date and first.get("order_date"):
+			lead_time_days = max(0, date_diff(last_receipt_date, first.order_date))
+		elif open_overdue_lead_days is not None:
+			# 逾期未交订单按“下单日到截止日”的已耗时计入实际交期，避免美化交付表现。
+			lead_time_days = open_overdue_lead_days
 		result.append(
 			frappe._dict(
 				{
@@ -579,6 +656,10 @@ def get_purchase_order_delay_status(item_rows, cutoff_date):
 					"supplier_name": first.supplier_name,
 					"status": status,
 					"delay_days": max_delay,
+					# 已交付迟到是事实值，不再变化；在途逾期随时间持续累积。
+					"delivered_delay_days": delivered_delay,
+					"open_overdue_days": open_overdue,
+					"lead_time_days": lead_time_days,
 				}
 			)
 		)

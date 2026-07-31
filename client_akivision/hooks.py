@@ -235,6 +235,13 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+	# 每日自检：是否到达设置的评级周期（周/月/季），未到期立即返回。
+	"daily": [
+		"client_akivision.utils.supplier_rating.scheduled_update_supplier_ratings",
+	],
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"client_akivision.tasks.all"

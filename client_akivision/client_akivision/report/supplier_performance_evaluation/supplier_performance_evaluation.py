@@ -1,30 +1,33 @@
 import frappe
 from frappe import _
-from frappe.utils import flt, getdate, nowdate
+from frappe.utils import flt
+
+from client_akivision.client_akivision.api.operations_kpi import normalise_filters
+from client_akivision.utils.supplier_rating import (
+    collect_supplier_metrics,
+    get_rating_standard_for_supplier,
+    score_supplier,
+)
 
 
 def execute(filters=None):
-    filters = frappe._dict(filters or {})
-    company = filters.get("company") or frappe.defaults.get_user_default("Company")
-    if not company:
-        frappe.throw(_("请先选择公司"))
-
-    from_date = getdate(filters.get("from_date") or nowdate())
-    to_date = getdate(filters.get("to_date") or nowdate())
-
-    data = get_data(from_date, to_date, company, filters.get("supplier"))
+    filters = normalise_filters(filters)
+    data = get_data(filters)
     return get_columns(), data, None, None, get_report_summary(data), 1
 
 
 def get_report_summary(data):
     purchase_order_count = sum(flt(row.purchase_order_count) for row in data)
+    evaluated_order_count = sum(flt(row.evaluated_order_count) for row in data)
+    pending_order_count = sum(flt(row.pending_order_count) for row in data)
     on_time_order_count = sum(flt(row.on_time_order_count) for row in data)
     delayed_order_count = sum(flt(row.delayed_order_count) for row in data)
-    on_time_rate = (on_time_order_count / purchase_order_count * 100) if purchase_order_count else 0
+    on_time_rate = (on_time_order_count / evaluated_order_count * 100) if evaluated_order_count else 0
 
     return [
         {"value": len(data), "label": _("供应商数"), "datatype": "Int", "indicator": "Blue"},
         {"value": purchase_order_count, "label": _("采购订单总数"), "datatype": "Int", "indicator": "Blue"},
+        {"value": pending_order_count, "label": _("待评估订单数"), "datatype": "Int", "indicator": "Orange"},
         {"value": on_time_rate, "label": _("整体到货及时率"), "datatype": "Percent", "indicator": "Green"},
         {"value": delayed_order_count, "label": _("延迟订单数"), "datatype": "Int", "indicator": "Red"},
     ]
@@ -32,74 +35,114 @@ def get_report_summary(data):
 
 def get_columns():
     return [
-        {"label": "供应商名称", "fieldname": "supplier", "fieldtype": "Link", "options": "Supplier", "width": 200},
-        {"label": "采购订单总数", "fieldname": "purchase_order_count", "fieldtype": "Int", "width": 120},
-        {"label": "按时到货订单数", "fieldname": "on_time_order_count", "fieldtype": "Int", "width": 140},
-        {"label": "到货及时率", "fieldname": "on_time_rate", "fieldtype": "Percent", "width": 120},
-        {"label": "延迟订单数", "fieldname": "delayed_order_count", "fieldtype": "Int", "width": 120},
+        {"label": "供应商", "fieldname": "supplier", "fieldtype": "Link", "options": "Supplier", "width": 140},
+        {"label": "供应商名称", "fieldname": "supplier_name", "fieldtype": "Data", "width": 180},
+        {"label": "采购订单总数", "fieldname": "purchase_order_count", "fieldtype": "Int", "width": 110},
+        {"label": "待评估订单数", "fieldname": "pending_order_count", "fieldtype": "Int", "width": 110},
+        {"label": "无法评估订单数", "fieldname": "unevaluable_order_count", "fieldtype": "Int", "width": 120},
+        {"label": "按时到货订单数", "fieldname": "on_time_order_count", "fieldtype": "Int", "width": 125},
+        {"label": "到货及时率", "fieldname": "on_time_rate", "fieldtype": "Percent", "width": 110},
+        {"label": "延迟订单数", "fieldname": "delayed_order_count", "fieldtype": "Int", "width": 100},
         {"label": "平均延迟天数", "fieldname": "average_delay_days", "fieldtype": "Float", "width": 120},
+        {"label": "容差后平均延迟(天)", "fieldname": "tolerance_adjusted_avg_delay", "fieldtype": "Float", "width": 140},
+        {"label": "在途逾期订单数", "fieldname": "open_overdue_order_count", "fieldtype": "Int", "width": 130},
+        {"label": "最长在途逾期(天)", "fieldname": "max_open_overdue_days", "fieldtype": "Int", "width": 140},
+        {"label": "平均实际交期(天)", "fieldname": "average_lead_time_days", "fieldtype": "Float", "width": 140},
+        {"label": "最长实际交期(天)", "fieldname": "max_lead_time_days", "fieldtype": "Int", "width": 140},
+        {"label": "退货率", "fieldname": "return_rate", "fieldtype": "Percent", "width": 100},
+        {"label": "综合得分", "fieldname": "composite_score", "fieldtype": "Float", "width": 100},
+        {"label": "上期评级得分", "fieldname": "last_rating_score", "fieldtype": "Float", "width": 120},
+        {"label": "评级标准", "fieldname": "rating_standard", "fieldtype": "Link", "options": "Supplier Rating Standard", "width": 120},
         {"label": "供应商评级", "fieldname": "supplier_rating", "fieldtype": "Data", "width": 100},
     ]
 
 
-def get_data(from_date, to_date, company, supplier):
-    supplier_rating = (
-        "s.custom_supplier_rating"
-        if frappe.db.has_column("Supplier", "custom_supplier_rating")
-        else "NULL"
-    )
-    return frappe.db.sql(
-        f"""
-        SELECT
-            s.name AS supplier,
-            COUNT(*) AS purchase_order_count,
-            SUM(CASE WHEN po_status.max_delay_days = 0 THEN 1 ELSE 0 END) AS on_time_order_count,
-            ROUND(SUM(CASE WHEN po_status.max_delay_days = 0 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 2) AS on_time_rate,
-            SUM(CASE WHEN po_status.max_delay_days > 0 THEN 1 ELSE 0 END) AS delayed_order_count,
-            ROUND(AVG(CASE WHEN po_status.max_delay_days > 0 THEN po_status.max_delay_days END), 2) AS average_delay_days,
-            {supplier_rating} AS supplier_rating
-        FROM `tabSupplier` s
-        INNER JOIN (
-            SELECT
-                po.name,
-                po.supplier,
-                MAX(
-                    GREATEST(
-                        COALESCE(receipt_delay.max_receipt_delay, 0),
-                        CASE
-                            WHEN IFNULL(poi.received_qty, 0) < poi.qty
-                                THEN GREATEST(DATEDIFF(LEAST(%(to_date)s, CURDATE()), poi.schedule_date), 0)
-                            ELSE 0
-                        END
-                    )
-                ) AS max_delay_days
-            FROM `tabPurchase Order` po
-            INNER JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
-            LEFT JOIN (
-                SELECT
-                    pri.purchase_order_item,
-                    MAX(GREATEST(DATEDIFF(pr.posting_date, poi_inner.schedule_date), 0)) AS max_receipt_delay
-                FROM `tabPurchase Receipt` pr
-                INNER JOIN `tabPurchase Receipt Item` pri ON pri.parent = pr.name
-                INNER JOIN `tabPurchase Order Item` poi_inner ON poi_inner.name = pri.purchase_order_item
-                WHERE pr.docstatus = 1
-                  AND pr.posting_date <= %(to_date)s
-                GROUP BY pri.purchase_order_item
-            ) receipt_delay ON receipt_delay.purchase_order_item = poi.name
-            WHERE po.docstatus = 1
-              AND po.company = %(company)s
-              AND po.transaction_date BETWEEN %(from_date)s AND %(to_date)s
-              AND (%(supplier)s IS NULL OR po.supplier = %(supplier)s)
-            GROUP BY po.name, po.supplier
-        ) po_status ON po_status.supplier = s.name
-        GROUP BY s.name, s.supplier_name, {supplier_rating}
-        ORDER BY s.supplier_name
-        """,
-        {
-            "from_date": from_date,
-            "to_date": to_date,
-            "company": company,
-            "supplier": supplier or None,
-        },
-        as_dict=True,
-    )
+def get_data(filters):
+    # 与“采购到货延迟分析”共用同一套订单三态（按时/延迟/待评估）口径，
+    # 保证两个报表的及时率一致；未到需求日期的订单不再虚增及时率。
+    metrics = collect_supplier_metrics(filters.from_date, filters.to_date, filters.company)
+    rows = list(metrics.values())
+    if filters.get("supplier"):
+        rows = [row for row in rows if row.supplier == filters.supplier]
+
+    ratings = get_supplier_ratings([row.supplier for row in rows])
+    last_rating_scores = get_last_rating_scores([row.supplier for row in rows])
+    data = []
+    for row in rows:
+        evaluated = flt(row.evaluated_order_count)
+        lead_time_order_count = row.completed_order_count + row.open_overdue_order_count
+        return_rate = row.return_rate
+        standard = get_rating_standard_for_supplier(row.supplier)
+        scores = score_supplier(
+            {
+                "evaluated_order_count": row.evaluated_order_count,
+                "on_time_order_count": row.on_time_order_count,
+                "delayed_order_count": row.delayed_order_count,
+                "average_delay_days": row.average_delay_days,
+                "total_delivered_delay_days": row.total_delivered_delay_days,
+                "open_overdue_days": row.open_overdue_days,
+                "tolerance_adjusted_avg_delay": row.tolerance_adjusted_avg_delay,
+                "average_lead_time_days": row.average_lead_time_days if lead_time_order_count else None,
+                "return_rate": return_rate,
+            },
+            standard,
+        )
+        data.append(
+            frappe._dict(
+                {
+                    "supplier": row.supplier,
+                    "supplier_name": row.supplier_name,
+                    "purchase_order_count": row.order_count,
+                    "evaluated_order_count": row.evaluated_order_count,
+                    "pending_order_count": row.pending_order_count,
+                    "unevaluable_order_count": row.unevaluable_order_count,
+                    "on_time_order_count": row.on_time_order_count,
+                    "on_time_rate": (row.on_time_order_count / evaluated * 100) if evaluated else 0,
+                    "delayed_order_count": row.delayed_order_count,
+                    "average_delay_days": round(flt(row.average_delay_days), 2),
+                    "tolerance_adjusted_avg_delay": round(flt(row.tolerance_adjusted_avg_delay), 2),
+                    "open_overdue_order_count": row.open_overdue_order_count,
+                    "max_open_overdue_days": row.max_open_overdue_days or None,
+                    "average_lead_time_days": round(flt(row.average_lead_time_days), 2)
+                    if lead_time_order_count
+                    else None,
+                    "max_lead_time_days": row.max_lead_time_days if lead_time_order_count else None,
+                    "return_rate": round(flt(return_rate), 2) if return_rate is not None else None,
+                    "composite_score": round(flt(scores.composite_score), 2)
+                    if scores.composite_score is not None
+                    else None,
+                    "last_rating_score": last_rating_scores.get(row.supplier),
+                    "rating_standard": standard.standard_name,
+                    "supplier_rating": ratings.get(row.supplier),
+                }
+            )
+        )
+    return sorted(data, key=lambda row: row.supplier_name or row.supplier)
+
+
+def get_supplier_ratings(suppliers):
+    if not suppliers or not frappe.db.has_column("Supplier", "custom_supplier_rating"):
+        return {}
+    return {
+        row.name: row.custom_supplier_rating
+        for row in frappe.get_all(
+            "Supplier",
+            filters={"name": ("in", suppliers)},
+            fields=["name", "custom_supplier_rating"],
+        )
+    }
+
+
+def get_last_rating_scores(suppliers):
+    """每个供应商最近一条评级记录的平滑后得分，即当前评级的依据。"""
+    if not suppliers:
+        return {}
+    scores = {}
+    for row in frappe.get_all(
+        "Supplier Rating Record",
+        filters={"supplier": ("in", suppliers)},
+        fields=["supplier", "composite_score"],
+        order_by="rating_date desc, creation desc",
+    ):
+        scores.setdefault(row.supplier, round(flt(row.composite_score), 2))
+    return scores

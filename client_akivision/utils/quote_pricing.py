@@ -244,6 +244,10 @@ def _upsert_item_price(doc, row, price_list, valid_from):
 	uom = row.get("uom") or frappe.db.get_value("Item", item_code, "stock_uom")
 	values = {
 		"price_list_rate": flt(row.get("rate")),
+		# Keep the supplier's quoted delivery lead time together with the
+		# price.  ERPNext's buying price picker reads this field from Item
+		# Price when building purchase recommendations and purchase orders.
+		"lead_time_days": flt(row.get("lead_time_days")),
 		"currency": doc.currency,
 		"valid_from": getdate(valid_from) if valid_from else None,
 		"valid_upto": getdate(doc.valid_till) if doc.get("valid_till") else None,
@@ -262,7 +266,16 @@ def _upsert_item_price(doc, row, price_list, valid_from):
 	)
 	if existing:
 		reference = (existing[0].reference or "").strip()
-		if reference and not frappe.db.exists("Supplier Quotation", reference):
+		# ERPNext may populate ``reference`` with the supplier name when an
+		# Item Price is created from a quotation.  Treat that value as an
+		# application-owned price as well; otherwise a later, cheaper submitted
+		# quotation would be incorrectly ignored as a user-maintained price.
+		owned_reference = (
+			not reference
+			or reference == (doc.supplier or "").strip()
+			or frappe.db.exists("Supplier Quotation", reference)
+		)
+		if not owned_reference:
 			# Explicitly user-maintained price (reference is not one of our
 			# quotation names): never overwrite, never create a duplicate.
 			return None
