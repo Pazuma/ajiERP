@@ -1067,6 +1067,12 @@ def get_price_list_rate(ctx: ItemDetailsCtx, item_doc, out: ItemDetails = None):
 
 def insert_item_price(ctx: ItemDetailsCtx):
 	"""Insert Item Price if Price List and Price List Rate are specified and currency is the same"""
+	# Supplier Quotation prices are synchronized by client_akivision after
+	# submission.  Do not let the generic buying price helper create a flat
+	# Item Price while the quotation form is being edited; quantity-tier quotes
+	# must remain represented exclusively by Pricing Rules.
+	if ctx.doctype == "Supplier Quotation":
+		return
 	if not ctx.price_list or not ctx.rate or ctx.is_internal_supplier or ctx.is_internal_customer:
 		return
 
