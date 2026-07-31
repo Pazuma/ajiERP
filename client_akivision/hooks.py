@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-required_apps = ["erpnext"]
+required_apps = ["erpnext", "custom_filters"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -48,7 +48,6 @@ app_include_js = [
 # include js in doctype views
 doctype_js = {
 	"Supplier Scorecard": "public/js/supplier_scorecard.js",
-	"Supplier Quotation": "public/js/supplier_quotation.js",
 	"Material Request": "public/js/material_request.js",
 	"Work Order": "public/js/work_order.js",
 	"Purchase Invoice": "public/js/purchase_invoice.js",
@@ -61,7 +60,6 @@ doctype_list_js = {
 	"Customer": "public/js/customer_list.js",
 	"Purchase Receipt": "public/js/purchase_receipt_list.js",
 	"Finished Goods Status": "public/js/finished_goods_status_list.js",
-	"Supplier Quotation": "public/js/supplier_quotation_list.js",
 }
 
 # Keep the Selling workspace configuration in the database, but limit what is
@@ -203,10 +201,6 @@ doc_events = {
 	"Supplier Scorecard Period": {
 		"on_submit": "client_akivision.utils.supplier_scorecard.refresh_supplier_rating_from_period",
 		"on_cancel": "client_akivision.utils.supplier_scorecard.refresh_supplier_rating_from_period",
-	},
-	"Supplier Quotation": {
-		"on_submit": "client_akivision.utils.quote_pricing.sync_quotation_tiers_on_submit",
-		"on_cancel": "client_akivision.utils.quote_pricing.disable_quotation_tiers_on_cancel",
 	},
 	"BOM": {
 		"validate": "client_akivision.utils.engineering_drawing.validate_bom_drawing",

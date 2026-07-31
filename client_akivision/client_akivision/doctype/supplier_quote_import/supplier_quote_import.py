@@ -9,7 +9,8 @@ from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.stock.doctype.item.item import get_item_defaults
 
-from client_akivision.utils import quote_llm, quote_parser, quote_pricing
+from client_akivision.utils import quote_llm, quote_parser
+from custom_filters import quote_pricing
 from client_akivision.utils.deployment_defaults import SAMPLE_LOAN_WAREHOUSES
 
 

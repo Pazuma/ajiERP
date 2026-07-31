@@ -33,7 +33,6 @@ REQUIRED_FIELDS = {
 	"Delivery Note": ("custom_remarks",),
 	"Purchase Receipt": ("custom_purchase_order",),
 	"Purchase Order": ("custom_purchase_comparison",),
-	"Supplier Quotation": ("custom_tier_sync_status",),
 	"Buying Settings": (
 		"custom_supplier_quotation_warehouse",
 		"custom_misc_purchase_item",
@@ -85,7 +84,6 @@ def sync_standard_custom_fields():
 		add_sample_management_custom_fields,
 		add_supplier_quote_column_mapping_field,
 		add_supplier_quote_item_mapping_field,
-		add_supplier_quotation_tier_sync_field,
 		add_supplier_rating_field,
 		add_supplier_rating_standard_field,
 		add_rating_settings_to_buying_settings,
@@ -97,7 +95,6 @@ def sync_standard_custom_fields():
 	add_item_product_status_and_remarks.execute()
 	add_supplier_quote_column_mapping_field.execute()
 	add_supplier_quote_item_mapping_field.execute()
-	add_supplier_quotation_tier_sync_field.execute()
 	add_buying_settings_supplier_quotation_warehouse.execute()
 	ensure_misc_purchase_item_field()
 	ensure_customer_loan_warehouse_field()
