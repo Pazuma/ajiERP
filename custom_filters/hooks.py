@@ -59,15 +59,16 @@ doctype_js = {
 	"Stock Entry": "public/js/stock_entry.js",
 	"Sales Order": "public/js/sales_order.js",
 	"Purchase Order": "public/js/purchase_order.js",
-	"Supplier Quotation": "public/js/supplier_quotation.js",
 	"Item": "public/js/item.js",
 	"Production Plan": "public/js/production_plan.js",
+	"Supplier Quotation": "public/js/supplier_quotation.js",
 }
 
 doctype_list_js = {
 	"Item": "public/js/item_list.js",
 	"Bin": "public/js/bin_list.js",
 	"Sales Order": "public/js/sales_order_list.js",
+	"Supplier Quotation": "public/js/supplier_quotation_list.js",
 }
 
 override_whitelisted_methods = {
@@ -175,6 +176,8 @@ after_migrate = "custom_filters.custom_filters.setup.after_migrate"
 doc_events = {
 	"Supplier Quotation": {
 		"validate": "custom_filters.custom_filters.supplier_quotation.set_default_warehouse",
+		"on_submit": "custom_filters.quote_pricing.sync_quotation_tiers_on_submit",
+		"on_cancel": "custom_filters.quote_pricing.disable_quotation_tiers_on_cancel",
 	}
 }
 

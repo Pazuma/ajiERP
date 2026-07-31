@@ -629,3 +629,27 @@ Fiscal Year (requires ERPNext to be installed),财年（需要安装 ERPNext）
 Company Abbreviation (requires ERPNext to be installed),公司简称（需要安装 ERPNext）
 Naming Series,单据编号
 Examples:,示例：
+Sync Tier Prices,同步阶梯价
+Tier pricing rules synced for {0} item(s).,已为 {0} 个物料同步阶梯价规则。
+No quantity tiers found in this quotation.,该报价单没有数量阶梯行。
+Tier prices can only be synced for submitted quotations.,仅已提交的报价单可同步阶梯价。
+Tier price sync failed; the quotation was submitted. Use the Sync Tier Prices button to retry.,"阶梯价同步失败，报价单已提交；可点击“同步阶梯价”按钮重试。"
+Tier Sync,阶梯价同步
+Synced,已同步
+Sync Failed,同步失败
+No price rows were found to sync in this quotation.,该报价单没有可同步的报价行。
+The current quotation has prices higher than the latest matching historical quotation. Continue submitting?,本次报价高于最近的匹配历史报价，是否继续提交？
+Current Rate,当前报价
+Historical Rate,历史报价
+Historical Quotation,历史报价单
+The following items have fewer quantity tiers than the latest quotation. Continue submitting?,以下物料的数量档少于最近报价，是否继续提交？
+Tiers (Latest → Current),档数（最近 → 本次）
+Latest Quotation,最近报价单
+Price Check Skipped,价格检查已跳过
+The price check failed and was skipped. Submission continues.,价格检查失败，已跳过检查，提交将继续。
+状态,状态
+非默认,非默认
+共,共
+个 BOM,个 BOM
+默认 BOM,默认 BOM
+Tier Price Sync Status,阶梯价同步状态
