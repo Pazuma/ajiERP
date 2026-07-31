@@ -12,6 +12,13 @@ ALLOWED_METHOD_PREFIXES_CONF = "draft_notification_allowed_method_prefixes"
 
 
 def handle_after_insert(doc, method=None):
+	if doc.doctype == "Item":
+		return
+	handle_document_event(doc, "After Insert")
+
+
+def handle_item_after_insert(doc, method=None):
+	"""Queue Item insert notifications through an explicit DocType hook."""
 	handle_document_event(doc, "After Insert")
 
 
@@ -410,9 +417,11 @@ def get_enabled_rules(doctype, trigger_event="After Insert", company=None):
 
 def get_candidate_users(doc, rule):
 	users = []
+	explicit_administrator = False
 
 	if rule.recipient_type == "Fixed Users":
 		users.extend(get_fixed_users(rule.name))
+		explicit_administrator = "Administrator" in users
 	elif rule.recipient_type == "Users With Role":
 		users.extend(get_users_with_role(rule.role))
 	elif rule.recipient_type == "User Field":
@@ -426,7 +435,11 @@ def get_candidate_users(doc, rule):
 	if rule.include_owner:
 		users.append(doc.owner)
 
-	return [user for user in users if user and user not in ("Guest", "Administrator")]
+	return [
+		user
+		for user in users
+		if user and user != "Guest" and (user != "Administrator" or explicit_administrator)
+	]
 
 
 def get_fixed_users(rule_name):

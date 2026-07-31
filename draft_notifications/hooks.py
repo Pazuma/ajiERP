@@ -18,6 +18,12 @@ doc_events = {
 		"on_submit": "draft_notifications.draft_notifications.draft_notification.handle_purchase_receipt_submit",
 		"on_cancel": "draft_notifications.draft_notifications.draft_notification.handle_purchase_receipt_cancel",
 	},
+	# Item creation can be completed through Item-specific flows that do not
+	# consistently reach the wildcard hook. Keep an explicit hook so an
+	# After Insert rule for Item is always queued.
+	"Item": {
+		"after_insert": "draft_notifications.draft_notifications.draft_notification.handle_item_after_insert",
+	},
 }
 
 scheduler_events = {

@@ -251,28 +251,28 @@
   },
   {
    "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
-   "description": "Jinja template. Available variables: doc, doc_url, doc_type, doc_name.",
+   "description": "Jinja template. Available variables: doc, doc_url, doc_type, doc_name. Use {{ doc.fieldname }} to read a field from the current document. Example: {{ doc.name }} - {{ doc.supplier }}.",
    "fieldname": "dingtalk_message_template",
    "fieldtype": "Text Editor",
    "label": "DingTalk Message Template"
   },
   {
    "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
-   "description": "Chinese DingTalk private chat template. Used when recipient language starts with zh.",
+   "description": "Chinese DingTalk private chat template. Used when recipient language starts with zh. Use {{ doc.fieldname }} to read document fields and {{ doc_url }} for the document link.",
    "fieldname": "dingtalk_message_zh",
    "fieldtype": "Text Editor",
    "label": "Chinese DingTalk Message"
   },
   {
    "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
-   "description": "English DingTalk private chat template. Used when recipient language starts with en.",
+   "description": "English DingTalk private chat template. Used when recipient language starts with en. Use {{ doc.fieldname }} to read document fields and {{ doc_url }} for the document link.",
    "fieldname": "dingtalk_message_en",
    "fieldtype": "Text Editor",
    "label": "English DingTalk Message"
   },
   {
    "depends_on": "eval:['DingTalk Private Chat','Email + DingTalk Private Chat','Desk + DingTalk Private Chat','DingTalk DING','Email + DingTalk DING','Desk + DingTalk DING'].includes(doc.notification_channel)",
-   "description": "Spanish DingTalk private chat template. Used when recipient language starts with es.",
+   "description": "Spanish DingTalk private chat template. Used when recipient language starts with es. Use {{ doc.fieldname }} to read document fields and {{ doc_url }} for the document link.",
    "fieldname": "dingtalk_message_es",
    "fieldtype": "Text Editor",
    "label": "Spanish DingTalk Message"
@@ -283,45 +283,49 @@
    "label": "Email"
   },
   {
+   "description": "Jinja template. You can use {{ doc.fieldname }} to read a field from the current document, {{ doc.name }} for the document number, {{ doc_url }} for its link, and {{ doc_type }} for the document type. Example: {{ doc.supplier }} - {{ doc.name }}.",
    "fieldname": "subject",
    "fieldtype": "Data",
    "label": "Subject"
   },
   {
-   "description": "Jinja template. The current document is available as doc.",
+   "description": "Jinja template. The current document is available as doc. Use {{ doc.fieldname }} to read document fields, {{ doc.name }} for the document number, {{ doc_url }} for the document link, and {{ doc_type }} / {{ doc_name }} for document information. Example: 采购订单 {{ doc.name }} 的供应商为 {{ doc.supplier }}。",
    "fieldname": "message",
    "fieldtype": "Text Editor",
    "label": "Message"
   },
   {
+   "description": "Jinja template. Use {{ doc.fieldname }} to read fields from the current document. This subject is used when the recipient language starts with zh.",
    "fieldname": "subject_zh",
    "fieldtype": "Data",
    "label": "Chinese Subject"
   },
   {
-   "description": "Chinese Jinja template. Used when recipient language starts with zh.",
+   "description": "Chinese Jinja template. Used when recipient language starts with zh. Use {{ doc.fieldname }} to read document fields, {{ doc.name }} for the document number, and {{ doc_url }} for the document link.",
    "fieldname": "message_zh",
    "fieldtype": "Text Editor",
    "label": "Chinese Message"
   },
   {
+   "description": "Jinja template. Use {{ doc.fieldname }} to read fields from the current document. This subject is used when the recipient language starts with en.",
    "fieldname": "subject_en",
    "fieldtype": "Data",
    "label": "English Subject"
   },
   {
-   "description": "English Jinja template. Used when recipient language starts with en.",
+   "description": "English Jinja template. Used when recipient language starts with en. Use {{ doc.fieldname }} to read document fields, {{ doc.name }} for the document number, and {{ doc_url }} for the document link.",
    "fieldname": "message_en",
    "fieldtype": "Text Editor",
    "label": "English Message"
   },
   {
+   "description": "Jinja template. Use {{ doc.fieldname }} to read fields from the current document. This subject is used when the recipient language starts with es.",
    "fieldname": "subject_es",
    "fieldtype": "Data",
    "label": "Spanish Subject"
   },
   {
-   "description": "Spanish Jinja template. Used when recipient language starts with es.",
+   "description": "Spanish Jinja template. Used when recipient language starts with es. Use {{ doc.fieldname }} to read document fields, {{ doc.name }} for the document number, and {{ doc_url }} for the document link.",
    "fieldname": "message_es",
    "fieldtype": "Text Editor",
    "label": "Spanish Message"
