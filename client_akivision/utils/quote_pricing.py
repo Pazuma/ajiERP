@@ -307,15 +307,25 @@ def _delete_item_prices_for_items(doc, item_codes):
 		prices = frappe.get_all(
 			"Item Price",
 			filters={
-				"supplier": doc.supplier,
+				# ERPNext 原生由供应商报价生成的普通 Item Price 可能不带
+				# supplier；同时兼容已经带当前供应商的记录。
+				"supplier": ("in", ["", doc.supplier]),
 				"buying": 1,
 				"item_code": item_code,
-				"reference": ("is", "set"),
 			},
 			fields=["name", "reference"],
 		)
 		for price in prices:
-			if frappe.db.exists("Supplier Quotation", price.reference):
+			reference = (price.reference or "").strip()
+			# ERPNext 原生提交供应商报价时可能创建一条无 reference
+			# 或以供应商名称为 reference 的 Item Price。阶梯报价的唯一
+			# 价格来源是 Pricing Rule，因此这些原生平价记录必须清理；
+			# 其他明确由用户维护的 reference 保留。
+			if (
+				not reference
+				or reference == (doc.supplier or "").strip()
+				or frappe.db.exists("Supplier Quotation", reference)
+			):
 				frappe.delete_doc("Item Price", price.name, ignore_permissions=True)
 	frappe.clear_cache(doctype="Item Price")
 
