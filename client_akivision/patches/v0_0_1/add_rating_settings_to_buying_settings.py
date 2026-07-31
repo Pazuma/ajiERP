@@ -44,7 +44,7 @@ def execute():
     # after that final native field so no standard field can leak into this tab.
     previous_field = "transaction_naming_html"
 
-    def add_layout(fieldname, fieldtype, label=None):
+    def add_layout(fieldname, fieldtype, label=None, hidden=False):
         nonlocal previous_field
         field = {
             "fieldname": fieldname,
@@ -53,6 +53,8 @@ def execute():
         }
         if label:
             field["label"] = label
+        if hidden:
+            field["hidden"] = 1
         fields.append(field)
         previous_field = fieldname
 
@@ -77,20 +79,16 @@ def execute():
     add_layout("custom_rating_operation_section", "Section Break", "Rating Operation")
     add_rating_field("enabled")
     add_rating_field("rating_frequency")
+    add_rating_field("min_evaluated_orders")
     add_layout("custom_rating_operation_column", "Column Break")
     add_rating_field("evaluation_period_months")
-    add_layout("custom_rating_sampling_section", "Section Break")
-    add_rating_field("min_evaluated_orders")
-    add_layout("custom_rating_sampling_column", "Column Break")
     add_rating_field("previous_score_weight")
 
     add_layout("custom_rating_weights_section", "Section Break", "Dimension Weights")
     add_rating_field("weight_on_time")
+    add_rating_field("weight_delay")
     add_layout("custom_rating_weights_column", "Column Break")
     add_rating_field("weight_lead_time")
-    add_layout("custom_rating_weights_second_section", "Section Break")
-    add_rating_field("weight_delay")
-    add_layout("custom_rating_weights_second_column", "Column Break")
     add_rating_field("weight_return")
 
     add_layout("custom_rating_on_time_section", "Section Break", "On-time Rate Scoring")
@@ -102,11 +100,11 @@ def execute():
     add_rating_field("delay_full_score_days")
     add_layout("custom_rating_delay_column", "Column Break")
     add_rating_field("delay_zero_score_days")
+
     add_layout("custom_rating_tolerance_section", "Section Break", "Delay Tolerance")
     add_rating_field("delay_tolerance_ratio")
-    add_layout("custom_rating_tolerance_column", "Column Break")
     add_rating_field("delay_tolerance_floor_days")
-    add_layout("custom_rating_tolerance_cap_section", "Section Break")
+    add_layout("custom_rating_tolerance_column", "Column Break")
     add_rating_field("delay_tolerance_cap_days")
 
     add_layout("custom_rating_lead_time_section", "Section Break", "Lead Time Scoring")
@@ -123,9 +121,25 @@ def execute():
     add_rating_field("grade_a_min")
     add_layout("custom_rating_grades_column", "Column Break")
     add_rating_field("grade_b_min")
-    add_layout("custom_rating_grades_last_section", "Section Break")
     add_rating_field("grade_c_min")
+
+    # These breaks were used by the first, over-segmented version of the tab.
+    # Keep their Custom Field records for idempotent upgrades, but hide them so
+    # they cannot introduce empty rows or extra separators in existing sites.
+    for fieldname, fieldtype in (
+        ("custom_rating_sampling_section", "Section Break"),
+        ("custom_rating_sampling_column", "Column Break"),
+        ("custom_rating_weights_second_section", "Section Break"),
+        ("custom_rating_weights_second_column", "Column Break"),
+        ("custom_rating_tolerance_cap_section", "Section Break"),
+        ("custom_rating_grades_last_section", "Section Break"),
+    ):
+        add_layout(fieldname, fieldtype, hidden=True)
     create_custom_fields({"Buying Settings": fields}, update=True)
+
+    # Unhide section/column breaks that are now used as visible layout elements
+    # (they may have been created as hidden by an earlier version of this patch).
+    _unhide_layout_fields()
 
     if frappe.db.exists("DocType", "Supplier Rating Settings"):
         for suffix, _fieldtype, _label, _options in _RATING_FIELDS:
@@ -140,3 +154,103 @@ def execute():
 
     frappe.db.updatedb("Buying Settings")
     frappe.clear_cache(doctype="Buying Settings")
+    _reorder_rating_fields()
+
+
+def _reorder_rating_fields():
+    """Idempotently set idx for custom_rating_* fields so same-dimension params
+    are horizontally aligned (full-score left, zero-score right)."""
+    layout_order = [
+        "custom_rating_section",
+        "custom_rating_operation_section",
+        "custom_rating_enabled",
+        "custom_rating_rating_frequency",
+        "custom_rating_min_evaluated_orders",
+        "custom_rating_operation_column",
+        "custom_rating_evaluation_period_months",
+        "custom_rating_previous_score_weight",
+        "custom_rating_weights_section",
+        "custom_rating_weight_on_time",
+        "custom_rating_weight_delay",
+        "custom_rating_weights_column",
+        "custom_rating_weight_lead_time",
+        "custom_rating_weight_return",
+        # On-time Rate Scoring
+        "custom_rating_on_time_section",
+        "custom_rating_on_time_full_score_rate",
+        "custom_rating_on_time_column",
+        "custom_rating_on_time_zero_score_rate",
+        # Delay Days Scoring
+        "custom_rating_delay_section",
+        "custom_rating_delay_full_score_days",
+        "custom_rating_delay_column",
+        "custom_rating_delay_zero_score_days",
+        # Delay Tolerance
+        "custom_rating_tolerance_section",
+        "custom_rating_delay_tolerance_ratio",
+        "custom_rating_delay_tolerance_floor_days",
+        "custom_rating_tolerance_column",
+        "custom_rating_delay_tolerance_cap_days",
+        # Lead Time Scoring
+        "custom_rating_lead_time_section",
+        "custom_rating_lead_time_target_days",
+        "custom_rating_lead_time_column",
+        "custom_rating_lead_time_zero_score_days",
+        # Return Rate Scoring
+        "custom_rating_return_section",
+        "custom_rating_return_full_score_rate",
+        "custom_rating_return_column",
+        "custom_rating_return_zero_score_rate",
+        # Rating Grades
+        "custom_rating_grades_section",
+        "custom_rating_grade_a_min",
+        "custom_rating_grades_column",
+        "custom_rating_grade_b_min",
+        "custom_rating_grade_c_min",
+    ]
+    for idx, fieldname in enumerate(layout_order, start=1):
+        frappe.db.set_value(
+            "Custom Field",
+            {"dt": "Buying Settings", "fieldname": fieldname},
+            "idx",
+            idx,
+            update_modified=False,
+        )
+
+
+def _unhide_layout_fields():
+    """Restore visible breaks from the first version that hid all layout rows.
+
+    The patch is executed from ``after_migrate``. Existing sites may therefore
+    already have the visible breaks as hidden Custom Fields; always repair them
+    idempotently instead of relying on ``create_custom_fields(update=True)`` to
+    overwrite their old hidden flag.
+    """
+    visible_fields = {
+        "custom_rating_section",
+        "custom_rating_operation_section",
+        "custom_rating_operation_column",
+        "custom_rating_weights_section",
+        "custom_rating_weights_column",
+        "custom_rating_on_time_section",
+        "custom_rating_on_time_column",
+        "custom_rating_delay_section",
+        "custom_rating_delay_column",
+        "custom_rating_tolerance_section",
+        "custom_rating_tolerance_column",
+        "custom_rating_lead_time_section",
+        "custom_rating_lead_time_column",
+        "custom_rating_return_section",
+        "custom_rating_return_column",
+        "custom_rating_grades_section",
+        "custom_rating_grades_column",
+    }
+    for fieldname in visible_fields:
+        if frappe.db.exists("Custom Field", {"dt": "Buying Settings", "fieldname": fieldname}):
+            frappe.db.set_value(
+                "Custom Field",
+                {"dt": "Buying Settings", "fieldname": fieldname},
+                "hidden",
+                0,
+                update_modified=False,
+            )

@@ -112,6 +112,12 @@ def sync_buying_sidebar_entries():
 	)
 	items = _move_before_section(items, quote_llm_settings.name, {"Reports", "报表"})
 
+	# Persist every preceding move before re-reading the database below. Without
+	# this, a fresh production sidebar (where the three custom links are newly
+	# created at the bottom) loses the in-memory ordering and keeps them below
+	# the Settings section.
+	_reindex(items)
+
 	# 默认评级配置已并入采购设置页签，不再需要独立侧边栏入口。
 	_remove_links("DocType", "Supplier Rating Settings")
 	items = _get_items()
@@ -131,6 +137,10 @@ def sync_buying_sidebar_entries():
 		items = _move_after(items, supplier_rating_standard.name, "Supplier Group")
 	else:
 		items = _move_before_section(items, supplier_rating_standard.name, {"Reports", "报表"})
+
+	# Always persist the final order. The old conditional reindex only ran when
+	# Supplier Group was absent, so deployed sites with that native link kept
+	# Purchase Receipt / Quote Import / Purchase Comparison at the sidebar end.
 	_reindex(items)
 
 	frappe.cache.delete_key("bootinfo")

@@ -4,9 +4,11 @@ from frappe.utils import flt
 
 from client_akivision.client_akivision.api.operations_kpi import normalise_filters
 from client_akivision.utils.supplier_rating import (
-    collect_supplier_metrics,
-    get_rating_standard_for_supplier,
-    score_supplier,
+	calculate_final_rating_score,
+	collect_supplier_metrics,
+	get_rating_standard_for_supplier,
+	resolve_grade,
+	score_supplier,
 )
 
 
@@ -50,7 +52,8 @@ def get_columns():
         {"label": "平均实际交期(天)", "fieldname": "average_lead_time_days", "fieldtype": "Float", "width": 140},
         {"label": "最长实际交期(天)", "fieldname": "max_lead_time_days", "fieldtype": "Int", "width": 140},
         {"label": "退货率", "fieldname": "return_rate", "fieldtype": "Percent", "width": 100},
-        {"label": "综合得分", "fieldname": "composite_score", "fieldtype": "Float", "width": 100},
+        {"label": "本期原始得分", "fieldname": "current_score", "fieldtype": "Float", "width": 115},
+        {"label": "最终评级得分", "fieldname": "composite_score", "fieldtype": "Float", "width": 115},
         {"label": "上期评级得分", "fieldname": "last_rating_score", "fieldtype": "Float", "width": 120},
         {"label": "评级标准", "fieldname": "rating_standard", "fieldtype": "Link", "options": "Supplier Rating Standard", "width": 120},
         {"label": "供应商评级", "fieldname": "supplier_rating", "fieldtype": "Data", "width": 100},
@@ -66,7 +69,7 @@ def get_data(filters):
         rows = [row for row in rows if row.supplier == filters.supplier]
 
     ratings = get_supplier_ratings([row.supplier for row in rows])
-    last_rating_scores = get_last_rating_scores([row.supplier for row in rows])
+    last_rating_scores = get_last_rating_scores([row.supplier for row in rows], filters.to_date)
     data = []
     for row in rows:
         evaluated = flt(row.evaluated_order_count)
@@ -86,6 +89,13 @@ def get_data(filters):
                 "return_rate": return_rate,
             },
             standard,
+        )
+        current_score = scores.composite_score
+        previous_score = last_rating_scores.get(row.supplier)
+        final_score = (
+            calculate_final_rating_score(current_score, previous_score, standard.previous_score_weight)
+            if evaluated >= flt(standard.min_evaluated_orders)
+            else None
         )
         data.append(
             frappe._dict(
@@ -108,12 +118,13 @@ def get_data(filters):
                     else None,
                     "max_lead_time_days": row.max_lead_time_days if lead_time_order_count else None,
                     "return_rate": round(flt(return_rate), 2) if return_rate is not None else None,
-                    "composite_score": round(flt(scores.composite_score), 2)
-                    if scores.composite_score is not None
-                    else None,
-                    "last_rating_score": last_rating_scores.get(row.supplier),
+                    "current_score": round(flt(current_score), 2) if current_score is not None else None,
+                    "composite_score": round(flt(final_score), 2) if final_score is not None else None,
+                    "last_rating_score": previous_score,
                     "rating_standard": standard.standard_name,
-                    "supplier_rating": ratings.get(row.supplier),
+                    "supplier_rating": resolve_grade(final_score, standard)
+                    if final_score is not None
+                    else ratings.get(row.supplier),
                 }
             )
         )
@@ -133,14 +144,14 @@ def get_supplier_ratings(suppliers):
     }
 
 
-def get_last_rating_scores(suppliers):
-    """每个供应商最近一条评级记录的平滑后得分，即当前评级的依据。"""
+def get_last_rating_scores(suppliers, before_date):
+    """Return each supplier's latest saved score strictly before this report period."""
     if not suppliers:
         return {}
     scores = {}
     for row in frappe.get_all(
         "Supplier Rating Record",
-        filters={"supplier": ("in", suppliers)},
+        filters={"supplier": ("in", suppliers), "rating_date": ("<", before_date)},
         fields=["supplier", "composite_score"],
         order_by="rating_date desc, creation desc",
     ):

@@ -313,6 +313,20 @@ def resolve_grade(composite, standard):
     return "D级"
 
 
+def calculate_final_rating_score(current_score, previous_score, previous_score_weight):
+    """Apply the same previous-period smoothing used for the saved rating.
+
+    ``previous_score`` is ``None`` for a supplier's first rating. A stored zero
+    is a valid prior rating and must therefore not be treated as missing.
+    """
+    if current_score is None:
+        return None
+    weight = cint(previous_score_weight)
+    if previous_score is None or not weight:
+        return flt(current_score)
+    return flt(current_score) * (100 - weight) / 100 + flt(previous_score) * weight / 100
+
+
 def _aggregate_order_metrics(orders):
     """Aggregate order-level delay status into per-supplier metric accumulators."""
     metrics = {}
@@ -497,10 +511,7 @@ def update_all_supplier_ratings(company=None, force=False):
             order_by="rating_date desc, creation desc",
         )
         current_score = flt(entry.composite_score)
-        if previous_score is None or not weight:
-            final_score = current_score
-        else:
-            final_score = current_score * (100 - weight) / 100 + flt(previous_score) * weight / 100
+        final_score = calculate_final_rating_score(current_score, previous_score, weight)
         grade = resolve_grade(final_score, cfg)
 
         _upsert_rating_record(

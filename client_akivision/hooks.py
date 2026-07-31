@@ -77,6 +77,8 @@ after_migrate = [
 	"client_akivision.utils.buying_sidebar.sync_buying_sidebar_entries",
 	"client_akivision.utils.stock_sidebar.sync_stock_sidebar_entries",
 	"client_akivision.utils.report_sidebar.sync_report_sidebar_entries",
+	"client_akivision.utils.manufacturing_sidebar.sync_manufacturing_sidebar_entries",
+	"client_akivision.utils.accounts_setup_sidebar.sync_accounts_setup_sidebar_entries",
 	"client_akivision.utils.misc_purchase.ensure_schema",
 	"client_akivision.utils.work_order_labor.ensure_schema",
 	"client_akivision.utils.purchase_order_drawing.ensure_schema",
