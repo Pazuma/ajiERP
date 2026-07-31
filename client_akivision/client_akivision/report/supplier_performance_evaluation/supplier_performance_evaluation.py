@@ -52,10 +52,9 @@ def get_columns():
         {"label": "平均实际交期(天)", "fieldname": "average_lead_time_days", "fieldtype": "Float", "width": 140},
         {"label": "最长实际交期(天)", "fieldname": "max_lead_time_days", "fieldtype": "Int", "width": 140},
         {"label": "退货率", "fieldname": "return_rate", "fieldtype": "Percent", "width": 100},
-        {"label": "本期原始得分", "fieldname": "current_score", "fieldtype": "Float", "width": 115},
         {"label": "最终评级得分", "fieldname": "composite_score", "fieldtype": "Float", "width": 115},
         {"label": "上期评级得分", "fieldname": "last_rating_score", "fieldtype": "Float", "width": 120},
-        {"label": "评级标准", "fieldname": "rating_standard", "fieldtype": "Link", "options": "Supplier Rating Standard", "width": 120},
+        {"label": "评级标准", "fieldname": "rating_standard", "fieldtype": "Data", "width": 120},
         {"label": "供应商评级", "fieldname": "supplier_rating", "fieldtype": "Data", "width": 100},
     ]
 
@@ -118,10 +117,11 @@ def get_data(filters):
                     else None,
                     "max_lead_time_days": row.max_lead_time_days if lead_time_order_count else None,
                     "return_rate": round(flt(return_rate), 2) if return_rate is not None else None,
-                    "current_score": round(flt(current_score), 2) if current_score is not None else None,
                     "composite_score": round(flt(final_score), 2) if final_score is not None else None,
                     "last_rating_score": previous_score,
-                    "rating_standard": standard.standard_name,
+                    # Buying Settings 中的评级参数就是系统默认标准；没有供应商专用标准时
+                    # 明确显示“默认标准”，避免报表出现空白且误以为未配置评级。
+                    "rating_standard": standard.standard_name or _("默认标准"),
                     "supplier_rating": resolve_grade(final_score, standard)
                     if final_score is not None
                     else ratings.get(row.supplier),

@@ -170,7 +170,6 @@ def ensure_misc_purchase_item_field():
 		"insert_after": "custom_supplier_quotation_warehouse",
 		"description": "零星采购发票使用的通用物料载体。",
 	}).insert(ignore_permissions=True)
-	frappe.db.set_single_value("Buying Settings", "custom_misc_purchase_item", "MISC-PURCHASE")
 
 
 def validate_standard_custom_fields():

@@ -28,6 +28,34 @@ _RATING_FIELDS = [
     ("grade_c_min", "Int", "Grade C Minimum Score", None),
 ]
 
+# 与“供应商评级标准”保持一致的字段说明；这些说明也显示在采购设置的
+# 默认评级页签中，避免用户只看到数字而不清楚评分方向。
+_RATING_DESCRIPTIONS = {
+    "enabled": "启用后按本页签配置自动计算供应商评级。",
+    "rating_frequency": "自动评级的执行周期。",
+    "evaluation_period_months": "评级时向前统计的订单数据窗口（月）。",
+    "min_evaluated_orders": "达到该数量的可评估订单后才计算评级。",
+    "previous_score_weight": "最终得分中上期评级得分所占的权重；其余部分使用本期得分。",
+    "weight_on_time": "到货及时率维度在总分中的权重。",
+    "weight_delay": "延迟天数维度在总分中的权重。",
+    "weight_lead_time": "实际交期维度在总分中的权重。",
+    "weight_return": "退货率维度在总分中的权重。",
+    "on_time_full_score_rate": "及时率达到该线即满分。",
+    "on_time_zero_score_rate": "及时率低于该线记 0 分。",
+    "delay_full_score_days": "平均延迟不超过该天数即满分。",
+    "delay_zero_score_days": "平均延迟达到该天数记 0 分。",
+    "delay_tolerance_ratio": "每个订单行的允许延迟 = 承诺交期 × 该比例；超出部分才计入评分延迟。",
+    "delay_tolerance_floor_days": "每个订单行允许延迟的最低天数。",
+    "delay_tolerance_cap_days": "每个订单行允许延迟的最高天数；0 表示不封顶。",
+    "lead_time_target_days": "平均实际交期不超过该天数即满分。",
+    "lead_time_zero_score_days": "平均实际交期达到该天数记 0 分。",
+    "return_full_score_rate": "退货率不超过该线即满分。",
+    "return_zero_score_rate": "退货率达到该线记 0 分。",
+    "grade_a_min": "最终得分达到该值评为 A 级。",
+    "grade_b_min": "最终得分达到该值评为 B 级。",
+    "grade_c_min": "最终得分达到该值评为 C 级；低于该值评为 D 级。",
+}
+
 
 def execute():
     """Move the default supplier rating config into Buying Settings as a tab.
@@ -69,6 +97,8 @@ def execute():
         }
         if options:
             field["options"] = options
+        if suffix in _RATING_DESCRIPTIONS:
+            field["description"] = _RATING_DESCRIPTIONS[suffix]
         fields.append(field)
         previous_field = field["fieldname"]
 
@@ -136,6 +166,18 @@ def execute():
     ):
         add_layout(fieldname, fieldtype, hidden=True)
     create_custom_fields({"Buying Settings": fields}, update=True)
+    # create_custom_fields 的 update 行为在不同 Frappe 版本中不会覆盖已有
+    # Custom Field 的描述，因此显式幂等回写，保证已部署站点也能补齐注释。
+    for suffix, description in _RATING_DESCRIPTIONS.items():
+        fieldname = f"custom_rating_{suffix}"
+        if frappe.db.exists("Custom Field", {"dt": "Buying Settings", "fieldname": fieldname}):
+            frappe.db.set_value(
+                "Custom Field",
+                {"dt": "Buying Settings", "fieldname": fieldname},
+                "description",
+                description,
+                update_modified=False,
+            )
 
     # Unhide section/column breaks that are now used as visible layout elements
     # (they may have been created as hidden by an earlier version of this patch).

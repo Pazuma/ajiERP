@@ -11,7 +11,16 @@ MISC_PURCHASE_ITEM = "MISC-PURCHASE"
 
 
 def _misc_purchase_item():
-	return frappe.db.get_single_value("Buying Settings", "custom_misc_purchase_item") or MISC_PURCHASE_ITEM
+	return frappe.db.get_single_value("Buying Settings", "custom_misc_purchase_item")
+
+
+def _require_misc_purchase_item():
+	item_code = _misc_purchase_item()
+	if not item_code:
+		frappe.throw(_("请先在采购设置的“零星采购物料”中维护通用物料。"))
+	if not frappe.db.exists("Item", item_code):
+		frappe.throw(_("采购设置中的零星采购物料 {0} 不存在，请先维护该物料。" ).format(item_code))
+	return item_code
 WAITING_STATUS = "待采购"
 INVOICED_STATUS = "已生成采购发票"
 COMPLETED_STATUS = "已完成"
@@ -92,7 +101,6 @@ def ensure_schema():
 	)
 	for doctype in ("Material Request", "Purchase Invoice"):
 		frappe.clear_cache(doctype=doctype)
-	_ensure_misc_purchase_item()
 
 
 def validate_misc_purchase_request(doc, method=None):
@@ -118,12 +126,11 @@ def validate_misc_purchase_request(doc, method=None):
 			frappe.throw(_("第 {0} 行预计金额必须大于零。").format(row.idx))
 		if not row.get("schedule_date"):
 			frappe.throw(_("第 {0} 行请填写需求日期。").format(row.idx))
-	carrier_item = _misc_purchase_item()
+	carrier_item = _require_misc_purchase_item()
 	invalid_items = [row.item_code for row in doc.get("items") if row.item_code != carrier_item]
 	if invalid_items:
 		frappe.throw(_("零星采购不能与标准物料明细混用，请新建需求单。"))
 
-	_ensure_misc_purchase_item()
 	carrier_schedule_date = min(getdate(row.schedule_date) for row in rows)
 	doc.set(
 		"items",
@@ -164,7 +171,7 @@ def create_purchase_invoice(material_request, supplier):
 		return existing
 
 	_validate_direct_invoice_allowed(supplier)
-	_ensure_misc_purchase_item()
+	_require_misc_purchase_item()
 	invoice = frappe.get_doc(
 		{
 			"doctype": "Purchase Invoice",
@@ -313,23 +320,6 @@ def _validate_direct_invoice_allowed(supplier):
 	if frappe.db.get_value("Supplier", supplier, "allow_purchase_invoice_creation_without_purchase_order"):
 		return
 	frappe.throw(_("当前系统要求采购发票必须关联采购订单；请为该供应商开启“允许无采购订单创建采购发票”，或调整采购设置。"))
-
-
-def _ensure_misc_purchase_item():
-	item_code = _misc_purchase_item()
-	values = {
-		"item_code": item_code,
-		"item_name": "零星采购",
-		"item_group": "All Item Groups",
-		"stock_uom": "Nos",
-		"is_stock_item": 0,
-		"is_purchase_item": 1,
-		"disabled": 0,
-	}
-	if frappe.db.exists("Item", item_code):
-		frappe.db.set_value("Item", item_code, values, update_modified=False)
-		return
-	frappe.get_doc({"doctype": "Item", **values}).insert(ignore_permissions=True)
 
 
 def sync_misc_purchase_item_name():

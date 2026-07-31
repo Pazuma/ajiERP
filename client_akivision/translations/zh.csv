@@ -838,5 +838,6 @@ Delay Tolerance,延迟容差
 Lead Time Scoring,实际交期评分
 Return Rate Scoring,退货率评分
 Rating Grades,评级等级
+默认标准,默认标准
 Price Check Skipped,价格检查已跳过
 The price check failed and was skipped. Submission continues.,"价格检查失败,已跳过检查,提交将继续。"
