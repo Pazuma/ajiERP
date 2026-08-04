@@ -8,12 +8,18 @@ from erpnext.manufacturing.doctype.production_plan.production_plan import (
 
 
 @frappe.whitelist()
-def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_data=None):
-	"""Keep ERPNext calculations and choose each raw material's best warehouse.
+def get_items_for_material_requests(
+	doc, warehouses=None, get_parent_warehouse_data=None, warehouse_selection_mode=None
+):
+	"""Keep ERPNext calculations and choose one receiving warehouse per item.
 
-	Priority is: Item Default, the warehouse with the highest positive actual
-	stock (excluding the company's WIP warehouse), then ERPNext's original
-	warehouse value.
+	The same item can have both Purchase and Material Transfer rows. They must
+	use one destination warehouse, otherwise the purchase and transfer flows
+	will replenish different locations. For the combined purchase/transfer
+	operation, priority is: Item Default, ERPNext's existing Purchase
+	destination, then the warehouse with the highest positive actual stock
+	(excluding the company's WIP warehouse). The purchase-only operation puts
+	the highest-stock warehouse ahead of ERPNext's proposed destination.
 	"""
 	items = erpnext_get_items_for_material_requests(doc, warehouses, get_parent_warehouse_data)
 	if not items:
@@ -59,13 +65,47 @@ def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_d
 		if flt(stock_row.actual_qty) > 0 and stock_row.item_code not in stock_warehouse_by_item:
 			stock_warehouse_by_item[stock_row.item_code] = stock_row.warehouse
 
-	valid_warehouses = set(
+	company_warehouses = set(
 		frappe.get_all(
 			"Warehouse",
-			filters={"name": ["in", list(warehouse_by_item.values())], "company": company},
+			filters={"company": company, "is_group": 0, "disabled": 0},
 			pluck="name",
 		)
 	)
+	default_warehouse_by_item = {
+		item_code: warehouse
+		for item_code, warehouse in warehouse_by_item.items()
+		if warehouse in company_warehouses
+	}
+	# ERPNext's Purchase row carries the intended receiving warehouse. When an
+	# Item Default is absent, prefer that stable destination over selecting a
+	# warehouse separately for each generated row.
+	purchase_warehouse_by_item = {}
+	for row in items:
+		item_code = row.get("item_code")
+		warehouse = row.get("warehouse")
+		if (
+			item_code
+			and row.get("material_request_type") != "Material Transfer"
+			and warehouse in company_warehouses
+			and item_code not in purchase_warehouse_by_item
+		):
+			purchase_warehouse_by_item[item_code] = warehouse
+
+	target_warehouse_by_item = {}
+	for item_code in item_codes:
+		if warehouse_selection_mode == "purchase_only":
+			target_warehouse_by_item[item_code] = (
+				default_warehouse_by_item.get(item_code)
+				or stock_warehouse_by_item.get(item_code)
+				or purchase_warehouse_by_item.get(item_code)
+			)
+		else:
+			target_warehouse_by_item[item_code] = (
+				default_warehouse_by_item.get(item_code)
+				or purchase_warehouse_by_item.get(item_code)
+				or stock_warehouse_by_item.get(item_code)
+			)
 
 	for row in items:
 		item_code = row.get("item_code")
@@ -74,17 +114,12 @@ def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_d
 			if row.get("material_request_type") == "Material Transfer"
 			else 0
 		)
-		# ERPNext uses `warehouse` as the destination and `from_warehouse`
-		# as the source for transfer rows. Do not rewrite the destination after
-		# the native allocation, otherwise a valid transfer can be recreated
-		# even when the destination already has stock.
-		if row.get("material_request_type") == "Material Transfer":
-			continue
-
-		warehouse = warehouse_by_item.get(item_code)
-		if warehouse not in valid_warehouses:
-			warehouse = stock_warehouse_by_item.get(item_code)
+		warehouse = target_warehouse_by_item.get(item_code)
 		if warehouse:
+			# ERPNext uses `warehouse` as the receiving warehouse for Material
+			# Transfer rows. Apply the Item Default consistently for both Purchase
+			# and Material Transfer; keep `from_warehouse` intact so the native
+			# transfer source selected from available stock is not lost.
 			row["warehouse"] = warehouse
 			_refresh_row_stock_values(row, company, warehouse, doc.get("ignore_existing_ordered_qty"))
 

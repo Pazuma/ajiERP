@@ -133,7 +133,7 @@ Allow this item to be used in purchase transactions.,允许此物料用于采购
 
 "
 Minimum stock level to maintain as a buffer. Used to calculate recommended reorder level: Reorder Level = Safety Stock + (Average Daily Consumption × Lead Time).,作为缓冲维持的最低库存水平。用于计算建议再订货点：再订货点 = 安全库存 +（平均日耗用量 × 交期）。
-The rate at which this item was last purchased via a Purchase Invoice. Auto-updated by the system.,此物料最近一次通过采购发票采购的价格。由系统自动更新。
+The rate at which this item was last purchased via a Purchase Invoice. Auto-updated by the system.,此物料最近一次通过采购应付单采购的价格。由系统自动更新。
 Enable if this item is provided by a customer and received via Stock Entry.,如果此物料由客户提供并通过库存单据入库，请勾选。
 Enable for drop shipping - supplier delivers directly to the customer without passing through your warehouse.,启用直运 - 供应商直接交货给客户，不经过您的仓库。
 Allow this item to be used in sales transactions.,允许此物料用于销售交易。
@@ -144,7 +144,7 @@ A quality inspection must be completed before generating a Purchase Receipt for 
 A quality inspection must be completed before generating a Delivery Note for this item.,此物料必须先完成质量检验，才能生成交货单。
 Enable if a vendor manufactures this item for you. You can choose to provide them raw materials using the default BOM.,如果供应商为您代工生产此物料，请勾选。您可以选择使用默认 BOM 向其提供原材料。
 "Percentage by which over-delivery or over-receipt is allowed against a Sales/Purchase Order for this item. If not set, value from Stock Settings will be used.",此物料相对于销售/采购订单允许超交或超收的百分比。如果未设置，将使用库存设置中的值。
-"Percentage by which over-billing is allowed against a Sales/Purchase Order for this item. If not set, value from Accounts Settings will be used.",此物料相对于销售/采购订单允许超额开票的百分比。如果未设置，将使用会计设置中的值。
+"Percentage by which over-billing is allowed against a Sales/Purchase Order for this item. If not set, value from Accounts Settings will be used.",此物料相对于销售/采购订单允许超额开具应收应付单的百分比。如果未设置，将使用会计设置中的值。
 "If enabled, sales from this item will be included in Sales Person and Sales Partner commission calculations",启用后，此物料的销售额将计入销售员和销售合作伙伴的佣金计算
 Creates a single grouped asset instead of individual assets when purchased in bulk.,批量采购时创建单个组合资产，而不是多个单独资产。
 "Allow stock to go below zero for this item, even if negative stock is disabled in Stock Settings.",允许此物料库存低于零，即使库存设置中已禁用负库存。
@@ -152,8 +152,8 @@ UOM Conversion Details,计量单位换算明细
 "<div style=""margin-bottom:10px; color: var(--gray-500) !important;"">Define alternate units for this item. Eg: 1 Box = 12 Nos, set conversion factor as 12. (Will also apply for variants) <a href=""https://docs.frappe.io/erpnext/uom"" target=""_blank"">Learn more &#8594;</a></div>","<div style=""margin-bottom:10px; color: var(--gray-500) !important;"">为此物料定义备用计量单位。例如：1 箱 = 12 个，换算系数设为 12。（同样适用于多规格物料）<a href=""https://docs.frappe.io/erpnext/uom"" target=""_blank"">了解更多 &#8594;</a></div>"
 Determine Address Tax Category from,地址税类别的判定依据
 Role allowed to bypass credit limit,允许绕过信用额度的角色
-Check Supplier invoice number uniqueness,检查供应商发票号的唯一性
-Unlink Payment on cancellation of invoice,发票取消时解除付款关联
+Check Supplier invoice number uniqueness,检查供应商应付单号的唯一性
+Unlink Payment on cancellation of invoice,应付单取消时解除付款关联
 Unlink Advance Payment on cancellation of order,订单取消时解除预付款关联
 Book Asset Depreciation entry automatically,自动生成资产折旧分录
 Automatically add Taxes and Charges from Item Tax Template,自动从物料税模板添加税费
@@ -178,7 +178,7 @@ Round tax amount row-wise,按行舍入税额
 General Ledger remarks length,总账备注长度
 Accounts Receivable / Payable remarks length,应收/应付备注长度
 Create payment requests in Draft status,以草稿状态创建付款请求
-Payment Requests made from Sales / Purchase Invoice will be put in Draft explicitly,从销售/采购发票创建的付款请求将明确置为草稿状态
+Payment Requests made from Sales / Purchase Invoice will be put in Draft explicitly,从销售应收单/采购应付单创建的付款请求将明确置为草稿状态
 Auto Reconciliation job trigger,自动对账任务触发方式
 Reconciliation queue size,对账队列大小
 Posting Date inheritance for exchange gain / loss,汇兑损益的过账日期继承
@@ -221,14 +221,14 @@ Allowed DocTypes,允许的单据类型
 <p>端点、结果键和参数值中可以使用 3 个变量。</p>
 <p>{from_currency} 与 {to_currency} 在 {transaction_date} 的汇率由 API 获取。</p>
 <p>示例：如果您的端点是 exchange.com/2021-08-01，则应输入 exchange.com/{transaction_date}</p>"
-Is Purchase Order required for Purchase Invoice & Receipt creation?,创建采购发票和收货单时是否必须有采购订单？
-Is Purchase Receipt required for Purchase Invoice creation?,创建采购发票时是否必须有采购收货单？
+Is Purchase Order required for Purchase Invoice & Receipt creation?,创建采购应付单和收货单时是否必须有采购订单？
+Is Purchase Receipt required for Purchase Invoice creation?,创建采购应付单时是否必须有采购收货单？
 Maintain same rate throughout the purchase  cycle,整个采购周期保持相同价格
-Warn or stop if Item rate is changed in Purchase Invoice or Purchase Receipt generated from a Purchase Order.,如果从采购订单生成的采购发票或采购收货单中更改了物料价格，则警告或停止。
+Warn or stop if Item rate is changed in Purchase Invoice or Purchase Receipt generated from a Purchase Order.,如果从采购订单生成的采购应付单或采购收货单中更改了物料价格，则警告或停止。
 Allow Item to be added multiple times in a transaction,允许同一物料在单据中多次添加
 Backflush raw materials of subcontract based on,外包原材料倒冲依据
 Action if same rate is not maintained,价格不一致时的操作
-Bill for rejected quantity in Purchase Invoice,采购发票中对拒收数量开票
+Bill for rejected quantity in Purchase Invoice,采购应付单中对拒收数量开具应付单
 Disable last purchase rate,禁用最近采购价
 Prevents the system from automatically using the rate from the last purchase transaction when creating new purchase orders or transactions.,阻止系统在创建新采购订单或交易时自动使用最近采购交易的价格。
 Show pay button in Purchase Order portal,在采购订单门户中显示付款按钮
@@ -242,7 +242,7 @@ Allow negative rates for Items,允许物料使用负价格
 Supplier Defaults,供应商默认值
 Blanket Orders,一揽子订单
 Zero-Quantity Line Items,零数量行项目
-Purchase Invoice Settings,采购发票设置
+Purchase Invoice Settings,采购应付单设置
 Over Order Allowance (%),允许超量订购(%)
 "The percentage by which you are allowed to order more on a Purchase Order than the quantity requested on the originating Material Request. For example, if the Material Request has 100 units and the allowance is 10%, you can order up to 110 units",允许采购订单数量超过源物料需求数量的百分比。例如：物料需求为 100 个单位，容差为 10%，则最多可订购 110 个单位
 "Leave blank for home.
@@ -253,12 +253,12 @@ Allow Editing of Items and Quantities in Work Order,允许编辑工单中的物�
 "If enabled, the system will allow users to edit the raw materials and their quantities in the Work Order. The system will not reset the quantities as per the BOM, if the user has changed them.",启用后，系统允许用户编辑工单中的原材料及其数量。如果用户修改过数量，系统将不再按 BOM 重置。
 Set Operating Cost / Secondary Items From Sub-assemblies,从子装配件设置加工费/副产品
 "To include sub-assembly costs and secondary items in Finished Goods on a work order without using a job card, when the 'Use Multi-Level BOM' option is enabled.","启用""使用多层 BOM""选项时，可在不使用工序卡的情况下，将子装配件成本和副产品计入工单中的成品。"
-Is Sales Order required to create Sales Invoice/Delivery Note?,创建销售发票/交货单时是否必须有销售订单？
-Is Delivery Note required to create Sales Invoice?,创建销售发票时是否必须有交货单？
+Is Sales Order required to create Sales Invoice/Delivery Note?,创建销售应收单/交货单时是否必须有销售订单？
+Is Delivery Note required to create Sales Invoice?,创建销售应收单时是否必须有交货单？
 How often should sales data be updated in Company/Project?,公司/项目中的销售数据更新频率？
 The frequency at which project progress and company transaction details will be updated. Set it to daily or monthly if you post a lot of transactions.,项目进度和公司交易明细的更新频率。如果交易量较大，建议设置为每日或每月。
 Maintain same rate throughout sales cycle,整个销售周期保持相同价格
-Warn or stop if Item rate is changed in Delivery Notes and Sales Invoices generated from a Sales Order.,如果从销售订单生成的交货单和销售发票中更改了物料价格，则警告或停止。
+Warn or stop if Item rate is changed in Delivery Notes and Sales Invoices generated from a Sales Order.,如果从销售订单生成的交货单和销售应收单中更改了物料价格，则警告或停止。
 Allow editing Price List rate in transactions,允许在交易中编辑价格表价格
 Allow same Item to be added multiple times in a transaction,允许同一物料在单据中多次添加
 Allow multiple Sales Orders against a customer's Purchase Order,允许一个客户采购订单对应多个销售订单
@@ -297,7 +297,7 @@ Set incoming rate as zero for expired Batch,过期批次的入库价设为零
 Enable tracking sales commissions,启用销售佣金跟踪
 Manage sales partner's and sales team's commissions,管理销售合作伙伴和销售团队的佣金
 Enable UTM,启用 UTM
-"Enable Urchin Tracking Module parameters in Quotation, Sales Order, Sales Invoice, POS Invoice, Lead,  and Delivery Note.",在报价单、销售订单、销售发票、POS 发票、线索和交货单中启用 UTM（Urchin 跟踪模块）参数。
+"Enable Urchin Tracking Module parameters in Quotation, Sales Order, Sales Invoice, POS Invoice, Lead,  and Delivery Note.",在报价单、销售订单、销售应收单、POS 发票、线索和交货单中启用 UTM（Urchin 跟踪模块）参数。
 Deliver secondary Items,交付副产品
 "If enabled, the Secondary Items generated against a Finished Good will also be added in the Stock Entry when delivering that Finished Good.",启用后，交付成品时，该成品产生的副产品也将添加到库存单据中。
 Advanced Features,高级功能
@@ -475,15 +475,15 @@ Link copied,链接已复制
 Failed to copy link,复制链接失败
 Dr,借方
 Source of Funds (Liabilities),负债
-Total Outgoing Bills,销售发票总额
-Total Incoming Bills,采购发票总额
+Total Outgoing Bills,销售应收单总额
+Total Incoming Bills,采购应付单总额
 Total Incoming Payment,收款总额
 Total Outgoing Payment,付款总额
-Incoming Bills (Purchase Invoice),采购发票
-Outgoing Bills (Sales Invoice),销售发票
+Incoming Bills (Purchase Invoice),采购应付单
+Outgoing Bills (Sales Invoice),销售应收单
 Accounts Receivable Ageing,应收账款账龄
 Accounts Payable Ageing,应付账款账龄
-Issue a debit note against an existing Sales Invoice to adjust the rate. The quantity will be retained from the original invoice.,针对现有销售发票开具借项通知单以调整价格。数量将沿用原发票上的数量。
+Issue a debit note against an existing Sales Invoice to adjust the rate. The quantity will be retained from the original invoice.,针对现有销售应收单开具借项通知单以调整价格。数量将沿用原单据上的数量。
 Is customer exempted from sales tax?,客户是否免征销售税？
 Default Supplier Quotation Warehouse,供应商报价默认仓库
 Payment Entry,收付款单
@@ -505,7 +505,7 @@ Accounts Setup,财务设置
 Match Against Voucher,匹配已有凭证
 Create Voucher,新建凭证
 Update Bank Transaction,更新银行流水
-Create Purchase Invoice,创建采购发票
+Create Purchase Invoice,创建采购应付单
 正在获取 BOM 反查数据...,正在获取 BOM 反查数据...
 正在获取阶梯价格数据...,正在获取阶梯价格数据...
 该物料未被任何已提交的 BOM 使用,该物料未被任何已提交的 BOM 使用
@@ -554,7 +554,64 @@ Allows the user to search and see records.,允许用户搜索并查看记录。
 The user can select a Customer in Sales Order but cannot open the Customer master.,用户可以在销售订单中选择客户，但无法打开客户主数据。
 Read,读取
 Allows the user to view the document.,允许用户查看文档。
-The user can view Sales Invoices but cannot modify any field values in them.,用户可以查看销售发票，但不能修改其中任何字段的值。
+The user can view Sales Invoices but cannot modify any field values in them.,用户可以查看销售应收单，但不能修改其中任何字段的值。
+Sales Invoice,销售应收单
+Sales Invoices,销售应收单
+Purchase Invoice,采购应付单
+Purchase Invoices,采购应付单
+Create Sales Invoice,创建销售应收单
+New Sales Invoice,新建销售应收单
+New Purchase Invoice,新建采购应付单
+Open Sales Invoice,打开销售应收单
+Open Purchase Invoice,打开采购应付单
+Get Outstanding Invoices,选择未结清单据
+Get Outstanding Invoice,选择未结清单据
+Get Outstanding Orders,选择未结清订单
+Consider for Tax Withholding,计入预扣税
+Consider for Tax Withholding ,计入预扣税
+Purchase Invoice Trends,采购应付单趋势
+Sales Invoice Trends,销售应收单趋势
+Sales Invoice Transactions,销售应收单交易
+Repair Purchase Invoices,维修采购应付单
+Allow Purchase Invoice Creation Without Purchase Order,允许不通过采购订单创建采购应付单
+Allow Purchase Invoice Creation Without Purchase Receipt,允许不通过采购收货单创建采购应付单
+Allow Sales Invoice Creation Without Sales Order,允许不通过销售订单创建销售应收单
+Allow Sales Invoice Creation Without Delivery Note,允许不通过交货单创建销售应收单
+Set Landed Cost Based on Purchase Invoice Rate,根据采购应付单价格设置附加成本
+Return Against Purchase Invoice,针对采购应付单退回
+Against Sales Invoice,对应销售应收单
+Against Sales Invoice Item,对应销售应收单明细
+Sales Invoice Item,销售应收单明细
+Purchase Invoice Item,采购应付单明细
+Sales Invoice Payment,销售应收单付款
+Purchase Invoice Payment,采购应付单付款
+Consolidated Sales Invoice,合并销售应收单
+Sales Invoice Reference,销售应收单引用
+Sales Invoice Advance,销售应收单预收款
+Purchase Invoice Advance,采购应付单预付款
+Sales Invoice Timesheet,销售应收单工时表
+Sales Invoice Taxes,销售应收单税费
+Purchase Invoice Taxes,采购应付单税费
+Purchase Invoice Standard,采购应付单标准格式
+Sales Invoice Standard,销售应收单标准格式
+Purchase Invoice with Item Image,带物料图片的采购应付单
+Sales Invoice with Item Image,带物料图片的销售应收单
+Make Sales Invoice,创建销售应收单
+Opening Sales Invoices have been created.,期初销售应收单已创建。
+Opening Purchase Invoices have been created.,期初采购应付单已创建。
+Creating Sales Invoices ...,正在创建销售应收单……
+Creating Purchase Invoices ...,正在创建采购应付单……
+No Outstanding Invoices found for this party,未找到该往来单位的未结清单据
+Total Purchase Cost (via Purchase Invoice),采购总成本（通过采购应付单）
+Total Billed Amount (via Sales Invoice),已开单总额（通过销售应收单）
+"If checked, Rejected Quantity will be included while making Purchase Invoice from Purchase Receipt.",如果勾选，从采购收货单创建采购应付单时将包含拒收数量。
+"Users can enable the checkbox If they want to adjust the incoming rate (set using purchase receipt) based on the purchase invoice rate.",如果用户希望根据采购应付单价格调整入库价格（由采购收货单设置），可以启用此复选框。
+"While making Purchase Invoice from Purchase Order, use Exchange Rate on Invoice's transaction date rather than inheriting it from Purchase Order. Only applies for Purchase Invoice.",从采购订单创建采购应付单时，使用应付单交易日期的汇率，而不是继承采购订单的汇率。仅适用于采购应付单。
+"Valuation rate for the item as per Sales Invoice (Only for Internal Transfers)",根据销售应收单计算物料估价率（仅适用于内部转移）
+"Amount Difference with Purchase Invoice",与采购应付单的金额差异
+"In Words will be visible once you save the Sales Invoice.",保存销售应收单后将显示金额大写。
+"In Words will be visible once you save the Purchase Invoice.",保存采购应付单后将显示金额大写。
+"The system will create a Sales Invoice or a POS Invoice from the POS interface based on this setting. For high-volume transactions, it is recommended to use POS Invoice.",系统将根据此设置从 POS 界面创建销售应收单或 POS 发票。对于高频交易，建议使用 POS 发票。
 Write,写入
 Allows the user to edit existing records they have access to.,允许用户编辑其有权访问的现有记录。
 The user can update a customer or any other fields in an existing Sales Order but cannot create a new Sales Order.,用户可以修改现有销售订单中的客户或其他字段，但不能创建新的销售订单。
@@ -653,3 +710,35 @@ The price check failed and was skipped. Submission continues.,价格检查失败
 个 BOM,个 BOM
 默认 BOM,默认 BOM
 Tier Price Sync Status,阶梯价同步状态
+Choose Production Priority,选择生产优先级
+Priority,优先级
+Production Item,生产物料
+Remaining Qty,剩余计划数量
+Select at least one production item.,请至少选择一个生产物料。
+There are no remaining production items.,没有待生产的计划物料。
+Current inventory is insufficient to produce any finished goods.,目前库存不足以生产任一成品。
+View Real-time Material Shortage,查看本计划实时物料缺口
+Real-time Material Shortage,本计划实时物料缺口
+Get required materials first to view this plan's material shortage.,请先获取需求物料，再查看本计划物料缺口。
+Gap = BOM required quantity − current warehouse stock − this plan's submitted Material Request balance − outstanding Purchase Order quantity. These balances are counted separately to prevent duplicate requests.,缺口 = BOM需求数量 − 当前仓库库存 − 本计划已申请未下单数量 − 采购订单未入库数量。两类已申请数量分别计算，避免重复申请。
+BOM Required Qty,BOM需求数量
+Current Stock Qty,当前库存数量
+Requested Not Ordered Qty,已申请未下单数量
+Outstanding PO Qty,采购订单未入库数量
+Plan Material Gap,本计划物料缺口
+Requested Not Ordered,已申请未下单
+Outstanding PO,采购未入库
+Plan Gap,计划缺口
+Create Purchase Request,创建采购需求
+Production Qty,生产数量
+Production quantity cannot exceed available quantity.,生产数量不能超过可生产数量。
+Per Finished Unit,每个成品用量
+Estimated Remaining,预计剩余数量
+Only submitted Production Plans can create Purchase Requests.,只有已提交的生产计划才能创建采购需求。
+There is no remaining material shortage to purchase.,当前没有需要采购的物料缺口。
+Create Work Orders,创建生产工单
+Available to Produce,可生产数量
+Raw material stock in source warehouses,发料仓原材料库存
+Source Warehouse,发料仓
+Qty In Stock,库存数量
+Required Qty,需求数量

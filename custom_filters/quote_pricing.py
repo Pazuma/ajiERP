@@ -262,6 +262,7 @@ def _upsert_item_price(doc, row, price_list, valid_from):
 			"uom": uom,
 		},
 		fields=["name", "reference"],
+		order_by="creation desc, name desc",
 		limit=1,
 	)
 	if existing:
@@ -374,9 +375,21 @@ def _rollback_to_previous_quotation(doc):
 	surfaced as a non-blocking alert instead.
 	"""
 	try:
+		filters = {
+			"supplier": doc.supplier,
+			"docstatus": 1,
+			"name": ("!=", doc.name),
+		}
+		# Never restore a price from another accounting context. Supplier
+		# quotations can share a supplier while belonging to different
+		# companies, currencies, or buying price lists.
+		for fieldname in ("company", "currency", "buying_price_list"):
+			value = doc.get(fieldname)
+			if value:
+				filters[fieldname] = value
 		previous = frappe.get_all(
 			"Supplier Quotation",
-			filters={"supplier": doc.supplier, "docstatus": 1, "name": ("!=", doc.name)},
+			filters=filters,
 			pluck="name",
 			order_by="transaction_date desc, creation desc",
 			limit=1,

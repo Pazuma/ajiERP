@@ -522,7 +522,7 @@ body.custom-filters-desk-tabs-ready .page-head {
 
 .cf-bom-native-table {
 	width: 100%;
-	min-width: 880px;
+	min-width: 980px;
 	border-collapse: separate;
 	border-spacing: 0;
 	table-layout: fixed;
@@ -549,7 +549,7 @@ body.custom-filters-desk-tabs-ready .page-head {
 }
 
 .cf-bom-native-table th:nth-child(1) { width: 240px; }
-.cf-bom-native-table th:nth-child(2) { width: 125px; }
+.cf-bom-native-table th:nth-child(2) { width: 220px; }
 .cf-bom-native-table th:nth-child(3) { width: 125px; }
 .cf-bom-native-table th:nth-child(4),
 .cf-bom-native-table th:nth-child(5) { width: 100px; }

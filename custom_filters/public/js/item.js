@@ -304,7 +304,7 @@ function render_bom_where_used_html(frm) {
                   (row) => `
                     <tr>
                         <td style="border:1px solid var(--border-color);text-align:center;vertical-align:middle;">${cf_item_doc_link(row.bom_no, null, { id: "bom_no" }, row, "BOM")}</td>
-                        <td style="border:1px solid var(--border-color);text-align:center;vertical-align:middle;">${cf_item_doc_link(row.finished_item, null, { id: "finished_item" }, row, "Item")}</td>
+                        <td style="border:1px solid var(--border-color);text-align:center;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cf_item_doc_link(row.finished_item, null, { id: "finished_item" }, row, "Item")}</td>
                         <td style="border:1px solid var(--border-color);text-align:center;vertical-align:middle;">${cf_item_escape(row.finished_item_name || "")}</td>
                         <td style="border:1px solid var(--border-color);text-align:center;vertical-align:middle;">${cf_item_escape(row.component_qty_text)}</td>
                         <td style="border:1px solid var(--border-color);text-align:center;vertical-align:middle;">${cf_item_escape(row.bom_qty_text)}</td>
@@ -322,7 +322,7 @@ function render_bom_where_used_html(frm) {
             <div class="cf-bom-native-table-wrap" style="width:min(930px,100%);height:360px;overflow:auto;border:1px solid var(--border-color);border-radius:8px;contain:paint;">
                 <table class="cf-bom-native-table" style="width:100%;min-width:880px;margin:0 auto;border-collapse:collapse;border:1px solid var(--border-color);table-layout:fixed;font-size:var(--text-sm);text-align:center;">
                     <thead><tr style="height:40px;">
-                        <th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("BOM 编号")}</th><th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("成品物料")}</th><th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("成品名称")}</th>
+                        <th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("BOM 编号")}</th><th style="width:220px;border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("成品物料")}</th><th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("成品名称")}</th>
                         <th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("组件用量")}</th><th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("BOM 数量")}</th>
                         <th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("状态")}</th><th style="border:1px solid var(--border-color);text-align:center;background:var(--subtle-fg);">${__("公司")}</th>
                     </tr></thead>
