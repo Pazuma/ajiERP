@@ -18,8 +18,26 @@ def serve(file_id, user, action="preview", expires=0, signature=""):
 	root = settings.local_proxy_root
 	if not root:
 		frappe.throw(_("尚未配置本机图纸目录。"))
+	# The proxy is deliberately allow-list based: a valid signature alone must
+	# never turn this endpoint into an arbitrary file browser.
+	drawing_names = frappe.get_all(
+		"Engineering Drawing",
+		filters={"external_file_id": file_id, "status": "Finalized"},
+		pluck="name",
+		limit=2,
+	)
+	if len(drawing_names) != 1:
+		frappe.throw(_("未找到已定稿且已登记的图纸文件。"), frappe.PermissionError)
+	drawing = frappe.get_doc("Engineering Drawing", drawing_names[0])
+	drawing.check_permission("read")
 	expires = int(expires or 0)
-	secret = frappe.conf.get("drawing_proxy_shared_secret") or frappe.conf.get("encryption_key")
+	secret = frappe.conf.get("drawing_proxy_shared_secret")
+	if not secret:
+		# Local development proxy compatibility; production proxy deployments
+		# must provide drawing_proxy_shared_secret explicitly.
+		secret = frappe.conf.get("encryption_key")
+	if not secret:
+		frappe.throw(_("图纸代理未配置签名密钥。"), frappe.PermissionError)
 	payload = f"{file_id}:{user}:{action}:{expires}"
 	if not secret or expires < int(time.time()) or not hmac.compare_digest(signature, hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()):
 		frappe.throw(_("图纸访问链接已失效。"), frappe.PermissionError)

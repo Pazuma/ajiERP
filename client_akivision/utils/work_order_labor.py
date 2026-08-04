@@ -46,5 +46,7 @@ def calculate_labor_cost(doc, method=None):
 	old_cost = flt((doc.get_doc_before_save() or {}).get("custom_actual_labor_cost"))
 	doc.custom_actual_labor_cost = labor_cost
 	doc.actual_operating_cost = flt(doc.get("actual_operating_cost")) - old_cost + labor_cost
-	if doc.get("total_operating_cost"):
+	# Zero is a valid starting value. Truthiness would skip the first labor
+	# costing update and leave the standard total out of sync.
+	if doc.get("total_operating_cost") is not None:
 		doc.total_operating_cost = flt(doc.total_operating_cost) - old_cost + labor_cost

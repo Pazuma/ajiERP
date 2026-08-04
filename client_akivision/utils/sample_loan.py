@@ -3,6 +3,26 @@ from frappe import _
 from frappe.utils import cint, flt, getdate, today
 
 
+def validate_sample_loan_warehouses(company, warehouses):
+    """Validate warehouses before a trusted sample Stock Entry is created."""
+    checked = set()
+    for warehouse in warehouses:
+        if not warehouse or warehouse in checked:
+            continue
+        checked.add(warehouse)
+        values = frappe.db.get_value(
+            "Warehouse", warehouse, ["company", "is_group", "disabled"], as_dict=True
+        )
+        if not values:
+            frappe.throw(_("仓库 {0} 不存在，无法处理样品库存。").format(warehouse))
+        if values.company and company and values.company != company:
+            frappe.throw(_("仓库 {0} 不属于公司 {1}，无法处理样品库存。").format(warehouse, company))
+        if values.is_group:
+            frappe.throw(_("仓库 {0} 是仓库组，不能用于样品库存移动。").format(warehouse))
+        if values.disabled:
+            frappe.throw(_("仓库 {0} 已禁用，不能用于样品库存移动。").format(warehouse))
+
+
 def create_sample_loan_stock_entry(
     doc, items, stock_entry_type, is_return=False
 ):
@@ -22,6 +42,18 @@ def create_sample_loan_stock_entry(
 
     if not items:
         frappe.throw(_("No items to process."))
+
+    warehouses = []
+    for row in items:
+        warehouses.extend(
+            [
+                row.get("source_warehouse") if isinstance(row, dict) else row.source_warehouse,
+                row.get("loan_warehouse") if isinstance(row, dict) else row.loan_warehouse,
+            ]
+        )
+    if is_return:
+        warehouses.append(frappe.db.get_single_value("Stock Settings", "sample_retention_warehouse"))
+    validate_sample_loan_warehouses(doc.company, warehouses)
 
     posting_date = doc.get("loan_date") or doc.get("return_date") or today()
 
@@ -334,6 +366,14 @@ def create_sample_loan_in_stock_entry(
 
     if not items:
         frappe.throw(_("No items to process."))
+
+    validate_sample_loan_warehouses(
+        doc.company,
+        [
+            row.get("loan_warehouse") if isinstance(row, dict) else getattr(row, "loan_warehouse", None)
+            for row in items
+        ],
+    )
 
     posting_date = doc.get("loan_date") or doc.get("return_date") or today()
 

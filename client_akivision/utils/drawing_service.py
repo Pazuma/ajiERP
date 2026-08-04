@@ -12,11 +12,20 @@ class DrawingServiceAdapter:
 	def __init__(self):
 		settings = frappe.get_single("Engineering Drawing Settings")
 		self.base_url = settings.proxy_url or frappe.conf.get("drawing_proxy_url")
-		self.secret = frappe.conf.get("drawing_proxy_shared_secret") or frappe.conf.get("encryption_key")
+		self.secret = frappe.conf.get("drawing_proxy_shared_secret")
+		# Keep the encryption-key fallback only for the local test proxy. A
+		# customer-hosted proxy must always use its own shared secret.
+		if not self.secret and not self.base_url:
+			self.secret = frappe.conf.get("encryption_key")
 		self.expiry = int(settings.link_expiry_seconds or 600)
 
 	def check_access(self, file_id, user):
-		return bool(file_id and user and (self.base_url or frappe.get_single_value("Engineering Drawing Settings", "local_proxy_root")))
+		return bool(
+			file_id
+			and user
+			and self.secret
+			and (self.base_url or frappe.get_single_value("Engineering Drawing Settings", "local_proxy_root"))
+		)
 
 	def signed_url(self, file_id, user, action):
 		if not self.check_access(file_id, user):

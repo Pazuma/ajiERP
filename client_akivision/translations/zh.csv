@@ -841,3 +841,5 @@ Rating Grades,评级等级
 默认标准,默认标准
 Price Check Skipped,价格检查已跳过
 The price check failed and was skipped. Submission continues.,"价格检查失败,已跳过检查,提交将继续。"
+The drawing proxy has no signing secret configured.,图纸代理未配置签名密钥。
+No finalized and registered drawing file was found.,未找到已定稿且已登记的图纸文件。

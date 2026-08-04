@@ -432,22 +432,29 @@ def get_operations_kpis(filters, po_rows=None):
 	total_po = sum(row["evaluated_order_count"] for row in po_rows)
 	on_time = sum(row["on_time_order_count"] for row in po_rows)
 	in_transit = frappe.db.sql(
-		"""SELECT COALESCE(SUM((poi.qty - poi.received_qty) * poi.rate), 0)
+		"""SELECT COALESCE(SUM(GREATEST(poi.qty - COALESCE(poi.received_qty, 0), 0) * poi.rate), 0)
 		FROM `tabPurchase Order` po INNER JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
 		WHERE po.docstatus = 1 AND po.company = %(company)s AND po.transaction_date BETWEEN %(from_date)s AND %(to_date)s
-			AND poi.received_qty < poi.qty""",
+			AND IFNULL(poi.qty, 0) > IFNULL(poi.received_qty, 0)
+			AND COALESCE(po.status, '') NOT IN ('Closed', 'Cancelled')""",
 		filters,
 	)[0][0]
+	excluded_warehouses = get_inventory_excluded_warehouses()
+	warehouse_clause = ""
+	if excluded_warehouses:
+		filters.inventory_excluded_warehouses = tuple(excluded_warehouses)
+		warehouse_clause = " AND w.name NOT IN %(inventory_excluded_warehouses)s"
 	inventory_value = frappe.db.sql(
-		"""SELECT COALESCE(SUM(b.actual_qty * b.valuation_rate), 0)
-		FROM `tabBin` b INNER JOIN `tabWarehouse` w ON w.name = b.warehouse WHERE w.company = %(company)s""",
+		f"""SELECT COALESCE(SUM(b.actual_qty * b.valuation_rate), 0)
+		FROM `tabBin` b INNER JOIN `tabWarehouse` w ON w.name = b.warehouse
+		WHERE w.company = %(company)s AND w.is_group = 0 AND w.disabled = 0{warehouse_clause}""",
 		filters,
 	)[0][0]
 	warnings = frappe.db.sql(
-		"""SELECT COUNT(*) FROM `tabItem` i INNER JOIN `tabItem Reorder` ir ON ir.parent = i.name
+		"""SELECT COUNT(DISTINCT CONCAT(i.name, '|', ir.warehouse)) FROM `tabItem` i INNER JOIN `tabItem Reorder` ir ON ir.parent = i.name
 		LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = ir.warehouse
 		INNER JOIN `tabWarehouse` w ON w.name = ir.warehouse
-		WHERE i.disabled = 0 AND i.is_stock_item = 1 AND w.company = %(company)s
+		WHERE i.disabled = 0 AND i.is_stock_item = 1 AND w.company = %(company)s AND w.is_group = 0 AND w.disabled = 0
 			AND ((i.safety_stock > 0 AND COALESCE(b.projected_qty, 0) <= i.safety_stock)
 			 OR (ir.warehouse_reorder_level > 0 AND COALESCE(b.projected_qty, 0) <= ir.warehouse_reorder_level))""",
 		filters,
@@ -467,6 +474,29 @@ def get_operations_kpis(filters, po_rows=None):
 		"purchase_in_transit_amount": metric(in_transit, "Currency", get_target("purchase_in_transit_amount", filters)),
 		"material_over_consumption_rate": metric(percent(consumption.excess_qty, consumption.required_qty), "Percent", get_target("material_over_consumption_rate", filters)),
 	}
+
+
+def get_inventory_excluded_warehouses():
+	"""Return configured business warehouses excluded from sellable inventory KPIs.
+
+	The fields are app extensions and may not exist during an intermediate
+	migration, so missing fields/sites must degrade to an empty exclusion list.
+	"""
+	if not frappe.db.exists("DocType", "Stock Settings"):
+		return []
+	result = []
+	# 样品仓仍属于企业持有库存，应计入库存金额；客户借出仓则不属于
+	# 当前可用经营库存，因此继续排除。
+	for fieldname in ("custom_customer_loan_warehouse",):
+		try:
+			value = frappe.db.get_single_value("Stock Settings", fieldname)
+		except Exception:
+			# A partially migrated site may have the DocType metadata but not its
+			# table yet. KPI rendering must remain available in that state.
+			continue
+		if value and value not in result:
+			result.append(value)
+	return result
 
 
 def get_production_trend(filters):
@@ -587,6 +617,10 @@ def get_purchase_order_delay_status(item_rows, cutoff_date):
 	# cutoff must not count time that has not elapsed yet.
 	cutoff_date = min(getdate(cutoff_date), getdate(nowdate()))
 	for purchase_order, rows in orders.items():
+		# Establish the order-level reference row before evaluating open-delay
+		# lead time.  The previous implementation assigned this after the loop,
+		# which raised UnboundLocalError for overdue open orders.
+		first = rows[0]
 		delivered_delay = 0
 		open_overdue = 0
 		all_on_time = True
@@ -641,7 +675,6 @@ def get_purchase_order_delay_status(item_rows, cutoff_date):
 			status = "unevaluable"
 		else:
 			status = "pending"
-		first = rows[0]
 		lead_time_days = None
 		if fully_delivered and last_receipt_date and first.get("order_date"):
 			lead_time_days = max(0, date_diff(last_receipt_date, first.order_date))
