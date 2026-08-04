@@ -22,8 +22,13 @@ def _apply_default_period(filters):
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
 	_apply_default_period(filters)
-	if filters.statement_type == "Trial Balance":
-		return execute_native_trial_balance(filters)
+	if filters.statement_type in ("Trial Balance", "Account Activity and Balance"):
+		if filters.get("expand_party"):
+			return execute_account_activity_balance(filters)
+		return execute_native_trial_balance(
+			filters,
+			activity_balance=filters.statement_type == "Account Activity and Balance",
+		)
 	result = build_statement(
 		filters.company,
 		filters.statement_type,
@@ -94,8 +99,13 @@ def execute(filters=None):
 	return get_columns(), result["rows"], message
 
 
-def execute_native_trial_balance(filters):
-	"""Render ERPNext's native Trial Balance inside this report page."""
+def execute_native_trial_balance(filters, activity_balance=False):
+	"""Render ERPNext's native Trial Balance for both balance-table entries.
+
+	The Chinese label "发生额及余额表" is an entry point only. Keeping the
+	calculation in ERPNext's report prevents a second GL aggregation engine from
+	drifting away from the native accounting semantics.
+	"""
 	from erpnext.accounts.report.trial_balance.trial_balance import execute as execute_trial_balance
 
 	native_filters = frappe._dict({
@@ -114,7 +124,262 @@ def execute_native_trial_balance(filters):
 		"with_period_closing_entry_for_current_period": 1,
 	})
 	columns, data = execute_trial_balance(native_filters)
+	if activity_balance:
+		_rename_activity_balance_columns(columns)
 	return columns, data
+
+
+def _rename_activity_balance_columns(columns):
+	"""Use explicit period labels without changing ERPNext's native report."""
+	for column in columns:
+		if column.get("fieldname") == "debit":
+			column["label"] = _("本期借方")
+		elif column.get("fieldname") == "credit":
+			column["label"] = _("本期贷方")
+
+
+def get_account_activity_columns(expand_party=False):
+	columns = [
+		{"label": _("科目类别"), "fieldname": "account_category", "fieldtype": "Data", "width": 100},
+		{"label": _("科目编码"), "fieldname": "account_number", "fieldtype": "Data", "width": 80},
+		{"label": _("科目名称"), "fieldname": "account_name", "fieldtype": "Data", "width": 170},
+		{"label": _("币种"), "fieldname": "currency", "fieldtype": "Data", "width": 60},
+		{"label": _("期初借方"), "fieldname": "opening_debit", "fieldtype": "Currency", "width": 95},
+		{"label": _("期初贷方"), "fieldname": "opening_credit", "fieldtype": "Currency", "width": 95},
+		{"label": _("本期借方"), "fieldname": "period_debit", "fieldtype": "Currency", "width": 95},
+		{"label": _("本期贷方"), "fieldname": "period_credit", "fieldtype": "Currency", "width": 95},
+		{"label": _("期末借方"), "fieldname": "closing_debit", "fieldtype": "Currency", "width": 95},
+		{"label": _("期末贷方"), "fieldname": "closing_credit", "fieldtype": "Currency", "width": 95},
+	]
+	if expand_party:
+		columns.insert(3, {"label": _("往来单位"), "fieldname": "party", "fieldtype": "Data", "width": 150})
+	return columns
+
+
+def _party_label(party_type, party):
+	"""Return a readable party label while keeping the party code visible."""
+	if not party:
+		return _("未指定往来")
+
+	party_name = None
+	party_name_field = {
+		"Customer": "customer_name",
+		"Supplier": "supplier_name",
+		"Employee": "employee_name",
+		"Shareholder": "title",
+	}.get(party_type)
+	if party_name_field and frappe.get_meta(party_type).has_field(party_name_field):
+		party_name = frappe.db.get_value(party_type, party, party_name_field)
+	return f"{party} - {party_name}" if party_name and party_name != party else party
+
+
+def _legacy_execute_account_activity_balance(filters):
+	"""Return a GL-based activity/balance table without using statement mappings."""
+	if not filters.company:
+		frappe.throw(_("请选择公司"))
+	if getdate(filters.from_date) > getdate(filters.to_date):
+		frappe.throw(_("起始日期不能晚于截止日期"))
+	frappe.has_permission("Company", doc=filters.company, throw=True)
+
+	account_filters = {"company": filters.company}
+	if filters.account:
+		account = frappe.db.get_value("Account", filters.account, ["company", "lft", "rgt"], as_dict=True)
+		if not account or account.company != filters.company:
+			frappe.throw(_("科目不属于当前公司"))
+		account_filters.update({"lft": [">=", account.lft], "rgt": ["<=", account.rgt]})
+	accounts = frappe.get_all(
+		"Account", filters=account_filters,
+		fields=["name", "account_name", "account_number", "root_type", "is_group", "parent_account", "lft", "rgt", "account_currency"],
+		order_by="lft asc",
+	)
+	if not accounts:
+		return get_account_activity_columns(bool(filters.expand_party)), [], _("期间内没有可显示的科目")
+
+	params = {"company": filters.company, "from_date": filters.from_date, "to_date": filters.to_date}
+	conditions = ["gle.company=%(company)s", "gle.is_cancelled=0"]
+	if filters.finance_book:
+		conditions.append("gle.finance_book=%(finance_book)s")
+		params["finance_book"] = filters.finance_book
+	if filters.cost_center:
+		conditions.append("gle.cost_center=%(cost_center)s")
+		params["cost_center"] = filters.cost_center
+	if filters.project:
+		conditions.append("gle.project=%(project)s")
+		params["project"] = filters.project
+	account_names = tuple(row.name for row in accounts)
+	conditions.append("gle.account IN %(accounts)s")
+	params["accounts"] = account_names
+	group_fields = "gle.account, gle.party_type, gle.party" if filters.expand_party else "gle.account"
+	rows = frappe.db.sql(
+		f"""
+		SELECT gle.account, gle.party_type, gle.party,
+			SUM(CASE WHEN gle.posting_date < %(from_date)s THEN gle.debit ELSE 0 END) opening_debit,
+			SUM(CASE WHEN gle.posting_date < %(from_date)s THEN gle.credit ELSE 0 END) opening_credit,
+			SUM(CASE WHEN gle.posting_date BETWEEN %(from_date)s AND %(to_date)s THEN gle.debit ELSE 0 END) period_debit,
+			SUM(CASE WHEN gle.posting_date BETWEEN %(from_date)s AND %(to_date)s THEN gle.credit ELSE 0 END) period_credit
+		FROM `tabGL Entry` gle
+		WHERE {' AND '.join(conditions)}
+		GROUP BY {group_fields}
+		""",
+		params, as_dict=True,
+	)
+	account_by_name = {row.name: row for row in accounts}
+	parent_map = {row.name: row.parent_account for row in accounts}
+	levels = {}
+	for account_name in account_by_name:
+		level = 0
+		parent = parent_map.get(account_name)
+		while parent and parent in parent_map:
+			level += 1
+			parent = parent_map.get(parent)
+		levels[account_name] = level
+	category = {"Asset": _("资产"), "Liability": _("负债"), "Equity": _("权益"), "Income": _("收入"), "Expense": _("费用"), "" : _("未分类")}
+
+	def blank():
+		return {"opening_debit": 0, "opening_credit": 0, "period_debit": 0, "period_credit": 0}
+
+	def add(target, source):
+		for key in ("opening_debit", "opening_credit", "period_debit", "period_credit"):
+			target[key] += source.get(key) or 0
+
+	def balance_values(values):
+		opening_net = (values["opening_debit"] or 0) - (values["opening_credit"] or 0)
+		closing_net = opening_net + (values["period_debit"] or 0) - (values["period_credit"] or 0)
+		# Normalize database floating-point residue so the UI never prints -0.00.
+		opening_net = round(opening_net, 2) if abs(opening_net) < 0.005 else opening_net
+		closing_net = round(closing_net, 2) if abs(closing_net) < 0.005 else closing_net
+		values["opening_debit"] = max(opening_net, 0)
+		values["opening_credit"] = max(-opening_net, 0)
+		values["closing_debit"] = max(closing_net, 0)
+		values["closing_credit"] = max(-closing_net, 0)
+		return values
+
+	# Keep party rows separate, while account totals are rolled up through parents.
+	leaf_totals = {}
+	for row in rows:
+		key = (row.account, row.party_type or "", row.party or "") if filters.expand_party else (row.account, "", "")
+		leaf_totals[key] = {field: row.get(field) or 0 for field in ("opening_debit", "opening_credit", "period_debit", "period_credit")}
+	account_totals = {name: blank() for name in account_by_name}
+	for (account_name, _party_type, _party), values in leaf_totals.items():
+		current = account_name
+		while current and current in account_totals:
+			add(account_totals[current], values)
+			current = parent_map.get(current)
+	rows_out = []
+	for account in accounts:
+		values = balance_values(account_totals[account.name].copy())
+		if not filters.show_zero_values and not any(values.get(key) for key in ("opening_debit", "opening_credit", "period_debit", "period_credit", "closing_debit", "closing_credit")):
+			continue
+		rows_out.append({"account": account.name, "account_category": category.get(account.root_type or "", account.root_type or ""), "account_number": account.account_number or "", "account_name": account.account_name or account.name, "currency": account.account_currency or frappe.get_cached_value("Company", filters.company, "default_currency"), "parent_account": account.parent_account or "", "indent": levels[account.name], "is_group": account.is_group, **values})
+		if filters.expand_party and not account.is_group:
+			for (account_name, party_type, party), party_values in leaf_totals.items():
+				if account_name != account.name:
+					continue
+				party_row = balance_values(party_values.copy())
+				if not filters.show_zero_values and not any(party_row.get(key) for key in ("opening_debit", "opening_credit", "period_debit", "period_credit", "closing_debit", "closing_credit")):
+					continue
+				rows_out.append({"account": account.name, "account_category": category.get(account.root_type or "", account.root_type or ""), "account_number": account.account_number or "", "account_name": account.account_name or account.name, "currency": account.account_currency or frappe.get_cached_value("Company", filters.company, "default_currency"), "party_type": party_type or _("未指定往来"), "party": _party_label(party_type, party), "parent_account": account.name, "indent": levels[account.name] + 1, "is_group": 0, **party_row})
+	return get_account_activity_columns(bool(filters.expand_party)), rows_out, _("金额按 GL Entry 聚合；期初 + 本期发生 = 期末余额")
+
+
+def execute_account_activity_balance(filters):
+	"""Use ERPNext Trial Balance as the account-level result and add party rows."""
+	from erpnext.accounts.report.trial_balance.trial_balance import execute as execute_trial_balance
+
+	native_filters = frappe._dict({
+		"company": filters.company,
+		"fiscal_year": filters.fiscal_year,
+		"from_date": filters.from_date,
+		"to_date": filters.to_date,
+		"finance_book": filters.finance_book,
+		"cost_center": filters.cost_center,
+		"project": filters.project,
+		"include_default_book_entries": 1,
+		"show_net_values": 1,
+		"show_group_accounts": 1,
+		"show_zero_values": filters.get("show_zero_values", 0),
+		"with_period_closing_entry_for_opening": 1,
+		"with_period_closing_entry_for_current_period": 1,
+	})
+	columns, native_rows = execute_trial_balance(native_filters)
+	if not filters.get("expand_party"):
+		return columns, native_rows, _("数据来源：ERPNext 原生试算平衡表")
+
+	account_names = [row.get("account") for row in native_rows if row.get("account") and row.get("is_group_account") == 0]
+	if not account_names:
+		return columns, native_rows, _("数据来源：ERPNext 原生试算平衡表")
+	params = {"company": filters.company, "from_date": filters.from_date, "to_date": filters.to_date, "accounts": tuple(account_names)}
+	conditions = ["gle.company=%(company)s", "gle.is_cancelled=0", "gle.account IN %(accounts)s"]
+	if filters.finance_book:
+		conditions.append("gle.finance_book=%(finance_book)s")
+		params["finance_book"] = filters.finance_book
+	if filters.cost_center:
+		conditions.append("gle.cost_center=%(cost_center)s")
+		params["cost_center"] = filters.cost_center
+	if filters.project:
+		conditions.append("gle.project=%(project)s")
+		params["project"] = filters.project
+	party_rows = frappe.db.sql(
+		f"""
+		SELECT gle.account,
+			COALESCE(NULLIF(gle.party_type, ''), '') AS party_type,
+			COALESCE(NULLIF(gle.party, ''), '') AS party,
+			SUM(CASE WHEN gle.posting_date < %(from_date)s THEN gle.debit ELSE 0 END) opening_debit,
+			SUM(CASE WHEN gle.posting_date < %(from_date)s THEN gle.credit ELSE 0 END) opening_credit,
+			SUM(CASE WHEN gle.posting_date BETWEEN %(from_date)s AND %(to_date)s
+				AND gle.is_opening = 'No' THEN gle.debit ELSE 0 END) debit,
+			SUM(CASE WHEN gle.posting_date BETWEEN %(from_date)s AND %(to_date)s
+				AND gle.is_opening = 'No' THEN gle.credit ELSE 0 END) credit
+		FROM `tabGL Entry` gle
+		WHERE {' AND '.join(conditions)}
+		GROUP BY gle.account,
+			COALESCE(NULLIF(gle.party_type, ''), ''),
+			COALESCE(NULLIF(gle.party, ''), '')
+		""",
+		params,
+		as_dict=True,
+	)
+	by_account = {}
+	for row in party_rows:
+		opening = (row.get("opening_debit") or 0) - (row.get("opening_credit") or 0)
+		closing = opening + (row.get("debit") or 0) - (row.get("credit") or 0)
+		row["opening_debit"], row["opening_credit"] = max(opening, 0), max(-opening, 0)
+		row["closing_debit"], row["closing_credit"] = max(closing, 0), max(-closing, 0)
+		by_account.setdefault(row.get("account"), []).append(row)
+
+	party_columns = list(columns)
+	_rename_activity_balance_columns(party_columns)
+	account_index = next((index for index, column in enumerate(party_columns) if column.get("fieldname") == "account"), 0)
+	party_columns[account_index + 1:account_index + 1] = [
+		{"label": _("往来单位"), "fieldname": "party", "fieldtype": "Data", "width": 150},
+	]
+	output = []
+	for row in native_rows:
+		output.append(row)
+		if row.get("is_group_account") == 0 and row.get("account") in by_account:
+			for party in by_account[row.get("account")]:
+				# Keep the account total, but avoid a noisy detail row when the
+				# underlying GL entry has no party dimension at all.
+				if not party.get("party") and not party.get("party_type"):
+					continue
+				if not filters.get("show_zero_values") and not any(party.get(field) for field in ("opening_debit", "opening_credit", "debit", "credit", "closing_debit", "closing_credit")):
+					continue
+				party_row = {
+					"account": party.get("party") or _("未指定往来"),
+					"account_name": party.get("party") or _("未指定往来"),
+					"party_type": party.get("party_type") or _("未指定往来"),
+					"party": _party_label(party.get("party_type"), party.get("party")),
+					"indent": (row.get("indent") or 0) + 1,
+					"currency": row.get("currency"),
+					"opening_debit": party.get("opening_debit"),
+					"opening_credit": party.get("opening_credit"),
+					"debit": party.get("debit"),
+					"credit": party.get("credit"),
+					"closing_debit": party.get("closing_debit"),
+					"closing_credit": party.get("closing_credit"),
+				}
+				output.append(party_row)
+	return party_columns, output
 
 
 def get_columns():
@@ -233,6 +498,7 @@ def _statement_title(statement_type):
 		"Cash Flow": _("现金流量表"),
 		"Changes in Equity": _("所有者权益变动表"),
 		"Trial Balance": _("试算平衡表"),
+		"Account Activity and Balance": _("发生额及余额表"),
 	}.get(statement_type, _("中国财务报表"))
 
 
@@ -271,6 +537,8 @@ def _render_report_pdf(filters, columns, rows, message):
 	)
 	if statement_type == "Balance Sheet":
 		body = _render_balance_sheet_pdf_rows(rows)
+	elif statement_type == "Account Activity and Balance":
+		body = _render_standard_pdf_rows(columns, rows)
 	else:
 		body = _render_standard_pdf_rows(columns, rows)
 	warning = f"<p class='notice'>{message}</p>" if message else ""

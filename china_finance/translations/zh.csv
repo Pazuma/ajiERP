@@ -18,6 +18,8 @@ China Reconciliation Difference,对账差异事项
 China Purchase Reconciliation Rule,采购应付对账规则
 China Invoice Control Rule,开票控制规则
 China Sales Invoice Control,销售发票开票控制
+Sales Invoice,销售应收单
+Purchase Invoice,采购应收单
 China Sales Settlement,销售结算单
 China Sales Settlement Item,销售结算明细
 China Sales Settlement Rule,销售结算规则
@@ -87,6 +89,7 @@ Blocking,阻断
 Warning,警告
 Information,信息
 Balance Sheet,资产负债表
+Account Activity and Balance,发生额及余额表
 Profit and Loss,利润表
 Cash Flow,现金流量表
 Changes in Equity,所有者权益变动表

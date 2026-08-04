@@ -105,7 +105,7 @@ CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS = (
 	{"fieldname": "company", "label": "公司", "fieldtype": "Link", "options": "Company", "mandatory": 1},
 	{
 		"fieldname": "statement_type", "label": "报表类型", "fieldtype": "Select",
-		"options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity\nTrial Balance", "mandatory": 1,
+		"options": "Balance Sheet\nProfit and Loss\nCash Flow\nAccount Activity and Balance", "mandatory": 1,
 		"default": "Balance Sheet",
 	},
 	{"fieldname": "finance_book", "label": "财务账簿", "fieldtype": "Link", "options": "Finance Book"},
@@ -118,6 +118,9 @@ CHINA_FINANCIAL_STATEMENT_REPORT_FILTERS = (
 	{"fieldname": "comparison_to_date", "label": "比较期截止日期", "fieldtype": "Date"},
 	{"fieldname": "cost_center", "label": "成本中心", "fieldtype": "Link", "options": "Cost Center"},
 	{"fieldname": "project", "label": "项目", "fieldtype": "Link", "options": "Project"},
+	{"fieldname": "account", "label": "科目", "fieldtype": "Link", "options": "Account"},
+	{"fieldname": "show_zero_values", "label": "显示零余额", "fieldtype": "Check", "default": 0},
+	{"fieldname": "expand_party", "label": "展开往来明细", "fieldtype": "Check", "default": 1},
 )
 
 

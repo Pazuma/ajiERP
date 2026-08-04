@@ -141,13 +141,15 @@ def _delivery_item_snapshot(delivery_note_item):
 	)
 	if not item:
 		frappe.throw(_("销售出库明细不存在：{0}").format(delivery_note_item))
+	delivery_doc = frappe.get_doc("Delivery Note", item.parent)
+	delivery_doc.check_permission("read")
 	delivery = frappe.db.get_value(
 		"Delivery Note", item.parent,
 		["company", "customer", "currency", "posting_date", "docstatus", "is_return", "taxes_and_charges", "tax_category"], as_dict=True,
 	)
 	if not delivery or delivery.docstatus != 1 or delivery.is_return:
 		frappe.throw(_("仅可结算已提交且非退货的销售出库单"))
-	if delivery.company != frappe.db.get_value("Delivery Note", item.parent, "company"):
+	if delivery.company != delivery_doc.company:
 		frappe.throw(_("销售出库公司不一致"))
 	item.update(delivery)
 	item.already_settled_qty = _active_settled_quantity(item.name)

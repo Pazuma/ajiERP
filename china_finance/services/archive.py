@@ -6,6 +6,7 @@ import zipfile
 from pathlib import Path
 
 import frappe
+from frappe.exceptions import DuplicateEntryError
 from frappe.utils import add_years, getdate, now_datetime
 from frappe.utils.file_manager import save_file
 
@@ -45,31 +46,62 @@ def populate_archive_metadata(doc):
 
 def create_archive_record(company, reference_doctype, reference_name, category, file_url):
 	file_hash = calculate_file_hash(file_url)
-	existing = frappe.db.get_value(
-		"China Electronic Document",
-		{"reference_doctype": reference_doctype, "reference_name": reference_name, "sha256": file_hash},
-		"name",
-	)
-	if existing:
-		return existing
-	doc = frappe.get_doc(
-		{
-			"doctype": "China Electronic Document",
-			"company": company,
-			"document_category": category,
-			"reference_doctype": reference_doctype,
-			"reference_name": reference_name,
-			"file": file_url,
-		}
-	)
-	doc.insert(ignore_permissions=True)
-	return doc.name
+	lock_key = hashlib.sha256(
+		f"{company}|{reference_doctype}|{reference_name}|{file_hash}".encode()
+	).hexdigest()
+	locked = frappe.db.sql("SELECT GET_LOCK(%s, 10)", (f"china_archive:{lock_key}",))[0][0]
+	if locked != 1:
+		frappe.throw(_("归档记录正在被其他请求处理，请稍后重试"))
+	try:
+		existing = frappe.db.get_value(
+			"China Electronic Document",
+			{
+				"company": company, "reference_doctype": reference_doctype,
+				"reference_name": reference_name, "sha256": file_hash,
+			},
+			"name",
+		)
+		if existing:
+			return existing
+		doc = frappe.get_doc(
+			{
+				"doctype": "China Electronic Document",
+				"company": company,
+				"document_category": category,
+				"reference_doctype": reference_doctype,
+				"reference_name": reference_name,
+				"file": file_url,
+			}
+		)
+		doc.insert(ignore_permissions=True)
+		return doc.name
+	except DuplicateEntryError:
+		return frappe.db.get_value(
+			"China Electronic Document",
+			{
+				"company": company, "reference_doctype": reference_doctype,
+				"reference_name": reference_name, "sha256": file_hash,
+			},
+			"name",
+		)
+	finally:
+		frappe.db.sql("SELECT RELEASE_LOCK(%s)", (f"china_archive:{lock_key}",))
 
 
 def create_archive_package(company, reference_doctype, reference_name, closing_run=None):
+	_validate_archive_reference(company, reference_doctype, reference_name)
+	if closing_run:
+		closing_doc = frappe.get_doc("China Closing Run", closing_run)
+		if closing_doc.company != company:
+			frappe.throw(_("结账运行单不属于请求公司"))
+		closing_doc.check_permission("read")
+	include_company_documents = reference_doctype == "Company" or bool(closing_run)
+	document_filters = {"company": company, "status": "Archived"}
+	if not include_company_documents:
+		document_filters.update({"reference_doctype": reference_doctype, "reference_name": reference_name})
 	documents = frappe.get_all(
 		"China Electronic Document",
-		filters={"company": company, "status": "Archived"},
+		filters=document_filters,
 		fields=[
 			"name", "document_category", "reference_doctype", "reference_name", "file",
 			"file_name", "mime_type", "file_size", "sha256", "archived_on", "retention_until",
@@ -140,3 +172,24 @@ def export_archive_package(company, reference_doctype="Company", reference_name=
 		reference_name or company,
 		closing_run=closing_run,
 	)
+
+
+ARCHIVE_REFERENCE_DOCTYPES = {
+	"Company", "China Closing Run", "China Tax Invoice", "China Reconciliation Statement",
+}
+
+
+def _validate_archive_reference(company, reference_doctype, reference_name):
+	if reference_doctype not in ARCHIVE_REFERENCE_DOCTYPES:
+		frappe.throw(_("不允许导出该类型的电子档案：{0}").format(reference_doctype))
+	if not reference_name:
+		frappe.throw(_("电子档案引用对象不能为空"))
+	if reference_doctype == "Company":
+		if reference_name != company:
+			frappe.throw(_("电子档案引用公司与请求公司不一致"))
+		doc = frappe.get_doc("Company", company)
+	else:
+		doc = frappe.get_doc(reference_doctype, reference_name)
+		if doc.get("company") != company:
+			frappe.throw(_("电子档案引用对象不属于请求公司"))
+	doc.check_permission("read")

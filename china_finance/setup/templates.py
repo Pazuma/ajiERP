@@ -1,7 +1,6 @@
 import frappe
 from frappe.utils import add_days, getdate
 
-
 TEMPLATE_VERSION = "3.0"
 MAPPING_RULE_VERSION = "1.5"
 TEMPLATE_EFFECTIVE_FROM = "2026-01-01"
@@ -439,11 +438,7 @@ def ensure_company_mappings():
 		"China Finance Settings", filters={"enabled": 1},
 		fields=["company", "accounting_standard", "activation_date", "statutory_reporting_activation_date"]
 	):
-		effective_from = (
-			settings.statutory_reporting_activation_date
-			if settings.accounting_standard == "企业会计准则" and settings.statutory_reporting_activation_date
-			else settings.activation_date
-		)
+		effective_from = settings.statutory_reporting_activation_date or settings.activation_date or TEMPLATE_EFFECTIVE_FROM
 		created += create_automatic_mappings(settings.company, settings.accounting_standard, effective_from)
 		sync_unreviewed_automatic_mappings(settings.company, settings.accounting_standard)
 	return created
@@ -554,9 +549,12 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 				)
 			if not row_code or valid_rows.get(row_code) != "Mapped Accounts":
 				continue
-			effective_date = max(frappe.utils.getdate(effective_from), frappe.utils.getdate(TEMPLATE_EFFECTIVE_FROM))
+			effective_date = getdate(effective_from)
 			mapping_key = f"{company}|{template}|{account.name}|{effective_date}"
 			if frappe.db.exists("China Financial Statement Mapping", {"mapping_key": mapping_key}):
+				continue
+			effective_to = _available_mapping_end(company, template, account.name, effective_date)
+			if effective_to is False:
 				continue
 			frappe.get_doc(
 				{
@@ -564,7 +562,7 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 					"company": company, "template": template, "row_code": row_code, "account": account.name,
 					"supplementary_row_code": get_supplementary_row_code(account, statement_type, valid_rows, row_code),
 					"cash_inflow_row_code": inflow_code, "cash_outflow_row_code": outflow_code,
-					"sign_multiplier": "1", "effective_from": effective_date,
+					"sign_multiplier": "1", "effective_from": effective_date, "effective_to": effective_to,
 					"mapping_source": "Automatic", "reviewed": 0,
 					"account_number_snapshot": account.account_number,
 					"mapping_basis": basis,
@@ -573,6 +571,25 @@ def create_automatic_mappings(company, accounting_standard, effective_from):
 			).insert(ignore_permissions=True)
 			created += 1
 	return created
+
+
+def _available_mapping_end(company, template, account, effective_from):
+	"""Return a non-overlapping end date, or False when already covered."""
+	start = getdate(effective_from)
+	rows = frappe.get_all(
+		"China Financial Statement Mapping",
+		filters={"company": company, "template": template, "account": account},
+		fields=["effective_from", "effective_to"],
+		order_by="effective_from asc",
+	)
+	for row in rows:
+		row_start = getdate(row.effective_from)
+		row_end = getdate(row.effective_to) if row.effective_to else None
+		if row_start <= start and (not row_end or row_end >= start):
+			return False
+		if row_start > start:
+			return add_days(row_start, -1)
+	return None
 
 
 def seed_cash_equivalent_scope():

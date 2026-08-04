@@ -2,7 +2,12 @@ frappe.query_reports["China Financial Statements"] = {
 	after_datatable_render() {
 		const report = frappe.query_report;
 		report.page.main.find(".china-balance-sheet-panels").remove();
+		report.page.main.find(".china-activity-balance-panel").remove();
+		report.$report.removeClass("china-activity-balance-report");
 		report.$report.show();
+		if (report.get_filter_value("statement_type") === "Account Activity and Balance") {
+			apply_activity_balance_compact_style(report);
+		}
 		if (report.get_filter_value("statement_type") !== "Balance Sheet") return;
 
 		const currency = report.raw_data.chart?.currency;
@@ -48,6 +53,9 @@ frappe.query_reports["China Financial Statements"] = {
 		report.get_filter("project").get_query = () => ({
 			filters: { company: report.get_filter_value("company") },
 		});
+		report.get_filter("account").get_query = () => ({
+			filters: { company: report.get_filter_value("company") },
+		});
 		// Query Report copies df.on_change only during control creation. Update the
 		// created controls so period changes work without reopening the page.
 		report.get_filter("fiscal_year").on_change = () => sync_accounting_period(report, true);
@@ -76,6 +84,20 @@ frappe.query_reports["China Financial Statements"] = {
 		return value;
 	},
 };
+
+function apply_activity_balance_compact_style(report) {
+	report.$report.addClass("china-activity-balance-report");
+	if (document.getElementById("china-activity-balance-compact-style")) return;
+	$("<style>")
+		.attr("id", "china-activity-balance-compact-style")
+		.text(`
+        .china-activity-balance-report .dt-cell__content {
+            font-size: 11px;
+            line-height: 1.2;
+        }
+		`)
+		.appendTo(document.head);
+}
 
 function add_china_finance_export_actions(report) {
 	if (report.__china_finance_export_actions_added || !report.page?.add_action_item) return;
@@ -157,7 +179,9 @@ function apply_accounting_period(report, refresh, fiscal_year, options) {
 	const set_dates = (year) => {
 		const periods = options || get_period_options(year, report.get_filter_value("periodicity"));
 		const selected = periods.find((option) => option.label === report.get_filter_value("accounting_period")) || periods[0];
+		report.__applying_accounting_period = true;
 		report.set_filter_value({ from_date: selected.from_date, to_date: selected.to_date });
+		report.__applying_accounting_period = false;
 		if (refresh) report.refresh();
 	};
 	if (fiscal_year) {

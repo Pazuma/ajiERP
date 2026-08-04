@@ -88,9 +88,9 @@ class ChinaStatementMapping {
 				</div>
 			</div>`,
 		).appendTo($(this.wrapper).find(".layout-main-section"));
-		this.$summary = this.$content.find(".smc-summary");
+			this.$summary = this.$content.find(".smc-summary");
 		this.$rows = this.$content.find(".smc-rows");
-		this.$accounts = this.$content.find(".smc-accounts");
+			this.$accounts = this.$content.find(".smc-accounts");
 		this.inject_styles();
 	}
 
@@ -165,6 +165,18 @@ class ChinaStatementMapping {
 				.smc-selection-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-blue, #f0f6ff); font-size: var(--text-sm); }
 				.smc-selection-hint { color: var(--text-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 				.smc-empty { padding: 28px 14px; color: var(--text-muted); text-align: center; }
+				.smc-configuration { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); margin-bottom: 16px; overflow: hidden; }
+				.smc-configuration__title { padding: 12px 16px; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--subtle-fg); }
+				.smc-configuration__body { padding: 12px 16px 16px; }
+				.smc-configuration__field + .smc-configuration__field { margin-top: 8px; }
+				.smc-configuration .form-group { margin-bottom: 8px; }
+				.smc-configuration .smc-save-configuration { margin-top: 4px; }
+				.smc-summary-config { min-width: 210px; border-left-color: var(--gray-400); }
+				.smc-summary-config__control { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+				.smc-date-control { width: 126px; }
+				.smc-date-control .form-group { margin: 0; }
+				.smc-date-control .control-label { display: none; }
+				.smc-date-control .form-control { height: 26px; padding: 2px 6px; }
 				@media (max-width: 991px) { .smc-main { grid-template-columns: 1fr; } }
 			</style>`,
 		).appendTo(document.head);
@@ -200,6 +212,45 @@ class ChinaStatementMapping {
 		this.render_summary();
 		this.render_rows();
 		this.render_accounts();
+		this.render_configuration();
+	}
+
+	render_configuration() {
+		if (!this.can_edit_template) return;
+		const configuration = this.data.configuration || {};
+		this.$summary.find(".smc-summary-config").remove();
+		const configs = [
+			["report_effective_from", __("报表生效日期"), configuration.report_effective_from],
+			["mapping_effective_from", __("科目映射统一生效日期"), configuration.mapping_effective_from],
+		];
+		configs.forEach(([fieldname, label, value]) => {
+			const $configuration = $(`
+				<div class="summary-item smc-summary-config">
+					<div class="summary-label">${label}</div>
+					<div class="smc-summary-config__control">
+						<div class="smc-date-control"></div>
+						<button class="btn btn-xs btn-primary smc-save-configuration">${__("保存")}</button>
+					</div>
+				</div>
+			`);
+			this.$summary.append($configuration);
+			const date_field = frappe.ui.form.make_control({
+				parent: $configuration.find(".smc-date-control"),
+				df: { fieldname, label, fieldtype: "Date" },
+				render_input: true,
+			});
+			date_field.set_value(value || null);
+			$configuration.find(".smc-save-configuration").on("click", async () => {
+			await frappe.xcall("china_finance.services.statement_mapping_console.save_mapping_configuration", {
+					company: this.company.get_value(),
+					template: this.data.template.name,
+				report_effective_from: fieldname === "report_effective_from" ? date_field.get_value() : configuration.report_effective_from,
+				mapping_effective_from: fieldname === "mapping_effective_from" ? date_field.get_value() : configuration.mapping_effective_from,
+			});
+			frappe.show_alert({ message: __("生效日期配置已保存"), indicator: "green" });
+			this.refresh();
+		});
+		});
 	}
 
 	render_summary() {

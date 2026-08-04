@@ -199,8 +199,13 @@ _gl_source_approval_events = {
 	"before_cancel": "china_finance.services.voucher.prepare_source_cancellation",
 }
 
+_journal_entry_events = {
+	"before_naming": "china_finance.services.naming.sync_journal_entry_series",
+	**_gl_source_approval_events,
+}
+
 doc_events = {
-	doctype: _gl_source_approval_events
+	doctype: _journal_entry_events if doctype == "Journal Entry" else _gl_source_approval_events
 	for doctype in (
 		"Journal Entry",
 		"Payment Entry",
@@ -225,6 +230,18 @@ doc_events["Delivery Note"] = {
 		"china_finance.services.sales_settlement.validate_delivery_note_settlement_mode",
 	],
 	"before_cancel": "china_finance.services.voucher.prepare_source_cancellation",
+	"on_submit": [
+		"china_finance.services.voucher.on_gl_source_submit",
+		"china_finance.services.auto_invoice.on_delivery_note_submit",
+	],
+}
+doc_events["Purchase Receipt"] = {
+	"before_submit": "china_finance.services.voucher.validate_source_approval",
+	"before_cancel": "china_finance.services.voucher.prepare_source_cancellation",
+	"on_submit": [
+		"china_finance.services.voucher.on_gl_source_submit",
+		"china_finance.services.auto_invoice.on_purchase_receipt_submit",
+	],
 }
 doc_events["Sales Invoice"] = {
 	"before_submit": [

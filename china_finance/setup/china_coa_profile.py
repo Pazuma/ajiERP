@@ -4,7 +4,7 @@ from functools import lru_cache
 
 import frappe
 from frappe import _
-from frappe.utils import cint, getdate, now_datetime
+from frappe.utils import add_days, cint, getdate, now_datetime
 
 
 CHART_TEMPLATE = "中国企业会计准则－一般纳税人制造业（1.0）"
@@ -228,11 +228,31 @@ def ensure_tax_mappings(company, effective_from):
 	for direction, number in TAX_ACCOUNT_RULES.items():
 		account = get_account_by_number(company, number, leaf=True)
 		filters = {"company": company, "direction": direction, "account": account.name, "effective_from": getdate(effective_from)}
-		if frappe.db.exists("China Tax Account Mapping", filters):
+		effective_to = _available_tax_mapping_end(company, direction, account.name, effective_from)
+		if effective_to is False or frappe.db.exists("China Tax Account Mapping", filters):
 			continue
-		frappe.get_doc({"doctype": "China Tax Account Mapping", **filters, "enabled": 1}).insert(ignore_permissions=True)
+		frappe.get_doc({"doctype": "China Tax Account Mapping", **filters, "effective_to": effective_to, "enabled": 1}).insert(ignore_permissions=True)
 		created += 1
 	return created
+
+
+def _available_tax_mapping_end(company, direction, account, effective_from):
+	"""Return a non-overlapping end date, or False when already covered."""
+	start = getdate(effective_from)
+	rows = frappe.get_all(
+		"China Tax Account Mapping",
+		filters={"company": company, "direction": direction, "account": account},
+		fields=["effective_from", "effective_to"],
+		order_by="effective_from asc",
+	)
+	for row in rows:
+		row_start = getdate(row.effective_from)
+		row_end = getdate(row.effective_to) if row.effective_to else None
+		if row_start <= start and (not row_end or row_end >= start):
+			return False
+		if row_start > start:
+			return add_days(row_start, -1)
+	return None
 
 
 def _get_generic_vat_account(company):
@@ -326,6 +346,19 @@ def _normalize_generic_item_tax_templates(company, vat_account):
 		)
 		if not rows or any(row.tax_type != vat_account for row in rows) or not _item_tax_template_is_unused(template.name):
 			continue
+		# ERPNext's generic VAT setup can contain the same VAT account more than
+		# once.  China has separate input/output accounts, but the input template
+		# still may contain only one row per account or ERPNext rejects it during
+		# validation.  Keep the first row's rate and discard duplicate setup rows.
+		unique_rows = []
+		seen_tax_types = set()
+		for row in rows:
+			if row.tax_type in seen_tax_types:
+				frappe.delete_doc("Item Tax Template Detail", row.name, ignore_permissions=True)
+				continue
+			seen_tax_types.add(row.tax_type)
+			unique_rows.append(row)
+		rows = unique_rows
 		for row in rows:
 			frappe.db.set_value("Item Tax Template Detail", row.name, "tax_type", output_account.name, update_modified=False)
 		output_title = f"{template.title}（销项）"
@@ -335,8 +368,7 @@ def _normalize_generic_item_tax_templates(company, vat_account):
 			frappe.get_doc({
 				"doctype": "Item Tax Template", "company": company, "title": input_title,
 				"taxes": [
-					{"tax_type": input_account.name, "tax_rate": row.tax_rate, "not_applicable": row.not_applicable}
-					for row in rows
+					{"tax_type": input_account.name, "tax_rate": rows[0].tax_rate, "not_applicable": rows[0].not_applicable}
 				],
 			}).insert(ignore_permissions=True)
 			created += 1
@@ -511,13 +543,14 @@ def ensure_cash_scope(company, effective_from):
 		if not account:
 			continue
 		key = f"{company}|{account.name}|{getdate(effective_from)}"
-		if frappe.db.exists("China Cash Equivalent Scope", {"scope_key": key}):
+		effective_to = _available_scope_end(company, account.name, effective_from)
+		if effective_to is False or frappe.db.exists("China Cash Equivalent Scope", {"scope_key": key}):
 			continue
 		frappe.get_doc({
 			"doctype": "China Cash Equivalent Scope", "scope_key": key,
 			"company": company, "account": account.name, "classification": classification,
 			"included": included, "restricted": restricted, "restriction_reason": reason,
-			"effective_from": getdate(effective_from), "reviewed": 0,
+			"effective_from": getdate(effective_from), "effective_to": effective_to, "reviewed": 0,
 			"policy_basis": "按中国科目模板编号自动建议，须由财务人员复核资金可随时支用性。",
 		}).insert(ignore_permissions=True)
 		created += 1
@@ -527,16 +560,37 @@ def ensure_cash_scope(company, effective_from):
 		fields=["name"],
 	):
 		key = f"{company}|{account.name}|{getdate(effective_from)}"
-		if frappe.db.exists("China Cash Equivalent Scope", {"scope_key": key}):
+		effective_to = _available_scope_end(company, account.name, effective_from)
+		if effective_to is False or frappe.db.exists("China Cash Equivalent Scope", {"scope_key": key}):
 			continue
 		frappe.get_doc({
 			"doctype": "China Cash Equivalent Scope", "scope_key": key,
 			"company": company, "account": account.name, "classification": "随时可用存款",
-			"included": 1, "restricted": 0, "effective_from": getdate(effective_from), "reviewed": 0,
+			"included": 1, "restricted": 0, "effective_from": getdate(effective_from),
+			"effective_to": effective_to, "reviewed": 0,
 			"policy_basis": "按 Bank 科目类型自动建议，须由财务人员复核。",
 		}).insert(ignore_permissions=True)
 		created += 1
 	return created
+
+
+def _available_scope_end(company, account, effective_from):
+	"""Return a non-overlapping end date, or False when already covered."""
+	start = getdate(effective_from)
+	rows = frappe.get_all(
+		"China Cash Equivalent Scope",
+		filters={"company": company, "account": account},
+		fields=["effective_from", "effective_to"],
+		order_by="effective_from asc",
+	)
+	for row in rows:
+		row_start = getdate(row.effective_from)
+		row_end = getdate(row.effective_to) if row.effective_to else None
+		if row_start <= start and (not row_end or row_end >= start):
+			return False
+		if row_start > start:
+			return add_days(row_start, -1)
+	return None
 
 
 def get_profile_status(company):

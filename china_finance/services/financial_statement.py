@@ -171,6 +171,8 @@ def build_statement(
 	if period_meta.get("opening_entry_cash"):
 		warnings.append(_("本期含开账现金 {0}，已计入期初余额而未计入经营现金流").format(period_meta["opening_entry_cash"]))
 	if statement_type == "Cash Flow":
+		if period_meta.get("unreviewed_fallback_count") or ytd_meta.get("unreviewed_fallback_count"):
+			warnings.append(_("现金流使用了未复核的历史自动映射，正式报表不可用"))
 		if period_meta.get("manual_assignment_count"):
 			warnings.append(_("本期已按凭证直接指定取数 {0} 张").format(period_meta["manual_assignment_count"]))
 		if period_meta.get("automatic_transaction_count"):
@@ -243,7 +245,12 @@ def get_period_mapped_values(
 	"""Split movement amounts at mapping effective-date boundaries."""
 	values = defaultdict(float)
 	skip_codes = set(skip_codes or ())
-	for mapping in get_mapping_revisions(company, template, from_date, to_date):
+	mappings = get_mapping_revisions(company, template, from_date, to_date)
+	account_dates = _get_account_daily_balances(
+		company, {mapping.account for mapping in mappings}, from_date, to_date,
+		finance_book, cost_center, project, exclude_period_closing,
+	)
+	for mapping in mappings:
 		if mapping.row_code in skip_codes:
 			continue
 		mapping_from = max(getdate(from_date), getdate(mapping.effective_from))
@@ -252,10 +259,10 @@ def get_period_mapped_values(
 		)
 		if mapping_from > mapping_to:
 			continue
-		balance = get_account_balances(
-			company, [mapping.account], mapping_from, mapping_to, finance_book, cost_center, project,
-			exclude_period_closing=exclude_period_closing,
-		).get(mapping.account, 0)
+		balance = sum(
+			amount for posting_date, amount in account_dates.get(mapping.account, {}).items()
+			if mapping_from <= posting_date <= mapping_to
+		)
 		value = flt(balance) * int(mapping.sign_multiplier)
 		if get_mapping_direction(template, mapping.row_code) == "Credit Positive":
 			value = -value
@@ -263,6 +270,41 @@ def get_period_mapped_values(
 		if mapping.get("supplementary_row_code"):
 			values[mapping.supplementary_row_code] += value
 	return values
+
+
+def _get_account_daily_balances(
+	company, accounts, from_date, to_date, finance_book=None, cost_center=None, project=None,
+	exclude_period_closing=False,
+):
+	"""Fetch all account movements for a period in one grouped query."""
+	if not accounts:
+		return {}
+	conditions = [
+		"company=%(company)s", "account IN %(accounts)s", "posting_date>=%(from_date)s",
+		"posting_date<=%(to_date)s", "is_cancelled=0",
+	]
+	parameters = {
+		"company": company, "accounts": list(accounts), "from_date": from_date, "to_date": to_date,
+	}
+	for fieldname, value in (("finance_book", finance_book), ("cost_center", cost_center), ("project", project)):
+		if value:
+			conditions.append(f"{fieldname}=%({fieldname})s")
+			parameters[fieldname] = value
+	if exclude_period_closing:
+		conditions.append("voucher_type!='Period Closing Voucher'")
+	rows = frappe.db.sql(
+		f"""
+		SELECT account, posting_date, SUM(debit-credit) AS balance
+		FROM `tabGL Entry`
+		WHERE {' AND '.join(conditions)}
+		GROUP BY account, posting_date
+		""",
+		parameters, as_dict=True,
+	)
+	result = defaultdict(dict)
+	for row in rows:
+		result[row.account][getdate(row.posting_date)] = flt(row.balance)
+	return result
 
 
 def render_rows(template, source_values):
@@ -484,6 +526,7 @@ def get_cash_flow_values(company, mappings, from_date, to_date, finance_book=Non
 	)
 	unclassified = 0.0
 	automatic_transaction_count = 0
+	unreviewed_fallback_count = 0
 	for cash_row in cash_rows:
 		if (cash_row.voucher_type, cash_row.voucher_no) in confirmed_sources:
 			continue
@@ -526,6 +569,7 @@ def get_cash_flow_values(company, mappings, from_date, to_date, finance_book=Non
 				for candidate in revisions_by_account.get(counterpart.account, ()):
 					if candidate.mapping_source == "Automatic" and not candidate.reviewed:
 						mapping = candidate
+						unreviewed_fallback_count += 1
 						break
 			row_code = None
 			if mapping:
@@ -545,6 +589,7 @@ def get_cash_flow_values(company, mappings, from_date, to_date, finance_book=Non
 		"transaction_count": automatic_transaction_count + len(confirmed_sources),
 		"manual_assignment_count": len(confirmed_sources),
 		"automatic_transaction_count": automatic_transaction_count,
+		"unreviewed_fallback_count": unreviewed_fallback_count,
 		"opening_entry_cash": flt(opening_entry_cash, 2),
 	}
 
@@ -930,11 +975,13 @@ def validate_statement_links(company, from_date, to_date, tolerance=None):
 		"profit_equity": check(pl_values, "NET_PROFIT", equity_values, "NET_PROFIT", _("净利润与权益变动衔接")),
 		"cash_flow": {
 			"passed": abs(cash_values.get("CASH_RECONCILIATION_DIFFERENCE", 0)) <= tolerance
-			and abs(flt(statements["Cash Flow"]["cash_flow_meta"].get("unclassified_amount"))) <= tolerance,
+			and abs(flt(statements["Cash Flow"]["cash_flow_meta"].get("unclassified_amount"))) <= tolerance
+			and not statements["Cash Flow"]["cash_flow_meta"].get("unreviewed_fallback_count"),
 			"difference": cash_values.get("CASH_RECONCILIATION_DIFFERENCE", 0),
-			"details": _("现金流勾稽差额 {0}，未分类现金流 {1}").format(
+			"details": _("现金流勾稽差额 {0}，未分类现金流 {1}，未复核历史自动映射 {2} 次").format(
 				cash_values.get("CASH_RECONCILIATION_DIFFERENCE", 0),
 				statements["Cash Flow"]["cash_flow_meta"].get("unclassified_amount", 0),
+				statements["Cash Flow"]["cash_flow_meta"].get("unreviewed_fallback_count", 0),
 			),
 		},
 	}

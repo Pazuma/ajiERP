@@ -22,7 +22,7 @@
    "fieldtype": "Select",
    "label": "\u62a5\u8868\u7c7b\u578b",
    "mandatory": 1,
-   "options": "Balance Sheet\nProfit and Loss\nCash Flow\nChanges in Equity\nTrial Balance",
+   "options": "Balance Sheet\nProfit and Loss\nCash Flow\nAccount Activity and Balance",
    "wildcard_filter": 0
   },
   {
@@ -102,12 +102,35 @@
    "mandatory": 0,
    "options": "Project",
    "wildcard_filter": 0
+  },
+  {
+   "fieldname": "account",
+   "fieldtype": "Link",
+   "label": "\u79d1\u76ee",
+   "mandatory": 0,
+   "options": "Account",
+   "wildcard_filter": 0
+  },
+  {
+   "fieldname": "show_zero_values",
+   "fieldtype": "Check",
+   "label": "\u663e\u793a\u96f6\u4f59\u989d",
+   "mandatory": 0,
+   "wildcard_filter": 0
+  },
+  {
+   "default": "1",
+   "fieldname": "expand_party",
+   "fieldtype": "Check",
+   "label": "\u5c55\u5f00\u5f80\u6765\u660e\u7ec6",
+   "mandatory": 0,
+   "wildcard_filter": 0
   }
  ],
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": null,
- "modified": "2026-07-20 15:14:38.651090",
+ "modified": "2026-08-04 11:34:09.821932",
  "modified_by": "Administrator",
  "module": "China Finance",
  "name": "China Financial Statements",
