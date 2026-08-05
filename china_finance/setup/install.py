@@ -22,6 +22,7 @@ DAILY_NAVIGATION = (
 )
 
 CLOSING_NAVIGATION = (
+	("China Voucher Ledger", "查凭证", "Report"),
 	("China Financial Statements", "中国财务报表", "Report"),
 	("China Closing Run", "中国结账运行单", "DocType"),
 )
@@ -326,6 +327,12 @@ def sync_sales_settlement_custom_fields():
 	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 	create_custom_fields({
+		"Journal Entry": [
+			{"fieldname": "custom_china_voucher_number", "label": "凭证字号", "fieldtype": "Data", "read_only": 1, "in_list_view": 1, "insert_before": "name"},
+		],
+		"Payment Entry": [
+			{"fieldname": "custom_china_voucher_number", "label": "凭证字号", "fieldtype": "Data", "read_only": 1, "in_list_view": 1, "insert_before": "name"},
+		],
 		"Bank Transaction": [
 			{"fieldname": "custom_summary", "label": "摘要", "fieldtype": "Small Text", "insert_after": "description"},
 		],
@@ -351,6 +358,27 @@ def sync_sales_settlement_custom_fields():
 			{"fieldname": "custom_china_sales_settlement", "label": "销售结算单", "fieldtype": "Link", "options": "China Sales Settlement", "read_only": 1, "insert_after": "customer_name"},
 		],
 	}, update=True)
+	backfill_source_voucher_numbers()
+
+
+def backfill_source_voucher_numbers():
+	"""Keep source-document list columns synchronized with voucher snapshots."""
+	for voucher in frappe.get_all(
+		"China Accounting Voucher",
+		filters={"docstatus": 1},
+		fields=["source_doctype", "source_name", "statutory_number"],
+	):
+		if voucher.source_doctype not in ("Journal Entry", "Payment Entry"):
+			continue
+		if not frappe.db.has_column(voucher.source_doctype, "custom_china_voucher_number"):
+			continue
+		frappe.db.set_value(
+			voucher.source_doctype,
+			voucher.source_name,
+			"custom_china_voucher_number",
+			voucher.statutory_number,
+			update_modified=False,
+		)
 
 
 def backfill_bank_transaction_summaries():
@@ -456,7 +484,7 @@ def _workspace_card(label, link_count):
 def _desired_workspace_links(custom_links=None):
 	links = [_workspace_card("日常工作", len(DAILY_NAVIGATION))]
 	links.extend(_workspace_link(*link) for link in DAILY_NAVIGATION)
-	links.append(_workspace_card("报表与结账", 2))
+	links.append(_workspace_card("报表与结账", len(CLOSING_NAVIGATION)))
 	links.extend(_workspace_link(*link) for link in CLOSING_NAVIGATION)
 	for label, _icon, group_links in ADMIN_NAVIGATION_GROUPS:
 		links.append(_workspace_card(label, len(group_links)))
@@ -474,7 +502,7 @@ def sync_simplified_navigation(navigation_name="China Finance"):
 		sidebar = frappe.get_doc("Workspace Sidebar", navigation_name)
 		custom = []
 		for item in sidebar.items:
-			if item.type == "Link" and item.link_to not in known:
+			if item.type == "Link" and item.link_to not in known and item.link_to != "china-banking":
 				custom.append(_sidebar_link(item.link_to, item.label, item.link_type))
 		desired = _desired_sidebar_items(custom)
 		current = [
@@ -497,7 +525,7 @@ def sync_simplified_navigation(navigation_name="China Finance"):
 		workspace = frappe.get_doc("Workspace", navigation_name)
 		custom = []
 		for item in workspace.links:
-			if item.type == "Link" and item.link_to not in known:
+			if item.type == "Link" and item.link_to not in known and item.link_to != "china-banking":
 				custom.append(_workspace_link(item.link_to, item.label, item.link_type))
 		desired = _desired_workspace_links(custom)
 		current = [(row.type, row.label, row.link_to, row.link_type) for row in workspace.links]

@@ -14,7 +14,11 @@ def execute(filters=None):
 		SELECT ti.name, ti.invoice_date, ti.direction, ti.invoice_type, ti.invoice_number, ti.invoice_status,
 			ti.seller_name, ti.buyer_name, ti.net_amount, ti.tax_amount, ti.gross_amount,
 			ti.verification_status, ti.deduction_status, ti.deduction_period, ti.accounting_status,
-			COALESCE((SELECT SUM(a.allocated_gross_amount) FROM `tabChina Tax Invoice Allocation` a WHERE a.parent=ti.name), 0) AS allocated_amount
+			COALESCE((
+				SELECT SUM(a.allocated_gross_amount)
+				FROM `tabChina Tax Invoice Allocation` a
+				WHERE a.parent=ti.name AND ti.docstatus=1
+			), 0) AS allocated_amount
 		FROM `tabChina Tax Invoice` ti
 		WHERE {' AND '.join(conditions)}
 		ORDER BY ti.invoice_date, ti.invoice_number

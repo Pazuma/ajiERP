@@ -249,11 +249,12 @@ def get_purchase_order_reconciliation_rows(company, from_date, to_date, supplier
 		LEFT JOIN (
 			SELECT source.purchase_order,
 				GROUP_CONCAT(source.purchase_invoice ORDER BY source.purchase_invoice SEPARATOR ', ') AS purchase_invoices,
-				SUM(source.billed_qty) AS billed_qty, SUM(source.invoice_amount) AS grand_total,
-				SUM(source.outstanding_amount) AS outstanding_amount
+				SUM(source.billed_qty) AS billed_qty, SUM(source.allocated_invoice_amount) AS grand_total,
+				SUM(source.allocated_outstanding_amount) AS outstanding_amount
 			FROM (
 				SELECT pii.purchase_order, pii.parent AS purchase_invoice, SUM(pii.qty) AS billed_qty,
-					MAX(pi.grand_total) AS invoice_amount, MAX(pi.outstanding_amount) AS outstanding_amount
+					SUM(CASE WHEN pi.base_net_total > 0 THEN pi.grand_total * pii.base_amount / pi.base_net_total ELSE 0 END) AS allocated_invoice_amount,
+					SUM(CASE WHEN pi.base_net_total > 0 THEN pi.outstanding_amount * pii.base_amount / pi.base_net_total ELSE 0 END) AS allocated_outstanding_amount
 				FROM `tabPurchase Invoice Item` pii
 				INNER JOIN `tabPurchase Invoice` pi ON pi.name=pii.parent AND pi.docstatus=1
 				WHERE pii.purchase_order IS NOT NULL AND pii.purchase_order!=''
@@ -277,13 +278,14 @@ def get_purchase_order_reconciliation_rows(company, from_date, to_date, supplier
 				SUM(source.allocated_amount) AS paid_amount
 			FROM (
 				SELECT pii.purchase_order, reference.parent AS payment_entry, reference.reference_name,
-					MAX(reference.allocated_amount) AS allocated_amount
+					SUM(CASE WHEN pi.base_net_total > 0 THEN reference.allocated_amount * pii.base_amount / pi.base_net_total ELSE 0 END) AS allocated_amount
 				FROM `tabPurchase Invoice Item` pii
+				INNER JOIN `tabPurchase Invoice` pi ON pi.name=pii.parent AND pi.docstatus=1
 				INNER JOIN `tabPayment Entry Reference` reference
 					ON reference.reference_doctype='Purchase Invoice' AND reference.reference_name=pii.parent
 				INNER JOIN `tabPayment Entry` pe ON pe.name=reference.parent AND pe.docstatus=1
 				WHERE pii.purchase_order IS NOT NULL AND pii.purchase_order!=''
-				GROUP BY pii.purchase_order, reference.parent, reference.reference_name
+				GROUP BY pii.purchase_order, pii.parent, reference.parent, reference.reference_name
 			) source GROUP BY source.purchase_order
 		) payments ON payments.purchase_order=po.name
 		WHERE {' AND '.join(conditions)}

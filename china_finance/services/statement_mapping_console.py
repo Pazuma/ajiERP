@@ -100,7 +100,32 @@ def build_console_payload(template, mappings, leaf_accounts, all_accounts=None, 
 		row_mappings.setdefault(mapping.row_code, []).append(item)
 		mapped_accounts.add(mapping.account)
 		pending_review += 0 if mapping.reviewed else 1
-	rows = [
+	rows = []
+	rollup_codes = {
+		"TAX_SURCHARGES", "SELLING_EXPENSES", "ADMIN_EXPENSES", "FINANCE_EXPENSES",
+		"NONOPERATING_INCOME", "NONOPERATING_EXPENSE",
+	}
+	for index, row in enumerate(template.rows):
+		children = []
+		if row.row_code in rollup_codes:
+			for child in template.rows[index + 1:]:
+				if child.indent <= row.indent:
+					break
+				if child.row_type == "Mapped Accounts" and not (child.label or "").strip().startswith("其中："):
+					children.append(child)
+		supplementary = (row.label or "").strip().startswith("其中：")
+		if row.formula:
+			calculation_description = ""
+		elif supplementary:
+			calculation_description = "仅补充披露，不参与父项金额计算"
+		elif children:
+			parts = ["本行直接映射科目汇总"] + [child.label for child in children]
+			calculation_description = " + ".join(parts)
+		elif row.row_type == "Mapped Accounts":
+			calculation_description = "本行映射科目汇总"
+		else:
+			calculation_description = ""
+		rows.append(
 		{
 			"row_code": row.row_code,
 			"label": row.label,
@@ -108,11 +133,11 @@ def build_console_payload(template, mappings, leaf_accounts, all_accounts=None, 
 			"indent": int(bool(row.indent)),
 			"bold": int(bool(row.bold)),
 			"formula": row.formula,
+			"calculation_description": calculation_description,
 			"balance_direction": row.balance_direction,
 			"mappings": row_mappings.get(row.row_code, []),
 		}
-		for row in template.rows
-	]
+		)
 	root_order = {"Asset": 0, "Liability": 1, "Equity": 2, "Income": 3, "Expense": 4}
 	valid_rows = {row.row_code: row.row_type for row in template.rows}
 	row_labels = {row.row_code: row.label for row in template.rows}

@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, getdate
 
 from china_finance.services.tax_invoice_request import get_invoice_requirement
 
@@ -13,18 +13,31 @@ def get_output_invoice_rows(company, from_date, to_date):
 		"""
 		SELECT si.name AS sales_invoice, si.company, si.posting_date, si.customer, si.customer_name,
 			si.grand_total, si.total_taxes_and_charges, si.outstanding_amount,
-			GROUP_CONCAT(DISTINCT request.name ORDER BY request.creation SEPARATOR ', ') AS requests,
-			GROUP_CONCAT(DISTINCT request.status ORDER BY request.creation SEPARATOR ', ') AS request_statuses,
-			GROUP_CONCAT(DISTINCT tax.name ORDER BY tax.invoice_date SEPARATOR ', ') AS tax_invoices,
-			COALESCE(SUM(allocation.allocated_gross_amount), 0) AS allocated_gross_amount,
-			COALESCE(SUM(allocation.allocated_tax_amount), 0) AS allocated_tax_amount
+		requests.requests, requests.request_statuses, allocations.tax_invoices,
+		COALESCE(allocations.allocated_gross_amount, 0) AS allocated_gross_amount,
+		COALESCE(allocations.allocated_tax_amount, 0) AS allocated_tax_amount
 		FROM `tabSales Invoice` si
-		LEFT JOIN `tabChina Tax Invoice Request Item` request_item ON request_item.sales_invoice=si.name
-		LEFT JOIN `tabChina Tax Invoice Request` request ON request.name=request_item.parent AND request.status NOT IN ('Rejected', 'Cancelled')
-		LEFT JOIN `tabChina Tax Invoice Allocation` allocation ON allocation.reference_doctype='Sales Invoice' AND allocation.reference_name=si.name
-		LEFT JOIN `tabChina Tax Invoice` tax ON tax.name=allocation.parent AND tax.docstatus=1 AND tax.direction='销项'
+		LEFT JOIN (
+			SELECT request_item.sales_invoice,
+				GROUP_CONCAT(DISTINCT request.name ORDER BY request.creation SEPARATOR ', ') AS requests,
+				GROUP_CONCAT(DISTINCT request.status ORDER BY request.creation SEPARATOR ', ') AS request_statuses
+			FROM `tabChina Tax Invoice Request Item` request_item
+			INNER JOIN `tabChina Tax Invoice Request` request
+				ON request.name=request_item.parent AND request.status NOT IN ('Rejected', 'Cancelled')
+			GROUP BY request_item.sales_invoice
+		) requests ON requests.sales_invoice=si.name
+		LEFT JOIN (
+			SELECT allocation.reference_name,
+				GROUP_CONCAT(DISTINCT tax.name ORDER BY tax.invoice_date, tax.name SEPARATOR ', ') AS tax_invoices,
+				SUM(allocation.allocated_gross_amount) AS allocated_gross_amount,
+				SUM(allocation.allocated_tax_amount) AS allocated_tax_amount
+			FROM `tabChina Tax Invoice Allocation` allocation
+			INNER JOIN `tabChina Tax Invoice` tax
+				ON tax.name=allocation.parent AND tax.docstatus=1 AND tax.direction='销项'
+			WHERE allocation.reference_doctype='Sales Invoice'
+			GROUP BY allocation.reference_name
+		) allocations ON allocations.reference_name=si.name
 		WHERE si.company=%s AND si.posting_date BETWEEN %s AND %s AND si.docstatus=1 AND si.is_return=0
-		GROUP BY si.name
 		ORDER BY si.posting_date, si.name
 		""",
 		(company, from_date, to_date),
@@ -52,12 +65,11 @@ def evaluate_output_invoice_rows(company, from_date, to_date):
 
 
 def get_output_tax_gl_check(company, from_date, to_date):
-	accounts = frappe.get_all(
+	accounts = list({row.account for row in frappe.get_all(
 		"China Tax Account Mapping",
 		filters={"company": company, "direction": "Output", "enabled": 1, "effective_from": ["<=", to_date]},
-		or_filters={"effective_to": [">=", from_date], "effective_to": ["is", "not set"]},
-		pluck="account",
-	)
+		fields=["account", "effective_from", "effective_to"],
+	) if (not row.effective_to or getdate(row.effective_to) >= getdate(from_date))})
 	tax_amount = frappe.db.sql(
 		"""SELECT COALESCE(SUM(tax_amount), 0) FROM `tabChina Tax Invoice`
 		WHERE company=%s AND direction='销项' AND docstatus=1 AND invoice_date BETWEEN %s AND %s""",
@@ -102,12 +114,11 @@ def get_input_tax_accounting_check(company, from_date, to_date):
 		""",
 		(company, from_date, to_date),
 	)[0][0]
-	accounts = frappe.get_all(
+	accounts = list({row.account for row in frappe.get_all(
 		"China Tax Account Mapping",
 		filters={"company": company, "direction": "Input", "enabled": 1, "effective_from": ["<=", to_date]},
-		or_filters={"effective_to": [">=", from_date], "effective_to": ["is", "not set"]},
-		pluck="account",
-	)
+		fields=["account", "effective_from", "effective_to"],
+	) if (not row.effective_to or getdate(row.effective_to) >= getdate(from_date))})
 	if not accounts:
 		if frappe.db.get_value("China Finance Settings", company, "taxpayer_type") == "小规模纳税人":
 			return {"passed": True, "details": _("小规模纳税人不要求配置进项税抵扣科目"), "tax_amount": flt(tax_amount), "gl_amount": 0}

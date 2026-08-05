@@ -22,6 +22,8 @@ GL_SOURCE_DOCTYPES = (
 	"Period Closing Voucher",
 )
 
+FORMAL_VOUCHER_SOURCES = ("Journal Entry", "Payment Entry")
+
 SNAPSHOT_RETRY_ROLES = ("System Manager", "China Finance Manager")
 SNAPSHOT_BACKLINK_DOCTYPES = ("China Accounting Voucher", "China Cash Flow Assignment")
 
@@ -373,6 +375,14 @@ def create_voucher_from_source(doc, source_event="Posting", force=False):
 	voucher.flags.ignore_permissions = True
 	voucher.insert()
 	voucher.submit()
+	if doc.doctype in ("Journal Entry", "Payment Entry") and frappe.db.has_column(doc.doctype, "custom_china_voucher_number"):
+		frappe.db.set_value(
+			doc.doctype,
+			doc.name,
+			"custom_china_voucher_number",
+			voucher.statutory_number,
+			update_modified=False,
+		)
 	if source_event == "Posting":
 		from china_finance.services.cash_flow_assignment import create_assignment_if_required
 
@@ -455,31 +465,24 @@ def reverse_voucher_entries(voucher_name):
 
 
 def classify_voucher_word(entries, settings):
-	if settings.voucher_mode == "统一记字":
-		return settings.default_voucher_word or "记"
-	accounts = {row.get("account") for row in entries if row.get("account")}
-	account_types = dict(
-		frappe.get_all("Account", filters={"name": ["in", list(accounts)]}, fields=["name", "account_type"], as_list=True)
-	)
-	cash_debit = any(account_types.get(row.get("account")) in {"Bank", "Cash"} and flt(row.get("debit")) for row in entries)
-	cash_credit = any(account_types.get(row.get("account")) in {"Bank", "Cash"} and flt(row.get("credit")) for row in entries)
-	if cash_debit and not cash_credit:
-		return "收"
-	if cash_credit and not cash_debit:
-		return "付"
-	if not cash_debit and not cash_credit:
-		return "转"
-	return settings.default_voucher_word or "记"
+	return "记"
 
 
 def assign_voucher_number(voucher):
-	if voucher.sequence_number:
+	if voucher.voucher_key:
+		return
+	if voucher.source_doctype not in FORMAL_VOUCHER_SOURCES:
+		# Business-document snapshots remain available for ledger tracing, but
+		# must not consume the formal accounting-voucher sequence.
+		voucher.sequence_number = 0
+		voucher.statutory_number = None
+		voucher.voucher_key = f"business|{voucher.company}|{voucher.source_doctype}|{voucher.source_name}|{voucher.source_event}"
 		return
 	settings = get_company_settings(voucher.company)
 	if not settings:
 		frappe.throw(_("公司 {0} 未启用中国财务设置").format(voucher.company))
-	period_key = voucher.accounting_period if settings.sequence_reset == "会计期间" else "YEAR"
-	sequence_key = "|".join((voucher.company, voucher.fiscal_year, period_key, voucher.voucher_word))
+	period_key = voucher.accounting_period
+	sequence_key = "|".join((voucher.company, voucher.fiscal_year, period_key, voucher.voucher_word, "formal"))
 
 	row = frappe.db.sql(
 		"SELECT name, current_value FROM `tabChina Voucher Sequence` WHERE sequence_key=%s FOR UPDATE",
@@ -494,9 +497,9 @@ def assign_voucher_number(voucher):
 					"sequence_key": sequence_key,
 					"company": voucher.company,
 					"fiscal_year": voucher.fiscal_year,
-					"accounting_period": voucher.accounting_period if period_key != "YEAR" else None,
+					"accounting_period": voucher.accounting_period,
 					"voucher_word": voucher.voucher_word,
-					"current_value": 0,
+					"current_value": get_existing_formal_sequence(voucher, sequence_key),
 				}
 			).insert(ignore_permissions=True)
 		except frappe.DuplicateEntryError:
@@ -510,11 +513,23 @@ def assign_voucher_number(voucher):
 	sequence = cint(row[0].current_value) + 1
 	frappe.db.set_value("China Voucher Sequence", row[0].name, "current_value", sequence, update_modified=False)
 	voucher.sequence_number = sequence
-	if settings.sequence_reset == "会计期间":
-		voucher.statutory_number = f"{voucher.voucher_word}字-{voucher.accounting_period}-{sequence:04d}"
-	else:
-		voucher.statutory_number = f"{voucher.voucher_word}字-{voucher.fiscal_year}-{sequence:04d}"
+	# The sequence key contains the accounting period, so the displayed
+	# voucher mark restarts at 1 each month while remaining concise.
+	voucher.statutory_number = f"{voucher.voucher_word}{sequence}"
 	voucher.voucher_key = f"{sequence_key}|{sequence:08d}"
+
+
+def get_existing_formal_sequence(voucher, sequence_key):
+	"""Seed the new formal sequence from historical Journal/Payment vouchers."""
+	return frappe.db.sql(
+		"""
+		SELECT COALESCE(MAX(sequence_number), 0)
+		FROM `tabChina Accounting Voucher`
+		WHERE company=%s AND fiscal_year=%s AND accounting_period=%s
+			AND voucher_word=%s AND source_doctype IN ('Journal Entry', 'Payment Entry')
+		""",
+		(voucher.company, voucher.fiscal_year, voucher.accounting_period, voucher.voucher_word),
+	)[0][0]
 
 
 def calculate_entries_hash(entries):
@@ -571,6 +586,45 @@ def rebuild_missing_vouchers(company, from_date=None, to_date=None, limit=500):
 			continue
 		try:
 			name = create_voucher_from_source(frappe.get_doc(row.voucher_type, row.voucher_no))
+			result["created"] += int(bool(name))
+		except Exception as exc:
+			result["errors"].append({"doctype": row.voucher_type, "name": row.voucher_no, "error": str(exc)})
+	return result
+
+
+def backfill_enabled_company_vouchers(company, limit=200):
+	"""Create missing historical snapshots without relying on activation_date."""
+	frappe.only_for(SNAPSHOT_RETRY_ROLES)
+	settings = get_company_settings(company)
+	if not settings:
+		return {"processed": 0, "created": 0, "skipped": 0, "errors": []}
+	rows = frappe.db.sql(
+		"""
+		SELECT gl.voucher_type, gl.voucher_no
+		FROM `tabGL Entry` gl
+		LEFT JOIN `tabChina Accounting Voucher` voucher
+			ON voucher.source_key=CONCAT('Posting|', gl.voucher_type, '|', gl.voucher_no)
+		WHERE gl.company=%(company)s
+			AND gl.is_cancelled=0
+			AND gl.voucher_type IN %(voucher_types)s
+			AND voucher.name IS NULL
+		GROUP BY gl.voucher_type, gl.voucher_no
+		ORDER BY MIN(gl.posting_date), gl.voucher_type, gl.voucher_no
+		LIMIT %(limit)s
+		""",
+		{"company": company, "voucher_types": GL_SOURCE_DOCTYPES, "limit": cint(limit)},
+		as_dict=True,
+	)
+	result = {"processed": 0, "created": 0, "skipped": 0, "errors": []}
+	for row in rows:
+		result["processed"] += 1
+		try:
+			if not frappe.db.exists(row.voucher_type, row.voucher_no):
+				result["skipped"] += 1
+				continue
+			name = create_voucher_from_source(
+				frappe.get_doc(row.voucher_type, row.voucher_no), force=True
+			)
 			result["created"] += int(bool(name))
 		except Exception as exc:
 			result["errors"].append({"doctype": row.voucher_type, "name": row.voucher_no, "error": str(exc)})

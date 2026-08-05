@@ -309,6 +309,7 @@ def _get_account_daily_balances(
 
 def render_rows(template, source_values):
 	values = defaultdict(float, source_values or {})
+	_roll_up_small_profit_and_loss_rows(template, values)
 	valid_codes = {row.row_code for row in template.rows}
 	for code in valid_codes:
 		values[code] += 0
@@ -339,6 +340,29 @@ def render_rows(template, source_values):
 				}
 			)
 	return rows
+
+
+def _roll_up_small_profit_and_loss_rows(template, values):
+	"""Show child expense rows in their statutory parent without double counting."""
+	if getattr(template, "accounting_standard", None) != "小企业会计准则" or getattr(template, "statement_type", None) != "Profit and Loss":
+		return
+
+	parent_codes = {
+		"TAX_SURCHARGES", "SELLING_EXPENSES", "ADMIN_EXPENSES", "FINANCE_EXPENSES",
+		"NONOPERATING_INCOME", "NONOPERATING_EXPENSE",
+	}
+	rows = template.rows
+	for index, parent in enumerate(rows):
+		if parent.row_code not in parent_codes:
+			continue
+		children = []
+		for child in rows[index + 1:]:
+			if child.indent <= parent.indent:
+				break
+			if child.row_type == "Mapped Accounts" and not (child.label or "").strip().startswith("其中："):
+				children.append(child.row_code)
+		if children:
+			values[parent.row_code] += sum(flt(values[code]) for code in children)
 
 
 def get_statement_values(

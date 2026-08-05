@@ -101,6 +101,17 @@
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
+   "label": "\u67e5\u51ed\u8bc1",
+   "link_to": "China Voucher Ledger",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
    "label": "\u4e2d\u56fd\u8d22\u52a1\u62a5\u8868",
    "link_to": "China Financial Statements",
    "link_type": "Report",
@@ -350,7 +361,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-07-27 08:49:53.475942",
+ "modified": "2026-08-05 11:25:34.105195",
  "modified_by": "Administrator",
  "module": "China Finance",
  "name": "China Finance",

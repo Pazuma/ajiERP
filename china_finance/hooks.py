@@ -57,7 +57,10 @@ doctype_js = {
 	"Sales Order": "public/js/sales_order_settlement.js",
 	"Delivery Note": ["public/js/delivery_note_settlement.js", "public/js/gl_source_snapshot.js"],
 	"Journal Entry": "public/js/gl_source_snapshot.js",
-	"Payment Entry": "public/js/gl_source_snapshot.js",
+	"Payment Entry": [
+		"public/js/payment_entry_invoice_selector.js",
+		"public/js/gl_source_snapshot.js",
+	],
 	"Purchase Invoice": "public/js/gl_source_snapshot.js",
 	"Purchase Receipt": "public/js/gl_source_snapshot.js",
 	"Stock Entry": "public/js/gl_source_snapshot.js",
@@ -72,6 +75,8 @@ doctype_js = {
 	"China Financial Statement Mapping": "public/js/china_financial_statement_mapping.js",
 }
 doctype_list_js = {
+	"Journal Entry": "public/js/source_voucher_number_list.js",
+	"Payment Entry": "public/js/source_voucher_number_list.js",
 	"China Financial Statement Template": "public/js/china_financial_statement_template_list.js",
 	"China Financial Statement Mapping": "public/js/china_financial_statement_mapping_list.js",
 	"China Sales Settlement": "public/js/china_sales_settlement_list.js",
@@ -259,23 +264,9 @@ doc_events["*"] = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"china_finance.tasks.all"
-# 	],
-# 	"daily": [
-# 		"china_finance.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"china_finance.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"china_finance.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"china_finance.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": ["china_finance.tasks.backfill_voucher_snapshots"],
+}
 
 # Testing
 # -------

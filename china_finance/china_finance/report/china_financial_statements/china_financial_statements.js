@@ -5,9 +5,6 @@ frappe.query_reports["China Financial Statements"] = {
 		report.page.main.find(".china-activity-balance-panel").remove();
 		report.$report.removeClass("china-activity-balance-report");
 		report.$report.show();
-		if (report.get_filter_value("statement_type") === "Account Activity and Balance") {
-			apply_activity_balance_compact_style(report);
-		}
 		if (report.get_filter_value("statement_type") !== "Balance Sheet") return;
 
 		const currency = report.raw_data.chart?.currency;
@@ -18,6 +15,7 @@ frappe.query_reports["China Financial Statements"] = {
 			.filter((row) => row.liability_equity_label)
 			.map((row) => make_balance_sheet_side_row(row, "liability_equity"));
 		const $panels = $("<div class='china-balance-sheet-panels'></div>");
+		apply_balance_sheet_compact_style();
 		const asset_panel = append_balance_sheet_panel($panels, __("资产"));
 		const liability_equity_panel = append_balance_sheet_panel($panels, __("负债和所有者权益"));
 		report.$report.before($panels).hide();
@@ -38,6 +36,19 @@ frappe.query_reports["China Financial Statements"] = {
 		}
 	},
 	onload(report) {
+		// Returning from a native voucher/account form can leave the shared query
+		// report page with that module's sidebar. Restore China Finance whenever
+		// this report becomes the active route.
+		frappe.app.sidebar?.setup("China Finance");
+		if (!frappe.query_reports["China Financial Statements"].china_finance_sidebar_hooked) {
+			frappe.query_reports["China Financial Statements"].china_finance_sidebar_hooked = true;
+			frappe.router.on("change", () => {
+				const route = frappe.get_route();
+				if (route[0] === "query-report" && route[1] === "China Financial Statements") {
+					frappe.app.sidebar?.setup("China Finance");
+				}
+			});
+		}
 		add_china_finance_export_actions(report);
 		if (!report.get_filter_value("company")) {
 			report.set_filter_value("company", frappe.defaults.get_user_default("Company"));
@@ -85,15 +96,17 @@ frappe.query_reports["China Financial Statements"] = {
 	},
 };
 
-function apply_activity_balance_compact_style(report) {
-	report.$report.addClass("china-activity-balance-report");
-	if (document.getElementById("china-activity-balance-compact-style")) return;
+function apply_balance_sheet_compact_style() {
+	if (document.getElementById("china-balance-sheet-compact-style")) return;
 	$("<style>")
-		.attr("id", "china-activity-balance-compact-style")
+		.attr("id", "china-balance-sheet-compact-style")
 		.text(`
-        .china-activity-balance-report .dt-cell__content {
+        .china-balance-sheet-panels .dt-cell__content {
             font-size: 11px;
             line-height: 1.2;
+        }
+        .china-balance-sheet-panels .dt-header .dt-cell__content {
+            font-size: 11px;
         }
 		`)
 		.appendTo(document.head);
@@ -274,7 +287,7 @@ function render_balance_sheet_tree(panel, rows, currency) {
 		// Fluid layout stretches the columns to the panel width, so no
 		// horizontal scrollbar appears and sticky columns cannot overlap.
 		layout: "fluid",
-		cellHeight: 33,
+		cellHeight: 29,
 		inlineFilters: true,
 		language: frappe.boot.lang,
 		translations: frappe.utils.datatable.get_translations(),
@@ -294,6 +307,10 @@ if (!frappe._china_fs_panels_cleanup_bound) {
 		const route = frappe.get_route();
 		if (route[0] !== "query-report" || route[1] !== "China Financial Statements") {
 			$(".china-balance-sheet-panels").remove();
+			// Query Report reuses the same page container. Remove the report-only
+			// class immediately when navigating elsewhere, otherwise the compact
+			// DataTable rules can affect the next report before it initializes.
+			frappe.query_report?.$report?.removeClass("china-activity-balance-report");
 		}
 	});
 }

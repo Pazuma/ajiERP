@@ -161,6 +161,20 @@ class TestStatementMappingConsolePayload(UnitTestCase):
 		self.assertIn("likely_row", payload["accounts"][0])
 		self.assertIsNone(payload["accounts"][0]["likely_row"])
 
+	def test_parent_row_exposes_implicit_rollup_and_supplementary_disclosure(self):
+		template = _template(
+			[
+				_row("ADMIN_EXPENSES", label="管理费用"),
+				_row("ENTERTAINMENT_EXPENSES", indent=1, label="业务招待费"),
+				_row("RESEARCH_EXPENSES", indent=1, label="其中：研究费用"),
+			]
+		)
+		mappings = [_mapping("M1", "660201", "ADMIN_EXPENSES"), _mapping("M2", "660205", "ENTERTAINMENT_EXPENSES")]
+		payload = build_console_payload(template, mappings, [_account("660201"), _account("660205")])
+		rows = {row["row_code"]: row for row in payload["rows"]}
+		self.assertEqual(rows["ADMIN_EXPENSES"]["calculation_description"], "本行直接映射科目汇总 + 业务招待费")
+		self.assertEqual(rows["RESEARCH_EXPENSES"]["calculation_description"], "仅补充披露，不参与父项金额计算")
+
 
 class _FakeTemplateDoc:
 	def __init__(self, rows):

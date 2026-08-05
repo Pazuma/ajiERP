@@ -1,4 +1,13 @@
 /* Small compatibility layer for the native ERPNext reconciliation dialog. */
+frappe.ui.form.on("Bank Reconciliation Tool", {
+	refresh(frm) {
+		frm.add_custom_button(__("打开新对账工具"), () => {
+			window.open("/banking", "_blank", "noopener,noreferrer");
+		});
+		frm.change_custom_button_type(__("打开新对账工具"), null, "primary");
+	},
+});
+
 (function patch_bank_reconciliation_dialog() {
 	const try_patch = () => {
 		const DialogManager = window.erpnext?.accounts?.bank_reconciliation?.DialogManager;
@@ -15,7 +24,7 @@
 			DataTableManager.prototype.make_dt = function () {
 				const me = this;
 				frappe.call({
-					method: "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_bank_transactions",
+					method: "china_finance.services.bank_reconciliation.get_bank_transactions_with_summary",
 					args: {
 						bank_account: this.bank_account,
 						from_date: this.bank_statement_from_date,
@@ -64,6 +73,9 @@
 				callback: (response) => {
 					if (!response.message) return;
 					this.bank_transaction = response.message;
+					this.bank_transaction.custom_summary = clean_bank_summary(
+						this.bank_transaction.custom_summary || this.bank_transaction.description
+					);
 					this.bank_transaction.payment_entry = 1;
 					this.bank_transaction.journal_entry = 1;
 					this.dialog.set_values(this.bank_transaction);
@@ -114,9 +126,16 @@
 					this.dialog.hide();
 				},
 			});
-		};
+	};
 
-		prototype.edit_in_full_page = function () {
+	function clean_bank_summary(value) {
+		return String(value || "")
+			.split("｜", 1)[0]
+			.replace(/\s*参考\s*#?.*$/i, "")
+			.trim();
+	}
+
+	prototype.edit_in_full_page = function () {
 			if (this.dialog.get_value("document_type") !== "Journal Entry") {
 				return native_edit_in_full_page.call(this);
 			}
@@ -149,10 +168,13 @@
 		return true;
 	};
 
-	if (!try_patch()) {
+	// The page controller loads the reconciliation bundle asynchronously. Load it
+	// first so the first table is created with the patched data source and columns.
+	frappe.require("bank-reconciliation-tool.bundle.js", () => {
+		if (try_patch()) return;
 		const timer = setInterval(() => {
 			if (try_patch()) clearInterval(timer);
 		}, 100);
 		setTimeout(() => clearInterval(timer), 10000);
-	}
+	});
 })();

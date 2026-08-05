@@ -124,14 +124,118 @@ def execute_native_trial_balance(filters, activity_balance=False):
 		"with_period_closing_entry_for_current_period": 1,
 	})
 	columns, data = execute_trial_balance(native_filters)
+	_adjust_opening_entries_by_posting_date(data, filters)
 	if activity_balance:
 		_rename_activity_balance_columns(columns)
 	return columns, data
 
 
+def _adjust_opening_entries_by_posting_date(rows, filters):
+	"""Remove future-dated opening entries from native trial-balance opening totals.
+
+	ERPNext treats every ``is_opening=Yes`` entry as an opening balance, even when
+	its posting date is later than the report start. For a branch opened on a
+	later date, that makes the balance appear before the opening voucher existed.
+	"""
+	if not rows or not filters.get("from_date"):
+		return
+
+	conditions = [
+		"gle.company = %(company)s",
+		"gle.is_cancelled = 0",
+		"gle.is_opening = 'Yes'",
+		"gle.posting_date >= %(from_date)s",
+	]
+	params = {"company": filters.company, "from_date": filters.from_date, "to_date": filters.to_date}
+	for fieldname in ("finance_book", "cost_center", "project"):
+		value = filters.get(fieldname)
+		if value:
+			conditions.append(f"gle.{fieldname} = %({fieldname})s")
+			params[fieldname] = value
+	opening_by_account = frappe.db.sql(
+		f"""
+		SELECT gle.account, SUM(gle.debit) AS debit, SUM(gle.credit) AS credit
+		FROM `tabGL Entry` gle
+		WHERE {' AND '.join(conditions)}
+		GROUP BY gle.account
+		""",
+		params,
+		as_dict=True,
+	)
+	if not opening_by_account:
+		return
+
+	account_values = {row.account: (flt(row.debit), flt(row.credit)) for row in opening_by_account}
+	closing_by_account = frappe.db.sql(
+		f"""
+		SELECT gle.account, SUM(gle.debit) AS debit, SUM(gle.credit) AS credit
+		FROM `tabGL Entry` gle
+		WHERE {' AND '.join(conditions)} AND gle.posting_date > %(to_date)s
+		GROUP BY gle.account
+		""",
+		params,
+		as_dict=True,
+	)
+	closing_values = {row.account: (flt(row.debit), flt(row.credit)) for row in closing_by_account}
+	total_debit = sum(value[0] for value in account_values.values())
+	total_credit = sum(value[1] for value in account_values.values())
+	total_closing_debit = sum(value[0] for value in closing_values.values())
+	total_closing_credit = sum(value[1] for value in closing_values.values())
+	accounts = frappe.db.get_all(
+		"Account",
+		filters={"company": filters.company, "disabled": 0},
+		fields=["name", "lft", "rgt", "is_group"],
+	)
+	account_index = {account.name: account for account in accounts}
+	for row in rows:
+		if row.get("warn_if_negative") or row.get("account") in ("'Total'", "Total"):
+			row["opening_debit"] = max(flt(row.get("opening_debit")) - total_debit, 0)
+			row["opening_credit"] = max(flt(row.get("opening_credit")) - total_credit, 0)
+			row["closing_debit"] = max(flt(row.get("closing_debit")) - total_closing_debit, 0)
+			row["closing_credit"] = max(flt(row.get("closing_credit")) - total_closing_credit, 0)
+			for fieldname in ("opening_debit", "opening_credit", "closing_debit", "closing_credit"):
+				if abs(flt(row.get(fieldname))) < 0.005:
+					row[fieldname] = 0
+			continue
+		account = account_index.get(row.get("account"))
+		if not account:
+			continue
+		if account.is_group:
+			debit = credit = closing_debit = closing_credit = 0
+			for child in accounts:
+				if child.lft >= account.lft and child.rgt <= account.rgt:
+					child_debit, child_credit = account_values.get(child.name, (0, 0))
+					debit += child_debit
+					credit += child_credit
+					child_debit, child_credit = closing_values.get(child.name, (0, 0))
+					closing_debit += child_debit
+					closing_credit += child_credit
+		else:
+			debit, credit = account_values.get(account.name, (0, 0))
+			closing_debit, closing_credit = closing_values.get(account.name, (0, 0))
+		row["opening_debit"] = max(flt(row.get("opening_debit")) - debit, 0)
+		row["opening_credit"] = max(flt(row.get("opening_credit")) - credit, 0)
+		row["closing_debit"] = max(flt(row.get("closing_debit")) - closing_debit, 0)
+		row["closing_credit"] = max(flt(row.get("closing_credit")) - closing_credit, 0)
+
+
 def _rename_activity_balance_columns(columns):
-	"""Use explicit period labels without changing ERPNext's native report."""
+	"""Use Chinese period labels and wider native columns for this report."""
 	for column in columns:
+		fieldname = column.get("fieldname")
+		native_widths = {
+			"account": 280,
+			"party_type": 120,
+			"party": 220,
+			"opening_debit": 150,
+			"opening_credit": 150,
+			"debit": 150,
+			"credit": 150,
+			"closing_debit": 150,
+			"closing_credit": 150,
+		}
+		if fieldname in native_widths:
+			column["width"] = native_widths[fieldname]
 		if column.get("fieldname") == "debit":
 			column["label"] = _("本期借方")
 		elif column.get("fieldname") == "credit":
@@ -140,19 +244,19 @@ def _rename_activity_balance_columns(columns):
 
 def get_account_activity_columns(expand_party=False):
 	columns = [
-		{"label": _("科目类别"), "fieldname": "account_category", "fieldtype": "Data", "width": 100},
-		{"label": _("科目编码"), "fieldname": "account_number", "fieldtype": "Data", "width": 80},
-		{"label": _("科目名称"), "fieldname": "account_name", "fieldtype": "Data", "width": 170},
-		{"label": _("币种"), "fieldname": "currency", "fieldtype": "Data", "width": 60},
-		{"label": _("期初借方"), "fieldname": "opening_debit", "fieldtype": "Currency", "width": 95},
-		{"label": _("期初贷方"), "fieldname": "opening_credit", "fieldtype": "Currency", "width": 95},
-		{"label": _("本期借方"), "fieldname": "period_debit", "fieldtype": "Currency", "width": 95},
-		{"label": _("本期贷方"), "fieldname": "period_credit", "fieldtype": "Currency", "width": 95},
-		{"label": _("期末借方"), "fieldname": "closing_debit", "fieldtype": "Currency", "width": 95},
-		{"label": _("期末贷方"), "fieldname": "closing_credit", "fieldtype": "Currency", "width": 95},
+		{"label": _("科目类别"), "fieldname": "account_category", "fieldtype": "Data", "width": 120},
+		{"label": _("科目编码"), "fieldname": "account_number", "fieldtype": "Data", "width": 100},
+		{"label": _("科目名称"), "fieldname": "account_name", "fieldtype": "Data", "width": 260},
+		{"label": _("币种"), "fieldname": "currency", "fieldtype": "Data", "width": 70},
+		{"label": _("期初借方"), "fieldname": "opening_debit", "fieldtype": "Currency", "width": 150},
+		{"label": _("期初贷方"), "fieldname": "opening_credit", "fieldtype": "Currency", "width": 150},
+		{"label": _("本期借方"), "fieldname": "period_debit", "fieldtype": "Currency", "width": 150},
+		{"label": _("本期贷方"), "fieldname": "period_credit", "fieldtype": "Currency", "width": 150},
+		{"label": _("期末借方"), "fieldname": "closing_debit", "fieldtype": "Currency", "width": 150},
+		{"label": _("期末贷方"), "fieldname": "closing_credit", "fieldtype": "Currency", "width": 150},
 	]
 	if expand_party:
-		columns.insert(3, {"label": _("往来单位"), "fieldname": "party", "fieldtype": "Data", "width": 150})
+		columns.insert(3, {"label": _("往来单位"), "fieldname": "party", "fieldtype": "Data", "width": 220})
 	return columns
 
 
@@ -302,6 +406,7 @@ def execute_account_activity_balance(filters):
 		"with_period_closing_entry_for_current_period": 1,
 	})
 	columns, native_rows = execute_trial_balance(native_filters)
+	_adjust_opening_entries_by_posting_date(native_rows, filters)
 	if not filters.get("expand_party"):
 		return columns, native_rows, _("数据来源：ERPNext 原生试算平衡表")
 
@@ -351,7 +456,7 @@ def execute_account_activity_balance(filters):
 	_rename_activity_balance_columns(party_columns)
 	account_index = next((index for index, column in enumerate(party_columns) if column.get("fieldname") == "account"), 0)
 	party_columns[account_index + 1:account_index + 1] = [
-		{"label": _("往来单位"), "fieldname": "party", "fieldtype": "Data", "width": 150},
+		{"label": _("往来单位"), "fieldname": "party", "fieldtype": "Data", "width": 220},
 	]
 	output = []
 	for row in native_rows:

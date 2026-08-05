@@ -53,6 +53,36 @@ def convert_bank_statement(data_import, source_file, bank=None):
 	}
 
 
+@frappe.whitelist()
+def convert_bank_statement_import_log(statement_import_id, source_file):
+	"""Convert a supported bank workbook for the new Banking importer.
+
+	The React Banking importer stores uploads in ``Bank Statement Import Log``;
+	keep the CMB parser here and replace the log's file with the normalized CSV
+	that ERPNext already understands.  The original workbook remains attached
+	to the same log for auditability.
+	"""
+	doc = frappe.get_doc("Bank Statement Import Log", statement_import_id)
+	doc.check_permission("write")
+	bank_account = frappe.db.get_value("Bank Account", doc.bank_account, ["bank", "account"] , as_dict=True)
+	if not bank_account or bank_account.bank != "招商银行":
+		return {"supported": False}
+
+	file_doc = _get_attached_source_file(doc, source_file, "Bank Statement Import Log")
+	content = file_doc.get_content()
+	content = content.encode() if isinstance(content, str) else content
+	if Path(source_file).suffix.lower() != ".xlsx":
+		frappe.throw(_("招商银行模板必须是 XLSX 文件。"), title=_("银行流水转换"))
+	rows = parse_cmb_statement(content, doc.bank_account)
+	file_hash = hashlib.sha256(content).hexdigest()
+	converted_file, reused = _get_or_create_converted_file(
+		doc, rows, file_hash, doctype="Bank Statement Import Log", fieldname="file"
+	)
+	doc.file = converted_file.file_url
+	doc.save()
+	return {"supported": True, "file_url": converted_file.file_url, "row_count": len(rows), "reused": reused}
+
+
 def parse_cmb_statement(content, bank_account):
 	"""Return normalized ERPNext Bank Transaction template rows from a CMB workbook."""
 	try:
@@ -80,13 +110,13 @@ def _validate_import_context(doc, requested_bank):
 		frappe.throw(_("所选银行账户与导入单据银行不一致。"), title=_("银行流水转换"))
 
 
-def _get_attached_source_file(doc, source_file):
+def _get_attached_source_file(doc, source_file, doctype=None):
 	if not source_file or Path(source_file).suffix.lower() != ".xlsx":
 		frappe.throw(_("请上传 .xlsx 格式的银行流水文件。"), title=_("银行流水转换"))
 
 	file_name = frappe.db.get_value(
 		"File",
-		{"file_url": source_file, "attached_to_doctype": doc.doctype, "attached_to_name": doc.name},
+		{"file_url": source_file, "attached_to_doctype": doctype or doc.doctype, "attached_to_name": doc.name},
 		"name",
 	)
 	if not file_name:
@@ -201,11 +231,12 @@ def _normalize_header(value):
 	return str(value or "").replace(" ", "").replace("\n", "").strip()
 
 
-def _get_or_create_converted_file(doc, rows, file_hash):
+def _get_or_create_converted_file(doc, rows, file_hash, doctype=None, fieldname="import_file"):
+	doctype = doctype or doc.doctype
 	filename = f"招商银行流水-{file_hash[:12]}.csv"
 	existing = frappe.db.get_value(
 		"File",
-		{"attached_to_doctype": doc.doctype, "attached_to_name": doc.name, "file_name": filename},
+		{"attached_to_doctype": doctype, "attached_to_name": doc.name, "file_name": filename},
 		"name",
 	)
 	if existing:
@@ -216,6 +247,6 @@ def _get_or_create_converted_file(doc, rows, file_hash):
 	writer.writerow(STANDARD_HEADERS)
 	writer.writerows(rows)
 	return (
-		save_file(filename, buffer.getvalue().encode("utf-8-sig"), doc.doctype, doc.name, is_private=True, df="import_file"),
+		save_file(filename, buffer.getvalue().encode("utf-8-sig"), doctype, doc.name, is_private=True, df=fieldname),
 		False,
 	)

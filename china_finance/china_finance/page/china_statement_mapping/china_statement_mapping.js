@@ -431,6 +431,8 @@ class ChinaStatementMapping {
 		}
 		if (row.formula) {
 			$row.append(`<div class="smc-row__formula">${this.render_formula(row.formula)}</div>`);
+		} else if (row.calculation_description) {
+			$row.append(`<div class="smc-row__formula smc-row__formula--implicit"><span class="text-muted">${__("计算逻辑")}：</span>${frappe.utils.escape_html(row.calculation_description)}</div>`);
 		}
 		const pending_only = this.pending_only.get_value();
 		const chips = row.mappings.filter((mapping) => !pending_only || !mapping.reviewed);

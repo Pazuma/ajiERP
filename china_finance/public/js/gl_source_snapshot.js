@@ -1,5 +1,9 @@
 const china_finance_source_snapshot = {
 	refresh(frm) {
+		// Form refresh can run more than once while the desk restores a route.
+		// Remove only our own indicator so repeated refreshes cannot duplicate it
+		// or alter native ERPNext dashboard statistics.
+		frm.dashboard.stats_area_row.find("[data-china-voucher-indicator]").remove();
 		// These are audit records generated from the source document. They must
 		// not be offered as business documents to cancel with the source.
 		frm.ignore_doctypes_on_cancel_all = Array.from(new Set([
@@ -22,7 +26,9 @@ const china_finance_source_snapshot = {
 					return;
 				}
 				if (state.statutory_number) {
-					frm.dashboard.add_indicator(__("法定凭证号：{0}", [state.statutory_number]), "blue");
+					frm.dashboard
+						.add_indicator(__("凭证字号：{0}", [state.statutory_number]), "blue")
+						.attr("data-china-voucher-indicator", "1");
 				}
 				if (state.can_view_snapshot) {
 					frm.add_custom_button(__("查看审计快照"), () => {

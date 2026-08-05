@@ -24,3 +24,31 @@
 		grid-template-columns: 1fr;
 	}
 }
+.china-voucher-ledger-report .dt-scrollable,
+.china-voucher-ledger-report .dt-header {
+		max-width: 100%;
+}
+
+.china-voucher-ledger-report .dt-cell__content {
+		line-height: 24px;
+		padding-left: 6px;
+		padding-right: 6px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+}
+
+.china-voucher-ledger-report .dt-row {
+		min-height: 28px;
+}
+
+
+.china-voucher-ledger-report .china-voucher-status-text {
+		font-weight: 400;
+		white-space: nowrap;
+}
+
+.china-voucher-ledger-report .china-voucher-status-text.green { color: var(--green-600); }
+.china-voucher-ledger-report .china-voucher-status-text.orange { color: var(--orange-600); }
+.china-voucher-ledger-report .china-voucher-status-text.red { color: var(--red-600); }
+.china-voucher-ledger-report .china-voucher-status-text.gray { color: var(--text-muted); }
