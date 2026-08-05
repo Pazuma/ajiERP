@@ -656,6 +656,9 @@ class PaymentEntry(AccountsController):
 				)
 
 	def validate_mandatory(self):
+		if not (self.docstatus == 1 or self.flags.in_submit):
+			return
+
 		for field in ("paid_amount", "received_amount", "source_exchange_rate", "target_exchange_rate"):
 			if not self.get(field):
 				frappe.throw(_("{0} is mandatory").format(_(self.meta.get_label(field))))

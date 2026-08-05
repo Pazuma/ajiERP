@@ -81,7 +81,7 @@ export const useGetAccountClosingBalanceAsPerStatement = (swrConfig: SWRConfigur
     })
 }
 
-export type UnreconciledTransaction = Pick<BankTransaction, 'name' | 'matched_transaction_rule' | 'date' | 'withdrawal' | 'deposit' | 'currency' | 'description' | 'status' | 'transaction_type' | 'reference_number' | 'party_type' | 'party' | 'bank_account' | 'company' | 'unallocated_amount'>
+export type UnreconciledTransaction = Pick<BankTransaction, 'name' | 'matched_transaction_rule' | 'date' | 'withdrawal' | 'deposit' | 'currency' | 'description' | 'custom_summary' | 'status' | 'transaction_type' | 'reference_number' | 'party_type' | 'party' | 'bank_account' | 'company' | 'unallocated_amount'>
 
 
 export const useGetUnreconciledTransactions = () => {
@@ -127,14 +127,15 @@ export const useGetVouchersForTransaction = (transaction: UnreconciledTransactio
     const dates = useAtomValue(bankRecDateAtom)
 
     const matchFilters = useAtomValue(bankRecMatchFilters)
+	const documentTypes = Array.isArray(matchFilters) ? matchFilters : ['payment_entry', 'journal_entry']
 
     return useFrappeGetCall<{ message: LinkedPayment[] }>('erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_linked_payments', {
         bank_transaction_name: transaction.name,
-        document_types: matchFilters ?? ['payment_entry', 'journal_entry'],
+        document_types: documentTypes,
         from_date: dates.fromDate,
         to_date: dates.toDate,
         filter_by_reference_date: 0
-    }, `bank-reconciliation-vouchers-${transaction.name}-${dates.fromDate}-${dates.toDate}-${matchFilters.join(',')}`, {
+    }, `bank-reconciliation-vouchers-${transaction.name}-${dates.fromDate}-${dates.toDate}-${documentTypes.join(',')}`, {
         revalidateOnFocus: false
     })
 }

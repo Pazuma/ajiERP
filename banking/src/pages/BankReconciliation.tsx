@@ -15,8 +15,11 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbS
 import { Badge } from "@/components/ui/badge"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useAtomValue } from "jotai"
-import { selectedBankAccountAtom } from "@/components/features/BankReconciliation/bankRecAtoms"
+import { bankRecDateAtom, selectedBankAccountAtom } from "@/components/features/BankReconciliation/bankRecAtoms"
+import { useFrappePostCall, useSWRConfig } from "frappe-react-sdk"
+import { toast } from "sonner"
 
 const BankReconciliationStatement = lazy(() => import('@/components/features/BankReconciliation/BankReconciliationStatement'))
 const BankTransactions = lazy(() => import('@/components/features/BankReconciliation/BankTransactionList'))
@@ -24,6 +27,7 @@ const BankClearanceSummary = lazy(() => import('@/components/features/BankReconc
 const IncorrectlyClearedEntries = lazy(() => import('@/components/features/BankReconciliation/IncorrectlyClearedEntries'))
 
 const BankReconciliation = () => {
+	const isEmbedded = Boolean((window as any).__BANKING_ROOT__)
 
     const [headerHeight, setHeaderHeight] = useState(0)
 
@@ -39,7 +43,7 @@ const BankReconciliation = () => {
 
     return (
         <div>
-            <div className="p-4 flex-col gap-4 md:flex hidden">
+            <div className={isEmbedded ? "p-4 flex flex-col gap-4" : "p-4 flex-col gap-4 md:flex hidden"}>
                 <div ref={ref} className="flex flex-col gap-4">
                     <div className="flex justify-between">
                         <div className="flex items-center gap-6">
@@ -67,6 +71,7 @@ const BankReconciliation = () => {
                             <TooltipProvider>
                                 <Settings />
                                 <ActionLog />
+                                <AutoReconcileButton />
                             </TooltipProvider>
                             <BankRecDateFilter />
                         </div>
@@ -77,7 +82,7 @@ const BankReconciliation = () => {
                 <BankRecTabs remainingHeightAfterTabs={remainingHeightAfterTabs} />
                 <BankTransactionUnreconcileModal />
             </div>
-            <div className="md:hidden flex h-screen items-center justify-between">
+            <div className={isEmbedded ? "hidden" : "md:hidden flex h-screen items-center justify-between"}>
                 <Empty>
                     <EmptyMedia>
                         <LandmarkIcon />
@@ -102,6 +107,57 @@ const BankReconciliation = () => {
             </div>
         </div>
     )
+}
+
+const AutoReconcileButton = () => {
+    const bankAccount = useAtomValue(selectedBankAccountAtom)
+    const dates = useAtomValue(bankRecDateAtom)
+    const [open, setOpen] = useState(false)
+    const { call, loading } = useFrappePostCall(
+        "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.auto_reconcile_vouchers"
+    )
+    const { mutate } = useSWRConfig()
+
+    const onClick = () => {
+        if (bankAccount) setOpen(true)
+    }
+
+    const confirm = () => {
+        if (!bankAccount) return
+
+        call({
+            bank_account: bankAccount.name,
+            from_date: dates.fromDate,
+            to_date: dates.toDate,
+        }).then(() => {
+            toast.success(_("Automatic reconciliation started"))
+            mutate((key) => typeof key === "string" && key.startsWith("bank-reconciliation-"))
+        }).catch(() => toast.error(_("Automatic reconciliation failed")))
+    }
+
+    return <>
+        <Button variant="outline" size="md" onClick={onClick} disabled={!bankAccount || loading}>
+            {loading ? <Loader2Icon className="animate-spin" /> : <CheckCircleIcon />}
+            {_("Auto Reconcile")}
+        </Button>
+        <AlertDialog open={open} onOpenChange={setOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{_("Auto Reconcile")}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {_("Automatically reconcile matching vouchers in the selected date range?")}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={loading}>{_("Cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirm} disabled={loading}>
+                        {loading ? <Loader2Icon className="animate-spin" /> : null}
+                        {_("Confirm")}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    </>
 }
 
 const BankRecTabs = ({ remainingHeightAfterTabs }: { remainingHeightAfterTabs: number }) => {

@@ -1,5 +1,5 @@
 import { lazy, useEffect } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, MemoryRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { FrappeProvider } from 'frappe-react-sdk'
 import { Toaster } from '@/components/ui/sonner'
 import BankReconciliation from '@/pages/BankReconciliation'
@@ -12,7 +12,22 @@ const BankStatementImporter = lazy(() => import('@/pages/BankStatementImporter')
 const ViewBankStatementImportLog = lazy(() => import('@/pages/ViewBankStatementImportLog'))
 
 function App() {
+	const isEmbedded = Boolean((window as any).__BANKING_ROOT__)
+	const currentUser = window.frappe?.boot?.user?.name || (window.frappe as any)?.session?.user || window.frappe?.boot?.user
+	const routes = (
+		<Routes>
+			<Route index element={<BankReconciliation />} />
+			<Route path="/statement-importer" element={<BankStatementImporterContainer />}>
+				<Route index element={<BankStatementImporter />} />
+				<Route path=":id" element={<ViewBankStatementImportLog />} />
+			</Route>
+			<Route path="*" element={<Navigate to="/" />} />
+		</Routes>
+	)
 	useEffect(() => {
+		if (isEmbedded) {
+			return
+		}
 		// Check if user is logged in by checking the Cookie "user_id"
 		// In Frappe, unauthenticated users are "Guest"
 		const userId = document.cookie?.split('; ').find(row => row.startsWith('user_id='))?.split('=')[1]?.trim()
@@ -42,18 +57,10 @@ function App() {
 					<ThemeProvider
 						defaultTheme={window.frappe?.boot?.desk_theme ?? "Automatic"}
 					>
-						{window.frappe?.boot?.user?.name && window.frappe?.boot?.user?.name !== 'Guest' &&
-							<BrowserRouter basename={import.meta.env.VITE_BASE_NAME ? `/${import.meta.env.VITE_BASE_NAME}` : ''}>
-								<Routes>
-									<Route index element={<BankReconciliation />} />
-									<Route path="/statement-importer" element={<BankStatementImporterContainer />}>
-										<Route index element={<BankStatementImporter />} />
-										<Route path=":id" element={<ViewBankStatementImportLog />} />
-									</Route>
-									<Route path="*" element={<Navigate to="/" />} />
-								</Routes>
-							</BrowserRouter>
-						}
+						{(isEmbedded || (currentUser && currentUser !== 'Guest')) && (isEmbedded ?
+							<MemoryRouter initialEntries={["/"]}>{routes}</MemoryRouter> :
+							<BrowserRouter basename={import.meta.env.VITE_BASE_NAME ? `/${import.meta.env.VITE_BASE_NAME}` : ''}>{routes}</BrowserRouter>
+						)}
 						<Toaster richColors />
 					</ThemeProvider>
 				</FrappeProvider>

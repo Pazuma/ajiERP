@@ -5,6 +5,26 @@ import App from './App.tsx'
 import './lib/namespace'
 import { DirectionProvider } from './components/ui/direction.tsx'
 
+const bankingRoot = ((window as any).__BANKING_ROOT__ || document.getElementById('root')) as HTMLElement | null
+
+function mountBankingApp(layoutDirection: string) {
+	if (!bankingRoot) {
+		console.error('Banking root element was not found')
+		return
+	}
+
+	if (window.frappe?.model?.sync && window.frappe?.boot?.docs) {
+		window.frappe.model.sync(window.frappe.boot.docs)
+	}
+
+	createRoot(bankingRoot).render(
+		<StrictMode>
+			<DirectionProvider dir={layoutDirection}>
+				<App />
+			</DirectionProvider>
+		</StrictMode>,
+	)
+}
 
 if (import.meta.env.DEV) {
   fetch('/api/method/erpnext.www.banking.get_context_for_dev', {
@@ -19,24 +39,10 @@ if (import.meta.env.DEV) {
     // Set document direction to rtl
     document.dir = values.message.layout_direction;
     //@ts-expect-error - frappe will be available
-    frappe.model.sync(frappe.boot.docs);
-    createRoot(document.getElementById('root') as HTMLElement).render(
-      <StrictMode>
-        <DirectionProvider dir={values.message.layout_direction}>
-          <App />
-        </DirectionProvider>
-      </StrictMode>,
-    )
+    mountBankingApp(values.message.layout_direction)
 
   })
 } else {
   //@ts-expect-error - frappe will be available
-  frappe.model.sync(frappe.boot.docs);
-  createRoot(document.getElementById('root') as HTMLElement).render(
-    <StrictMode>
-      <DirectionProvider dir={window.frappe?.boot?.layout_direction ?? 'ltr'}>
-        <App />
-      </DirectionProvider>
-    </StrictMode>,
-  )
+  mountBankingApp(window.frappe?.boot?.layout_direction ?? 'ltr')
 }

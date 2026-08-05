@@ -272,7 +272,7 @@ const BankEntryForm = ({ selectedTransaction }: { selectedTransaction: Unreconci
             cheque_date: selectedTransaction.date,
             posting_date: selectedTransaction.date,
             cheque_no: (selectedTransaction.reference_number || selectedTransaction.description || '').slice(0, 140),
-            user_remark: selectedTransaction.description,
+            user_remark: selectedTransaction.custom_summary || selectedTransaction.description,
             entries: defaultAccounts,
         }
     })

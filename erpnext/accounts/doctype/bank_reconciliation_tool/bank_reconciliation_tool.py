@@ -10,7 +10,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Sum
-from frappe.utils import cint, create_batch, flt
+from frappe.utils import cint, create_batch, flt, getdate
 
 from erpnext import get_default_cost_center
 from erpnext.accounts.doctype.bank_transaction.bank_transaction import get_total_allocated_amount
@@ -736,7 +736,7 @@ def create_bank_entry_and_reconcile(
 				"credit": entry.get("credit"),
 				"party_type": entry.get("party_type") if entry.get("party") else None,
 				"party": entry.get("party"),
-				"user_remark": entry.get("user_remark"),
+				"user_remark": entry.get("user_remark") or user_remark,
 				**entry,
 				"cost_center": cost_center,
 			},
@@ -968,7 +968,11 @@ def auto_reconcile_vouchers(
 	from_reference_date: str | date | None = None,
 	to_reference_date: str | date | None = None,
 ):
-	bank_transactions = get_bank_transactions(bank_account)
+	bank_transactions = get_bank_transactions(
+		bank_account,
+		from_date=from_date,
+		to_date=to_date,
+	)
 
 	if len(bank_transactions) > 10:
 		for bank_transaction_batch in create_batch(bank_transactions, 1000):
@@ -997,35 +1001,44 @@ def auto_reconcile_vouchers(
 def start_auto_reconcile(
 	bank_transactions, from_date, to_date, filter_by_reference_date, from_reference_date, to_reference_date
 ):
-	frappe.flags.auto_reconcile_vouchers = True
-
-	reconciled, partially_reconciled = set(), set()
+	reconciled, partially_reconciled, failed = set(), set(), set()
 	for transaction in bank_transactions:
-		linked_payments = get_linked_payments(
-			transaction.name,
-			["payment_entry", "journal_entry", "sales_invoice"],
-			from_date,
-			to_date,
-			filter_by_reference_date,
-			from_reference_date,
-			to_reference_date,
-		)
+		savepoint = "auto_reconcile_transaction"
+		frappe.db.savepoint(savepoint)
+		try:
+			current_transaction = frappe.get_doc("Bank Transaction", transaction.name)
+			if current_transaction.status == "Reconciled" or flt(current_transaction.unallocated_amount) <= 0:
+				continue
 
-		if not linked_payments:
-			continue
-
-		vouchers = list(
-			map(
-				lambda entry: {
-					"payment_doctype": entry.get("doctype"),
-					"payment_name": entry.get("name"),
-					"amount": entry.get("paid_amount"),
-				},
-				linked_payments,
+			linked_payments = get_linked_payments(
+				current_transaction.name,
+				["payment_entry", "journal_entry", "sales_invoice"],
+				from_date,
+				to_date,
+				filter_by_reference_date,
+				from_reference_date,
+				to_reference_date,
 			)
-		)
+			linked_payment = get_suggested_payment(current_transaction, linked_payments)
+			if not linked_payment:
+				continue
 
-		updated_transaction = reconcile_vouchers(transaction.name, json.dumps(vouchers))
+			vouchers = json.dumps(
+				[
+					{
+						"payment_doctype": linked_payment.get("doctype"),
+						"payment_name": linked_payment.get("name"),
+						"amount": linked_payment.get("paid_amount"),
+					}
+				]
+			)
+
+			updated_transaction = reconcile_vouchers(current_transaction.name, vouchers)
+		except Exception:
+			frappe.db.rollback(save_point=savepoint)
+			failed.add(transaction.name)
+			frappe.log_error(frappe.get_traceback(), "Bank auto reconciliation failed")
+			continue
 
 		if updated_transaction.status == "Reconciled":
 			reconciled.add(updated_transaction.name)
@@ -1033,13 +1046,36 @@ def start_auto_reconcile(
 			# Partially reconciled (status = Unreconciled & unallocated amount changed)
 			partially_reconciled.add(updated_transaction.name)
 
-	alert_message, indicator = get_auto_reconcile_message(partially_reconciled, reconciled)
+	alert_message, indicator = get_auto_reconcile_message(partially_reconciled, reconciled, failed)
 	frappe.msgprint(title=_("Auto Reconciliation"), msg=alert_message, indicator=indicator)
 
-	frappe.flags.auto_reconcile_vouchers = False
 
 
-def get_auto_reconcile_message(partially_reconciled, reconciled):
+def get_suggested_payment(transaction, linked_payments):
+	"""Return the first voucher when it meets the Banking page's suggestion rules."""
+	if not linked_payments:
+		return None
+
+	payment = linked_payments[0]
+	if flt(payment.get("paid_amount")) != flt(transaction.unallocated_amount):
+		return None
+
+	posting_date_matches = getdate(payment.get("posting_date")) == getdate(transaction.date)
+	reference_date_matches = payment.get("reference_date") and getdate(
+		payment.get("reference_date")
+	) == getdate(transaction.date)
+	reference_matches = bool(payment.get("reference_no")) and (
+		payment.get("reference_no") in (transaction.reference_number or "")
+		or payment.get("reference_no") in (transaction.description or "")
+	)
+
+	if posting_date_matches or reference_date_matches or reference_matches:
+		return payment
+
+	return None
+
+
+def get_auto_reconcile_message(partially_reconciled, reconciled, failed=None):
 	"""Returns alert message and indicator for auto reconciliation depending on result state."""
 	alert_message, indicator = "", "blue"
 	if not partially_reconciled and not reconciled:
@@ -1056,6 +1092,9 @@ def get_auto_reconcile_message(partially_reconciled, reconciled):
 			len(partially_reconciled),
 			_("Transactions") if len(partially_reconciled) > 1 else _("Transaction"),
 		)
+
+	if failed:
+		alert_message += _("<br>{0} Transaction(s) Failed").format(len(failed))
 
 	return alert_message, indicator
 
@@ -1078,7 +1117,7 @@ def reconcile_vouchers(bank_transaction_name: str | int, vouchers: str, is_new_v
 @frappe.whitelist()
 def get_linked_payments(
 	bank_transaction_name: str | int,
-	document_types: list[str] | None = None,
+	document_types: list[str] | str | None = None,
 	from_date: str | date | None = None,
 	to_date: str | date | None = None,
 	filter_by_reference_date: bool | None = None,
@@ -1086,6 +1125,13 @@ def get_linked_payments(
 	to_reference_date: str | date | None = None,
 ):
 	# get all matching payments for a bank transaction
+	if isinstance(document_types, str):
+		try:
+			document_types = json.loads(document_types)
+		except json.JSONDecodeError:
+			document_types = [item for item in document_types.split(",") if item]
+	if document_types is not None and not isinstance(document_types, list):
+		document_types = list(document_types)
 	transaction = frappe.get_doc("Bank Transaction", bank_transaction_name)
 	bank_account = frappe.db.get_values(
 		"Bank Account", transaction.bank_account, ["account", "company"], as_dict=True

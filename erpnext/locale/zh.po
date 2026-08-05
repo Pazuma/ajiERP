@@ -59913,3 +59913,97 @@ msgstr "{} {} 已经关联了 {} {}"
 msgid "{} {} is not affecting bank account {}"
 msgstr "{} {}未影响银行账户{}"
 
+# Banking: reconciliation statement labels
+msgid "Document Type"
+msgstr "单据类型"
+
+msgid "Reference #"
+msgstr "参考号"
+
+msgid "Bank Statement Balance as per General Ledger"
+msgstr "总账银行对账单余额"
+
+msgid "Outstanding Checks and Deposits to clear"
+msgstr "待清账支票和存款"
+
+msgid "Calculated Bank Statement Balance"
+msgstr "计算的银行对账单余额"
+
+msgid "Below is a list of all entries posted against the bank account {0} which have not been cleared till {1}."
+msgstr "以下是针对银行账户 {0} 的所有已过账但截至 {1} 尚未清账的分录。"
+
+msgid "Closing balance as per system"
+msgstr "系统期末余额"
+
+msgid "This is what the system expects the closing balance to be in your bank statement."
+msgstr "这是系统预计银行对账单应显示的期末余额。"
+
+msgid "It takes into account all the transactions that have been posted and subtracts the transactions that have not cleared yet."
+msgstr "该余额包含所有已过账交易，并扣除了尚未清账的交易。"
+
+msgid "If your bank statement shows a different closing balance, it is because all transactions have not reconciled yet."
+msgstr "如果银行对账单显示的期末余额不同，说明仍有部分交易尚未完成核销。"
+
+msgid "For more information, click on the"
+msgstr "如需了解更多信息，请点击下方的"
+
+msgid "tab below."
+msgstr "页签。"
+
+# China Finance: new Banking module labels
+msgid "Beta"
+msgstr "测试版"
+
+msgid "Date Range"
+msgstr "日期范围"
+
+msgid "Closing Balance as per system"
+msgstr "系统期末余额"
+
+msgid "Closing Balance as per statement"
+msgstr "对账单期末余额"
+
+msgid "Progress"
+msgstr "进度"
+
+msgid "Match and Reconcile"
+msgstr "匹配与对账"
+
+msgid "Bank Transactions"
+msgstr "银行交易"
+
+msgid "Bank Clearance Summary"
+msgstr "银行清账汇总"
+
+msgid "Incorrectly Cleared Entries"
+msgstr "错误清账分录"
+
+msgid "Unreconciled Transactions"
+msgstr "未核销交易"
+
+msgid "Match or Create"
+msgstr "匹配或创建"
+
+msgid "Select a transaction to match and reconcile with vouchers"
+msgstr "请选择一笔交易与凭证进行匹配和核销"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "All"
+msgstr "全部"
+
+msgid "Reconciled"
+msgstr "已核销"
+
+msgid "Unreconciled"
+msgstr "未核销"
+
+msgid "Partially Reconciled"
+msgstr "部分核销"
+
+msgid "Try the {0} for a better experience."
+msgstr "试试{0}，获得更好的使用体验。"
+
+msgid "new Banking module"
+msgstr "新版银行模块"

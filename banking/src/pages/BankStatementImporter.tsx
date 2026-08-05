@@ -17,7 +17,7 @@ import { flt, formatCurrency } from "@/lib/numbers"
 import _ from "@/lib/translate"
 import { cn } from "@/lib/utils"
 import { BankStatementImportLog } from "@/types/Accounts/BankStatementImportLog"
-import { useFrappeCreateDoc, useFrappeFileUpload, useFrappeGetDocList, useFrappeUpdateDoc } from "frappe-react-sdk"
+import { useFrappeCreateDoc, useFrappeFileUpload, useFrappeGetDocList, useFrappePostCall, useFrappeUpdateDoc } from "frappe-react-sdk"
 import { useAtom, useAtomValue } from "jotai"
 import { ListIcon, Loader2Icon } from "lucide-react"
 import { useState } from "react"
@@ -38,6 +38,9 @@ const BankStatementImporter = () => {
     const navigate = useNavigate()
     const { createDoc, loading: createLoading, error: createError } = useFrappeCreateDoc<BankStatementImportLog>()
     const { updateDoc, error: updateError } = useFrappeUpdateDoc()
+    const { call: convertBankStatement, loading: convertLoading, error: convertError } = useFrappePostCall<{
+        message: { supported: boolean, row_count?: number }
+    }>("china_finance.services.bank_statement_import.convert_bank_statement_import_log")
 
     const isPdf = files[0]?.name?.toLowerCase().endsWith(".pdf") ?? false
 
@@ -69,6 +72,11 @@ const BankStatementImporter = () => {
                     bank_account: selectedBankAccount.name
                 })
         }).then((doc) => {
+            return convertBankStatement({
+                statement_import_id: doc.name,
+                source_file: doc.file,
+            }).then(() => doc)
+        }).then((doc) => {
             navigate(`/statement-importer/${doc.name}`)
         })
     }
@@ -79,6 +87,7 @@ const BankStatementImporter = () => {
                 {error && <ErrorBanner error={error} />}
                 {createError && <ErrorBanner error={createError} />}
                 {updateError && <ErrorBanner error={updateError} />}
+                {convertError && <ErrorBanner error={convertError} />}
                 <div className="py-2 flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
                         <Label>{_("Company")}<span className="text-ink-red-3">*</span></Label>
@@ -143,9 +152,9 @@ const BankStatementImporter = () => {
                         <Button
                             onClick={onUpload}
                             size='md'
-                            disabled={files.length === 0 || loading || createLoading || !selectedBankAccount || !selectedCompany}>
-                            {loading || createLoading ? <Loader2Icon className="size-4 animate-spin" /> : null}
-                            {loading || createLoading ? _("Uploading...") : _("Upload")}
+                            disabled={files.length === 0 || loading || createLoading || convertLoading || !selectedBankAccount || !selectedCompany}>
+                            {loading || createLoading || convertLoading ? <Loader2Icon className="size-4 animate-spin" /> : null}
+                            {loading || createLoading || convertLoading ? _("Uploading...") : _("Upload")}
                         </Button>
                     </div>
                 </div>

@@ -9,6 +9,7 @@ from frappe.utils import add_days, today
 from erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool import (
 	auto_reconcile_vouchers,
 	get_bank_transactions,
+	get_suggested_payment,
 )
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
@@ -96,3 +97,37 @@ class TestBankReconciliationTool(ERPNextTestSuite, AccountsTestMixin):
 		# assert API output post reconciliation
 		transactions = get_bank_transactions(self.bank_account, from_date, to_date)
 		self.assertEqual(len(transactions), 0)
+
+	def test_suggested_payment_uses_banking_match_rules(self):
+		transaction = frappe._dict(
+			{
+				"date": "2026-08-05",
+				"unallocated_amount": 100,
+				"reference_number": "BANK-123",
+				"description": "Service fee BANK-123",
+			}
+		)
+		payments = [
+			frappe._dict(
+			{
+				"name": "PE-001",
+				"paid_amount": 100,
+				"posting_date": "2026-06-01",
+				"reference_date": "2026-06-01",
+				"reference_no": "OTHER",
+			}
+			),
+			frappe._dict(
+			{
+				"name": "PE-002",
+				"paid_amount": 100,
+				"posting_date": "2026-06-01",
+				"reference_date": "2026-06-01",
+				"reference_no": "BANK-12",
+			}
+			),
+		]
+
+		self.assertIsNone(get_suggested_payment(transaction, payments))
+		payments[0].reference_no = "BANK-12"
+		self.assertEqual(get_suggested_payment(transaction, payments).name, "PE-001")

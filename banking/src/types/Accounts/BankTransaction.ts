@@ -35,6 +35,7 @@ export interface BankTransaction{
 	currency?: string
 	/**	Description : Small Text	*/
 	description?: string
+	custom_summary?: string
 	/**	Reference Number : Small Text	*/
 	reference_number?: string
 	/**	Transaction ID : Data	*/
