@@ -486,7 +486,6 @@ Accounts Payable Ageing,应付账款账龄
 Issue a debit note against an existing Sales Invoice to adjust the rate. The quantity will be retained from the original invoice.,针对现有销售应收单开具借项通知单以调整价格。数量将沿用原单据上的数量。
 Is customer exempted from sales tax?,客户是否免征销售税？
 Default Supplier Quotation Warehouse,供应商报价默认仓库
-Payment Entry,收付款单
 Account Name,银行账户名称
 Bank Account,银行账户
 Bank Accounts,银行账户
@@ -742,3 +741,17 @@ Raw material stock in source warehouses,发料仓原材料库存
 Source Warehouse,发料仓
 Qty In Stock,库存数量
 Required Qty,需求数量
+Payment Entry,收付款凭证
+Payment Entries,收付款凭证
+Create Payment Entry,创建收付款凭证
+New Payment Entry,新建收付款凭证
+Advance Payment Entry,预收付款凭证
+Get Payment Entries,获取收付款凭证
+Unreconcile Payment Entries,取消收付款凭证核销
+"Only 'Payment Entries' made against this advance account are supported.",仅支持针对该预收预付款科目创建的收付款凭证。
+"Payment Entry has been modified after you pulled it. Please pull it again.",获取后收付款凭证已被修改，请重新获取。
+"Please cancel payment entry manually first",请先手动取消收付款凭证
+"Payment Entries {0} are un-linked",收付款凭证 {0} 已解除关联
+"Account: {0} is not permitted under Payment Entry",科目：{0} 不允许用于收付款凭证
+"Bank Transaction {0} added as Payment Entry",银行交易 {0} 已作为收付款凭证添加
+Only Value available for Payment Entry,收付款凭证仅支持金额

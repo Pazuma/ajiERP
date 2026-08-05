@@ -23,13 +23,6 @@ TRANSLATION_OVERRIDES = {
     "Create Journal Entries": "创建记账凭证",
     "Submit Journal entries": "提交记账凭证",
     "Book deferred entries via Journal Entry": "通过记账凭证登记递延分录",
-    # ERPNext 原生 zh.po 将 Payment Entry 翻为"收付款凭证"；
-    # 这里作为业务单据入口，统一使用更简洁的"收付款单"。
-    "Payment Entry": "收付款单",
-    "Payment Entries": "收付款单",
-    "Payment Entry Deduction": "收付款单扣款",
-    "Payment Entry Reference": "收付款单参考",
-    "Create Payment Entry": "创建收付款单",
     # Bank Account 页面：ERPNext 原生中文存在"户头"、"科目"等不符合大陆业务语境的翻译。
     # 注意 Bank Account DocType 中字段源文本是 "Is Default Account"，不是通用的 "Is Default"。
     "Bank Account": "银行账户",
