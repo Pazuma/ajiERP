@@ -2,7 +2,7 @@
 	if (window.__custom_filters_right_sidebar_loaded) return;
 	window.__custom_filters_right_sidebar_loaded = true;
 
-	const RIGHT_SIDEBAR_VERSION = "2026.07.22.2";
+	const RIGHT_SIDEBAR_VERSION = "2026.08.05.1";
 	const BAR_ID = "custom-filters-right-sidebar";
 	const FLYOUT_ID = "custom-filters-right-sidebar-flyout";
 	const FLYOUT_CLOSE_DELAY = 200;
