@@ -144,6 +144,28 @@
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
+   "label": "\u56de\u6b3e\u8bb0\u5f55",
+   "link_to": "Receipt Record",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u4ed8\u6b3e\u8bb0\u5f55",
+   "link_to": "Purchase Payment Record",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
    "label": "Accounts Receivable",
    "link_to": "Accounts Receivable",
    "link_type": "Report",
@@ -188,6 +210,17 @@
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
+   "label": "\u67e5\u51ed\u8bc1",
+   "link_to": "China Voucher Ledger",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
    "label": "Financial Reports",
    "link_to": "Financial Reports",
    "link_type": "Workspace",
@@ -195,7 +228,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-02-23 16:38:05.061694",
+ "modified": "2026-08-05 15:23:01.889011",
  "modified_by": "Administrator",
  "module": "Accounts",
  "module_onboarding": "Accounting Onboarding",
