@@ -1,0 +1,38 @@
+[
+  {
+    "source_row_code": "EMPLOYEE_BENEFITS_PAYABLE",
+    "source_direction": "Credit Positive",
+    "target_row_codes": ["OTHER_CURRENT_ASSETS"],
+    "reason": "应付职工薪酬借方余额"
+  },
+  {
+    "source_row_code": "ACCOUNTS_RECEIVABLE",
+    "source_direction": "Debit Positive",
+    "target_row_codes": ["CONTRACT_LIABILITIES", "ADVANCES_FROM_CUSTOMERS"],
+    "reason": "应收账款贷方余额"
+  },
+  {
+    "source_row_code": "ACCOUNTS_PAYABLE",
+    "source_direction": "Credit Positive",
+    "target_row_codes": ["PREPAYMENTS"],
+    "reason": "应付账款借方余额"
+  },
+  {
+    "source_row_code": "OTHER_RECEIVABLES",
+    "source_direction": "Debit Positive",
+    "target_row_codes": ["OTHER_PAYABLES"],
+    "reason": "其他应收款贷方余额"
+  },
+  {
+    "source_row_code": "OTHER_PAYABLES",
+    "source_direction": "Credit Positive",
+    "target_row_codes": ["OTHER_RECEIVABLES"],
+    "reason": "其他应付款借方余额"
+  },
+  {
+    "source_row_code": "TAXES_PAYABLE",
+    "source_direction": "Credit Positive",
+    "target_row_codes": ["OTHER_CURRENT_ASSETS"],
+    "reason": "应交税费借方余额展示"
+  }
+]

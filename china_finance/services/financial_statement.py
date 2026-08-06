@@ -5,8 +5,46 @@ from collections import defaultdict
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, flt, get_first_day, getdate
+from frappe.utils import add_days, flt, get_first_day, getdate, today
 
+
+RECLASSIFICATION_TOLERANCE = 0.01
+
+
+def get_balance_sheet_reclassification_rules(company=None, template=None, to_date=None):
+	"""Load presentation-only rules from deployable app configuration."""
+	if company and template:
+		filters = {"company": company, "template": template.name, "enabled": 1, "effective_from": ["<=", to_date]}
+		rules = frappe.get_all(
+			"China Financial Statement Reclassification Rule",
+			filters=filters,
+			fields=["source_row_code", "source_account", "source_direction", "target_row_code", "effective_from", "effective_to"],
+		)
+		rules = [rule for rule in rules if not rule.effective_to or getdate(rule.effective_to) >= getdate(to_date)]
+		if rules:
+			row_labels = {row.row_code: row.label for row in template.rows}
+			return [
+				{
+					**rule,
+					"target_row_codes": [rule.target_row_code],
+					"reason": row_labels.get(rule.source_row_code, rule.source_row_code) + "余额展示调整",
+				}
+				for rule in rules
+			]
+	path = frappe.get_app_path("china_finance", "config", "balance_sheet_reclassifications.json")
+	with open(path, encoding="utf-8") as rules_file:
+		rules = json.load(rules_file)
+	for rule in rules:
+		rule.setdefault("target_row_codes", [rule.get("target_row_code")])
+	return rules
+
+
+def get_account_reclassification_rules(company, template, to_date):
+	"""Return enabled presentation rules scoped to one source account."""
+	return [
+		rule for rule in get_balance_sheet_reclassification_rules(company, template, to_date)
+		if rule.get("source_account")
+	]
 
 ALLOWED_AST_NODES = (
 	ast.Expression, ast.BinOp, ast.UnaryOp, ast.Add, ast.Sub, ast.Mult, ast.Div,
@@ -90,6 +128,7 @@ def build_statement(
 	template = get_template(company, statement_type, to_date)
 	mappings = get_mappings(company, template, to_date)
 	year_start = get_fiscal_year_start(company, to_date)
+	reclassifications = []
 
 	if statement_type == "Cash Flow":
 		period_values, period_meta = get_cash_flow_values(
@@ -101,7 +140,8 @@ def build_statement(
 		opening_values = None
 	else:
 		period_values = get_statement_values(
-			company, mappings, statement_type, from_date, to_date, finance_book, cost_center, project, template=template
+			company, mappings, statement_type, from_date, to_date, finance_book, cost_center, project,
+			template=template, reclassifications=reclassifications if statement_type == "Balance Sheet" else None,
 		)
 		ytd_values = get_statement_values(
 			company, mappings, statement_type, year_start, to_date, finance_book, cost_center, project, template=template
@@ -109,11 +149,21 @@ def build_statement(
 		opening_values = (
 			get_statement_values(
 				company, mappings, statement_type, None, add_days(from_date, -1), finance_book, cost_center, project,
-				as_at_date=True, template=template,
+				as_at_date=True, template=template, reclassifications=reclassifications,
 			)
 			if statement_type in {"Balance Sheet", "Changes in Equity"} else None
 		)
 		period_meta = ytd_meta = {}
+
+	if statement_type == "Balance Sheet":
+		for values, period_label in (
+			(period_values, "本期"),
+			(opening_values, "期初") if opening_values is not None else (None, None),
+		):
+			if values is not None:
+				reclassifications.extend(
+					apply_balance_sheet_reclassifications(values, template, period_label, company, to_date)
+				)
 
 	if restate_prior_period and statement_type == "Balance Sheet":
 		from china_finance.services.prior_period_error import get_restatement_values
@@ -123,6 +173,11 @@ def build_statement(
 			ytd_values[row_code] += amount
 
 	period_rows = render_rows(template, period_values)
+	accounts_by_row = defaultdict(list)
+	for mapping in mappings:
+		accounts_by_row[mapping.row_code].append(mapping.account)
+	for result_row in period_rows:
+		result_row["source_accounts"] = sorted(set(accounts_by_row.get(result_row["row_code"], [])))
 	opening_rows = (
 		{row["row_code"]: row["amount"] for row in render_rows(template, opening_values)}
 		if opening_values is not None else {}
@@ -133,6 +188,20 @@ def build_statement(
 		result_row["year_to_date_amount"] = (
 			ytd_rows.get(result_row["row_code"], 0) if statement_type != "Balance Sheet" else None
 		)
+	unmapped_accounts = []
+	ar_ap_check = None
+	if statement_type in {"Balance Sheet", "Profit and Loss"}:
+		unmapped_accounts = get_unmapped_account_balances(
+			company, mappings, statement_type, from_date, to_date, finance_book, cost_center, project
+		)
+	if statement_type == "Balance Sheet":
+		try:
+			from china_finance.services.ledger_reconciliation import get_ar_ap_ledger_check
+
+			ar_ap_check = get_ar_ap_ledger_check(company, to_date)
+		except Exception:
+			ar_ap_check = {"passed": False, "count": 0, "difference": 0, "unavailable": True}
+	checks = build_statement_checks(statement_type, period_rows, mappings, unmapped_accounts, ar_ap_check)
 	cash_flow_supplement = []
 	cash_equivalent_composition = []
 	equity_matrix = None
@@ -154,16 +223,33 @@ def build_statement(
 	unreviewed = sum(1 for mapping in mappings if not mapping.reviewed)
 	if unreviewed:
 		warnings.append(_("有 {0} 条自动科目映射尚未复核").format(unreviewed))
+	for check in checks:
+		if not check["passed"]:
+			warnings.append(check["message"])
 	if statement_type == "Balance Sheet":
 		temporary_inventory_accrual_debit = get_temporary_inventory_accrual_debit_balance(
 			company, to_date, finance_book, cost_center, project
 		)
 		if temporary_inventory_accrual_debit:
 			warnings.append(
-				_("暂估应付款存在借方余额 {0}，已重分类至其他流动资产；请完成采购入库或核对该采购发票。").format(
+				_("暂估应付款借方余额 {0} 已按报表展示规则列入其他流动资产；原始账务未改变。请核对相关凭证。").format(
 					temporary_inventory_accrual_debit
 				)
 			)
+		for item in reclassifications:
+			source_detail = f"（科目：{item['source_account']}）" if item.get("source_account") else ""
+			warnings.append(
+				_("{0}：{1}{2} {3} 已按报表展示规则列入 {4}；原始账务未改变。").format(
+					item["period"], item["reason"], source_detail, item["amount"], item["target_label"]
+				)
+			)
+		row_by_code = {row.row_code: row for row in template.rows}
+		for rule in get_balance_sheet_reclassification_rules(company, template, to_date):
+			target_codes = rule.get("target_row_codes", (rule.get("target_row_code"),))
+			if rule["source_row_code"] in row_by_code and not any(code in row_by_code for code in target_codes):
+				warnings.append(
+					_("展示调整规则 {0} 的目标项目不存在，已保留原始余额。").format(rule["reason"])
+				)
 	if period_meta.get("unclassified_amount"):
 		warnings.append(_("本期有未分类现金流 {0}").format(period_meta["unclassified_amount"]))
 	if ytd_meta.get("unclassified_amount") and year_start != from_date:
@@ -186,11 +272,185 @@ def build_statement(
 		"template": template.name, "template_version": template.version, "accounting_standard": template.accounting_standard,
 		"from_date": str(from_date), "to_date": str(to_date), "fiscal_year_start": str(year_start),
 		"rows": period_rows, "warnings": warnings, "cash_flow_meta": period_meta,
+		"reclassifications": reclassifications, "checks": checks,
 		"cash_flow_supplement": cash_flow_supplement,
 		"cash_equivalent_composition": cash_equivalent_composition,
 		"equity_matrix": equity_matrix,
 		"report_status": "草表", "amount_unit": frappe.db.get_value("China Finance Settings", company, "report_amount_unit") or "元",
 	}
+
+
+def build_statement_checks(statement_type, rows, mappings, unmapped_accounts=None, ar_ap_check=None):
+	"""Return non-mutating checks that explain whether report output is coherent."""
+	amounts = {row["row_code"]: flt(row["amount"]) for row in rows}
+	checks = []
+	if statement_type == "Balance Sheet":
+		difference = flt(amounts.get("TOTAL_ASSETS", 0) - amounts.get("TOTAL_LIABILITIES_EQUITY", 0), 2)
+		checks.append({
+			"code": "BALANCE_SHEET_BALANCE",
+			"passed": abs(difference) <= RECLASSIFICATION_TOLERANCE,
+			"difference": difference,
+			"message": _("资产负债表未勾稽，差异 {0}").format(difference),
+		})
+	seen = defaultdict(int)
+	account_rows = defaultdict(set)
+	for mapping in mappings:
+		seen[(mapping.account, mapping.row_code)] += 1
+		account_rows[mapping.account].add(mapping.row_code)
+	duplicates = sum(1 for count in seen.values() if count > 1)
+	checks.append({
+		"code": "DUPLICATE_REPORT_MAPPING",
+		"passed": duplicates == 0,
+		"difference": duplicates,
+		"message": _("存在 {0} 组重复报表科目映射").format(duplicates),
+	})
+	cross_row_accounts = [account for account, row_codes in account_rows.items() if len(row_codes) > 1]
+	checks.append({
+		"code": "CROSS_ROW_REPORT_MAPPING",
+		"passed": not cross_row_accounts,
+		"difference": len(cross_row_accounts),
+		"message": _("有 {0} 个科目同时映射到多个报表项目，请确认是否需要拆分或保留补充映射：{1}").format(
+			len(cross_row_accounts), "、".join(cross_row_accounts[:5])
+		),
+	})
+	if statement_type in {"Balance Sheet", "Profit and Loss"}:
+		unmapped_accounts = unmapped_accounts or []
+		labels = "；".join(
+			f"{item['account']} {flt(item['balance'], 2):,.2f}" for item in unmapped_accounts[:5]
+		)
+		checks.append({
+			"code": "UNMAPPED_ACCOUNT_BALANCE",
+			"passed": not unmapped_accounts,
+			"blocking": False,
+			"severity": "warning",
+			"difference": len(unmapped_accounts),
+			"message": _("有 {0} 个未映射科目存在本期影响金额，请确认是否纳入报表：{1}").format(
+				len(unmapped_accounts), labels
+			),
+		})
+	if statement_type == "Balance Sheet" and ar_ap_check is not None:
+		if ar_ap_check.get("unavailable"):
+			details = _("应收应付台账核对未执行，请从核对报表确认")
+		else:
+			details = _("应收应付台账存在 {0} 项差异，差额绝对值合计 {1}").format(
+			ar_ap_check.get("count", 0), flt(ar_ap_check.get("difference", 0), 2)
+		) if not ar_ap_check.get("passed") else _("应收应付台账核对通过")
+		checks.append({
+			"code": "AR_AP_LEDGER_RECONCILIATION",
+			"passed": bool(ar_ap_check.get("passed")) and not ar_ap_check.get("unavailable"),
+			"blocking": False,
+			"severity": "warning",
+			"difference": ar_ap_check.get("count", 0),
+			"message": details,
+		})
+	if statement_type == "Profit and Loss":
+		negative_rows = [
+			row["label"] for row in rows
+			if row["row_type"] == "Mapped Accounts" and flt(row["amount"]) < -RECLASSIFICATION_TOLERANCE
+		]
+		checks.append({
+			"code": "NEGATIVE_PROFIT_AND_LOSS_AMOUNT",
+			"passed": not negative_rows,
+			"blocking": False,
+			"severity": "warning",
+			"difference": len(negative_rows),
+			"message": _("利润表有 {0} 个项目出现负数发生额，请关注红字、冲销或科目映射：{1}").format(
+				len(negative_rows), "、".join(negative_rows[:5])
+			),
+		})
+	return checks
+
+
+def get_unmapped_account_balances(
+	company, mappings, statement_type, from_date, to_date, finance_book=None, cost_center=None, project=None
+):
+	"""Find material leaf-account activity omitted from the configured statement mapping.
+
+	This is a review signal only. It does not add an account to a report or alter GL values.
+	"""
+	mapped_accounts = {mapping.account for mapping in mappings}
+	conditions, parameters = get_gl_conditions(
+		company,
+		None if statement_type == "Balance Sheet" else from_date,
+		to_date,
+		finance_book,
+		cost_center,
+		project,
+	)
+	conditions.append("gle.voucher_type!='Period Closing Voucher'") if statement_type == "Profit and Loss" else None
+	if mapped_accounts:
+		conditions.append("gle.account NOT IN %(mapped_accounts)s")
+		parameters["mapped_accounts"] = list(mapped_accounts)
+	root_types = ("Asset", "Liability", "Equity") if statement_type == "Balance Sheet" else ("Income", "Expense")
+	conditions.append("a.root_type IN %(root_types)s")
+	parameters["root_types"] = root_types
+	rows = frappe.db.sql(
+		f"""
+		SELECT gle.account, a.account_name, a.root_type,
+			SUM(gle.debit - gle.credit) AS balance
+		FROM `tabGL Entry` gle
+		INNER JOIN `tabAccount` a ON a.name = gle.account
+		WHERE {' AND '.join(conditions)} AND a.is_group=0 AND a.disabled=0
+		GROUP BY gle.account, a.account_name, a.root_type
+		HAVING ABS(SUM(gle.debit - gle.credit)) > %(materiality)s
+		ORDER BY ABS(SUM(gle.debit - gle.credit)) DESC
+		LIMIT 20
+		""",
+		{**parameters, "materiality": RECLASSIFICATION_TOLERANCE},
+		as_dict=True,
+	)
+	return [
+		{"account": row.account, "account_name": row.account_name, "root_type": row.root_type, "balance": flt(row.balance, 2)}
+		for row in rows
+	]
+
+
+def apply_balance_sheet_reclassifications(values, template, period_label, company=None, to_date=None):
+	"""Move configured abnormal balances for presentation without changing source values."""
+	if not values or not template:
+		return []
+
+	row_by_code = {row.row_code: row for row in template.rows}
+	items = []
+	# Account-scoped rules remove only their selected account from the source
+	# value in get_statement_values.  A project-wide rule therefore continues to
+	# handle the remaining accounts instead of being disabled wholesale.
+	for rule in get_balance_sheet_reclassification_rules(company, template, to_date or today()):
+		source = row_by_code.get(rule["source_row_code"])
+		target_row_code = next(
+			(code for code in rule.get("target_row_codes", (rule.get("target_row_code"),)) if code in row_by_code),
+			None,
+		)
+		target = row_by_code.get(target_row_code)
+		if not source or not target or source.row_type == "Heading" or target.row_type == "Heading":
+			continue
+		if source.balance_direction != rule["source_direction"]:
+			continue
+
+		amount = flt(values.get(rule["source_row_code"], 0), 2)
+		if abs(amount) < RECLASSIFICATION_TOLERANCE:
+			continue
+		if rule["source_direction"] == "Credit Positive":
+			if amount >= 0:
+				continue
+		else:
+			if amount >= 0:
+				continue
+
+		reclassified_amount = abs(amount)
+		values[rule["source_row_code"]] += reclassified_amount
+		values[target_row_code] += reclassified_amount
+		items.append(
+			{
+				"period": period_label,
+				"reason": rule["reason"],
+				"amount": reclassified_amount,
+				"source_row_code": rule["source_row_code"],
+				"target_row_code": target_row_code,
+				"target_label": target.label,
+			}
+		)
+	return items
 
 
 def get_mappings(company, template, to_date):
@@ -367,7 +627,7 @@ def _roll_up_small_profit_and_loss_rows(template, values):
 
 def get_statement_values(
 	company, mappings, statement_type, from_date, to_date, finance_book=None, cost_center=None, project=None,
-	as_at_date=False, template=None
+	as_at_date=False, template=None, reclassifications=None,
 ):
 	if not as_at_date and statement_type in {"Profit and Loss", "Changes in Equity"}:
 		values = get_period_mapped_values(
@@ -403,6 +663,12 @@ def get_statement_values(
 		flt(balances.get(temporary_inventory_accrual_account)), 0
 	) if temporary_inventory_accrual_account else 0
 	vat_balance = 0
+	account_reclassification_rules = {}
+	if statement_type == "Balance Sheet" and template:
+		account_reclassification_rules = {
+			rule["source_account"]: rule
+			for rule in get_account_reclassification_rules(company, template, to_date)
+		}
 	for mapping in mappings:
 		if statement_type == "Changes in Equity" and mapping.row_code in {"OPENING_EQUITY", "NET_PROFIT", "CLOSING_EQUITY"}:
 			continue
@@ -417,6 +683,30 @@ def get_statement_values(
 		value = flt(balances.get(mapping.account)) * int(mapping.sign_multiplier)
 		if get_mapping_direction(template, mapping.row_code) == "Credit Positive":
 			value = -value
+		account_rule = account_reclassification_rules.get(mapping.account)
+		if (
+			account_rule
+			and mapping.row_code == account_rule["source_row_code"]
+			and get_mapping_direction(template, mapping.row_code) == account_rule["source_direction"]
+			and value < -RECLASSIFICATION_TOLERANCE
+		):
+			target_row_code = account_rule["target_row_code"]
+			reclassified_amount = abs(value)
+			values[target_row_code] += reclassified_amount
+			if reclassifications is not None:
+				target = next((row for row in template.rows if row.row_code == target_row_code), None)
+				reclassifications.append(
+					{
+						"period": "期初" if as_at_date else "本期",
+						"reason": account_rule["reason"],
+						"amount": reclassified_amount,
+						"source_row_code": account_rule["source_row_code"],
+						"source_account": mapping.account,
+						"target_row_code": target_row_code,
+						"target_label": target.label if target else target_row_code,
+					}
+				)
+			continue
 		values[mapping.row_code] += value
 		if mapping.get("supplementary_row_code"):
 			values[mapping.supplementary_row_code] += value
@@ -642,10 +932,12 @@ def get_opening_entry_cash(company, from_date, to_date, finance_book=None, cost_
 
 def get_gl_conditions(company, from_date, to_date, finance_book=None, cost_center=None, project=None):
 	conditions = [
-		"gle.company=%(company)s", "gle.posting_date>=%(from_date)s", "gle.posting_date<=%(to_date)s",
+		"gle.company=%(company)s", "gle.posting_date<=%(to_date)s",
 		"gle.is_cancelled=0",
 	]
 	values = {"company": company, "from_date": from_date, "to_date": to_date}
+	if from_date:
+		conditions.append("gle.posting_date>=%(from_date)s")
 	if finance_book:
 		conditions.append("gle.finance_book=%(finance_book)s")
 		values["finance_book"] = finance_book

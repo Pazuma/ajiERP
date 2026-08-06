@@ -73,20 +73,6 @@ frappe.query_reports["China Voucher Ledger"] = {
 	onload(report) {
 		report.page.wrapper.addClass("china-voucher-ledger-report");
 		ensure_voucher_ledger_styles();
-		frappe.app.sidebar?.setup("China Finance");
-		if (!frappe.query_reports["China Voucher Ledger"].china_finance_sidebar_hooked) {
-			frappe.query_reports["China Voucher Ledger"].china_finance_sidebar_hooked = true;
-			frappe.router.on("change", () => {
-				const route = frappe.get_route();
-				if (route[0] === "query-report" && route[1] === "China Voucher Ledger") {
-					frappe.app.sidebar?.setup("China Finance");
-				} else {
-					// The query-report wrapper is shared by all reports. Do not let
-					// voucher-only compact styles leak into the next report.
-					report.page.wrapper.removeClass("china-voucher-ledger-report");
-				}
-			});
-		}
 		report.page.wrapper.on("click", ".china-voucher-link", (event) => {
 			event.preventDefault();
 			const source_doctype = decodeURIComponent(event.currentTarget.dataset.sourceDoctype);

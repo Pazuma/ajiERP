@@ -65,11 +65,56 @@ def get_mapping_console(company, statement_type, accounting_standard=None):
 		order_by="lft",
 	)
 	payload = build_console_payload(template, mappings, leaf_accounts, all_accounts, company=company)
+	_totals = get_mapping_account_totals(company, [mapping.account for mapping in mappings], today())
+	for row in payload["rows"]:
+		for mapping in row["mappings"]:
+			mapping.update(_totals.get(mapping["account"], {}))
 	payload["configuration"] = {
 		"report_effective_from": str(report_effective_from or ""),
 		"mapping_effective_from": str(mapping_effective_from or ""),
 	}
+	payload["reclassification_rules"] = get_reclassification_rules_for_console(company, template)
 	return payload
+
+
+def get_mapping_account_totals(company, accounts, as_of_date):
+	"""Return read-only debit, credit and net totals for mapped leaf accounts."""
+	accounts = tuple(sorted(set(accounts)))
+	if not accounts:
+		return {}
+	rows = frappe.db.sql(
+		"""
+		SELECT account, SUM(debit) AS debit_total, SUM(credit) AS credit_total
+		FROM `tabGL Entry`
+		WHERE company = %(company)s
+			AND account IN %(accounts)s
+			AND posting_date <= %(as_of_date)s
+			AND is_cancelled = 0
+		GROUP BY account
+		""",
+		{"company": company, "accounts": accounts, "as_of_date": as_of_date},
+		as_dict=True,
+	)
+	return {
+		row.account: {
+			"debit_total": row.debit_total or 0,
+			"credit_total": row.credit_total or 0,
+			"balance": (row.debit_total or 0) - (row.credit_total or 0),
+		}
+		for row in rows
+	}
+
+
+def get_reclassification_rules_for_console(company, template):
+	return frappe.get_all(
+		"China Financial Statement Reclassification Rule",
+		filters={"company": company, "template": template.name},
+		fields=[
+			"name", "source_row_code", "source_account", "source_direction", "target_row_code",
+			"effective_from", "effective_to", "enabled", "review_notes",
+		],
+		order_by="source_row_code, effective_from",
+	)
 
 
 def build_console_payload(template, mappings, leaf_accounts, all_accounts=None, company=None):
@@ -241,6 +286,57 @@ def save_mapping_configuration(company, template=None, report_effective_from=Non
 		"report_effective_from": str(report_effective_from or ""),
 		"mapping_effective_from": str(mapping_effective_from or ""),
 	}
+
+
+@frappe.whitelist()
+def save_reclassification_rule(
+	company, template, source_row_code, source_direction, target_row_code, source_account=None,
+	effective_from=None, effective_to=None, enabled=1, name=None, review_notes=None,
+):
+	_require_write_access()
+	template_doc = frappe.get_doc("China Financial Statement Template", template)
+	if template_doc.statement_type != "Balance Sheet":
+		frappe.throw(_("异常余额重分类目前只支持资产负债表"))
+	rows = {row.row_code: row for row in template_doc.rows}
+	for code in (source_row_code, target_row_code):
+		if code not in rows or rows[code].row_type != "Mapped Accounts":
+			frappe.throw(_("重分类项目必须是模板中的明细项目"))
+	if source_row_code == target_row_code:
+		frappe.throw(_("重分类来源项目和目标项目不能相同"))
+	if source_account:
+		account = frappe.db.get_value("Account", source_account, ["company", "is_group"], as_dict=True)
+		if not account or account.company != company or account.is_group:
+			frappe.throw(_("来源科目必须是当前公司的末级科目"))
+		if not frappe.db.exists(
+			"China Financial Statement Mapping",
+			{"company": company, "template": template, "row_code": source_row_code, "account": source_account},
+		):
+			frappe.throw(_("来源科目尚未映射到来源项目"))
+	if source_direction not in ("Debit Positive", "Credit Positive"):
+		frappe.throw(_("余额方向无效"))
+	effective_from = getdate(effective_from or template_doc.effective_from)
+	if effective_to and getdate(effective_to) < effective_from:
+		frappe.throw(_("失效日期不能早于生效日期"))
+	if name:
+		doc = frappe.get_doc("China Financial Statement Reclassification Rule", name)
+		if doc.company != company or doc.template != template:
+			frappe.throw(_("不能修改其他公司的重分类规则"), frappe.PermissionError)
+	else:
+		existing = frappe.db.get_value(
+			"China Financial Statement Reclassification Rule",
+			{"company": company, "template": template, "source_row_code": source_row_code, "source_account": source_account or ""},
+			"name",
+		)
+		doc = frappe.get_doc("China Financial Statement Reclassification Rule", existing) if existing else frappe.new_doc("China Financial Statement Reclassification Rule")
+	doc.update({
+		"company": company, "template": template, "source_row_code": source_row_code,
+		"source_account": source_account or None,
+		"source_direction": source_direction, "target_row_code": target_row_code,
+		"effective_from": effective_from, "effective_to": getdate(effective_to) if effective_to else None,
+		"enabled": 1 if cint(enabled) else 0, "review_notes": review_notes or None,
+	})
+	doc.insert(ignore_permissions=True) if doc.is_new() else doc.save(ignore_permissions=True)
+	return get_reclassification_rules_for_console(company, template_doc)
 
 
 @frappe.whitelist()

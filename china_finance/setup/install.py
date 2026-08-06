@@ -146,6 +146,7 @@ def after_install():
 	sync_china_financial_statement_report_filters()
 	sync_china_financial_statement_print_format()
 	backfill_bank_transaction_summaries()
+	sync_reclassification_rules()
 	sync_navigation_metadata()
 
 
@@ -170,6 +171,7 @@ def after_migrate():
 	sync_china_financial_statement_report_filters()
 	sync_china_financial_statement_print_format()
 	backfill_bank_transaction_summaries()
+	sync_reclassification_rules()
 	sync_navigation_metadata()
 	validate_deployment_schema()
 
@@ -401,6 +403,7 @@ def backfill_bank_transaction_summaries():
 
 def sync_navigation_metadata():
 	"""Keep route identifiers stable while translations provide Chinese labels."""
+	sync_payments_voucher_report_link()
 	navigation_name = "China Finance"
 	values_by_doctype = {
 		"Workspace": {"label": navigation_name, "title": navigation_name},
@@ -424,6 +427,66 @@ def sync_navigation_metadata():
 	frappe.cache.delete_key("desktop_icons")
 	frappe.cache.delete_key("bootinfo")
 	frappe.clear_cache()
+
+
+def sync_reclassification_rules():
+	"""Seed default presentation rules without overwriting console changes."""
+	path = frappe.get_app_path("china_finance", "config", "balance_sheet_reclassifications.json")
+	with open(path, encoding="utf-8") as rules_file:
+		rules = json.load(rules_file)
+	for company in frappe.get_all("Company", filters={"is_group": 0}, pluck="name"):
+		if not frappe.db.exists("China Finance Settings", company):
+			continue
+		settings = frappe.get_cached_doc("China Finance Settings", company)
+		accounting_standard = settings.accounting_standard
+		for template in frappe.get_all(
+			"China Financial Statement Template",
+			filters={"statement_type": "Balance Sheet", "accounting_standard": accounting_standard, "is_active": 1},
+			fields=["name", "effective_from"],
+		):
+			rows = {row.row_code for row in frappe.get_cached_doc("China Financial Statement Template", template.name).rows}
+			for rule in rules:
+				target = next((code for code in rule.get("target_row_codes", []) if code in rows), None)
+				if not target or rule["source_row_code"] not in rows:
+					continue
+				if frappe.db.exists(
+					"China Financial Statement Reclassification Rule",
+					{"company": company, "template": template.name, "source_row_code": rule["source_row_code"]},
+				):
+					continue
+				frappe.get_doc({
+					"doctype": "China Financial Statement Reclassification Rule",
+					"company": company, "template": template.name,
+					"source_row_code": rule["source_row_code"],
+					"source_direction": rule["source_direction"],
+					"target_row_code": target,
+					"effective_from": template.effective_from,
+					"enabled": 1,
+				}).insert(ignore_permissions=True)
+
+
+def sync_payments_voucher_report_link():
+	"""Add the voucher report to Payments without replacing user-defined links."""
+	if not frappe.db.exists("Workspace Sidebar", "Payments") or not frappe.db.exists("Report", "China Voucher Ledger"):
+		return
+
+	sidebar = frappe.get_doc("Workspace Sidebar", "Payments")
+	if any(item.link_to == "China Voucher Ledger" and item.link_type == "Report" for item in sidebar.items):
+		return
+
+	item = sidebar.append("items", _sidebar_link("China Voucher Ledger", "查凭证", "Report"))
+	financial_reports_index = next(
+		(
+			index
+			for index, existing in enumerate(sidebar.items)
+			if existing.link_to == "Financial Reports" and existing.link_type == "Workspace"
+		),
+		len(sidebar.items),
+	)
+	sidebar.items.remove(item)
+	sidebar.items.insert(financial_reports_index, item)
+	sidebar.flags.ignore_permissions = True
+	sidebar.save()
 
 
 def _known_navigation_links():

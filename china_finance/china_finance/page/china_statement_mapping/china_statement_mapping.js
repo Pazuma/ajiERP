@@ -82,13 +82,15 @@ class ChinaStatementMapping {
 		this.$content = $(
 			`<div class="china-statement-mapping">
 				<div class="smc-summary"></div>
+				<div class="smc-reclassifications"></div>
 				<div class="smc-main">
 					<div class="smc-rows"></div>
 					<div class="smc-accounts"></div>
 				</div>
 			</div>`,
 		).appendTo($(this.wrapper).find(".layout-main-section"));
-			this.$summary = this.$content.find(".smc-summary");
+		this.$summary = this.$content.find(".smc-summary");
+		this.$reclassifications = this.$content.find(".smc-reclassifications");
 		this.$rows = this.$content.find(".smc-rows");
 			this.$accounts = this.$content.find(".smc-accounts");
 		this.inject_styles();
@@ -140,6 +142,7 @@ class ChinaStatementMapping {
 				.smc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px 30px; }
 				.smc-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 4px 10px; font-size: var(--text-xs); background: var(--subtle-fg); transition: box-shadow 0.12s ease; }
 				.smc-chip:hover { box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.06)); }
+				.smc-chip--link { cursor: pointer; }
 				.smc-chip__dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
 				.smc-chip__dot--reviewed { background: var(--green-500); }
 				.smc-chip__dot--pending { background: var(--orange-500); }
@@ -171,6 +174,19 @@ class ChinaStatementMapping {
 				.smc-configuration__field + .smc-configuration__field { margin-top: 8px; }
 				.smc-configuration .form-group { margin-bottom: 8px; }
 				.smc-configuration .smc-save-configuration { margin-top: 4px; }
+				.smc-reclassifications { margin-bottom: 16px; }
+				.smc-reclassifications__panel { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); overflow: hidden; }
+				.smc-reclassifications__panel .smc-panel-title { display: flex; align-items: center; gap: 8px; }
+				.smc-reclassifications__panel .smc-panel-title button { margin-left: auto; }
+				.smc-reclassifications__hint { padding: 8px 18px; color: var(--text-muted); font-size: var(--text-xs); border-bottom: 1px solid var(--border-color); }
+				.smc-reclassification-row { display: flex; align-items: center; gap: 14px; padding: 9px 18px; border-bottom: 1px solid var(--border-color); }
+				.smc-reclassification-row:last-child { border-bottom: 0; }
+				.smc-reclassification-row span:first-child { min-width: 180px; font-weight: 600; }
+				.smc-reclassification-row span:nth-child(3) { flex: 1; }
+				.smc-reclassification-signs { display: inline-flex; align-items: center; gap: 8px; min-width: 148px; }
+				.smc-reclassification-sign { display: inline-block; min-width: 38px; padding: 2px 6px; border-radius: 10px; font-size: var(--text-xs); text-align: center; }
+				.smc-reclassification-sign--positive { color: var(--green-700); background: var(--green-100); }
+				.smc-reclassification-sign--negative { color: var(--orange-700); background: var(--orange-100); }
 				.smc-summary-config { min-width: 210px; border-left-color: var(--gray-400); }
 				.smc-summary-config__control { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
 				.smc-date-control { width: 126px; }
@@ -210,9 +226,125 @@ class ChinaStatementMapping {
 
 	render_all() {
 		this.render_summary();
+		this.render_reclassification_rules();
 		this.render_rows();
 		this.render_accounts();
 		this.render_configuration();
+	}
+
+	render_reclassification_rules() {
+		if (this.statement_type.get_value() !== "Balance Sheet") {
+			this.$reclassifications.empty();
+			return;
+		}
+		const rules = this.data.reclassification_rules || [];
+		const rows = this.data.rows || [];
+		const labels = Object.fromEntries(rows.map((row) => [row.row_code, row.label]));
+		const normal_sign = () => __("正数");
+		const adjusted_sign = () => __("负数");
+		const $panel = $(`
+			<div class="smc-reclassifications__panel">
+				<div class="smc-panel-title">${__("报表余额重分类")}
+					${this.can_write ? `<button class="btn btn-xs btn-primary smc-add-reclassification">${__("新增展示规则")}</button>` : ""}
+				</div>
+				<div class="smc-reclassifications__hint">${__("仅影响报表展示，不修改总账、凭证和原始科目映射")}</div>
+				<div class="smc-reclassifications__list"></div>
+			</div>`);
+		const $list = $panel.find(".smc-reclassifications__list");
+		if (!rules.length) $list.html(`<div class="smc-empty">${__("暂无展示调整规则")}</div>`);
+		rules.forEach((rule) => {
+			const sign_scope = rule.source_account ? __("余额贡献") : "";
+			const $row = $(`
+				<div class="smc-reclassification-row">
+					<span>${frappe.utils.escape_html(labels[rule.source_row_code] || rule.source_row_code)}${rule.source_account ? ` <small class="text-muted">(${frappe.utils.escape_html(rule.source_account)})</small>` : ` <small class="text-muted">(${__("全部科目")})</small>`}</span>
+					<span class="smc-reclassification-signs">
+						<span>${__("正常")} ${sign_scope} <span class="smc-reclassification-sign smc-reclassification-sign--positive">${normal_sign()}</span></span>
+						<span>${__("需调整")} ${sign_scope} <span class="smc-reclassification-sign smc-reclassification-sign--negative">${adjusted_sign()}</span></span>
+					</span>
+					<span>→ ${frappe.utils.escape_html(labels[rule.target_row_code] || rule.target_row_code)}</span>
+					<span class="text-muted">${rule.enabled ? __("已启用") : __("已停用")}</span>
+				</div>`);
+			if (this.can_write) {
+				$('<button class="btn btn-xs btn-default">编辑</button>').on("click", () => this.edit_reclassification_rule(rule)).appendTo($row);
+			}
+			$list.append($row);
+		});
+		$panel.find(".smc-add-reclassification").on("click", () => this.edit_reclassification_rule());
+		this.$reclassifications.html($panel);
+	}
+
+	edit_reclassification_rule(rule = {}) {
+		const rows = (this.data.rows || []).filter((row) => row.row_type === "Mapped Accounts");
+		const options = rows.map((row) => ({ label: `${row.label} (${row.row_code})`, value: row.row_code }));
+		const account_options = [{ label: __("全部科目"), value: "" }].concat(
+			rows.flatMap((row) => (row.mappings || []).map((mapping) => ({
+				label: `${mapping.account} → ${row.label}`, value: mapping.account,
+			}))),
+		);
+		const dialog = new frappe.ui.Dialog({
+			title: rule.name ? __("编辑展示调整规则") : __("新增展示调整规则"),
+			fields: [
+				{ fieldname: "source_row_code", label: __("余额来源项目"), fieldtype: "Select", options, reqd: 1 },
+				{ fieldname: "source_account", label: __("来源科目"), fieldtype: "Select", options: account_options, description: __("留空表示该项目下的全部科目") },
+				{ fieldname: "normal_sign", label: __("正常余额符号"), description: __("报表项目正常显示为正数，负数时按规则重分类"), fieldtype: "Select", options: `${__("正数")}\n${__("负数")}`, reqd: 1 },
+				{ fieldname: "target_row_code", label: __("展示列入项目"), fieldtype: "Select", options, reqd: 1 },
+				{ fieldname: "effective_from", label: __("生效日期"), fieldtype: "Date", reqd: 1 },
+				{ fieldname: "effective_to", label: __("失效日期"), fieldtype: "Date" },
+				{ fieldname: "enabled", label: __("启用"), fieldtype: "Check", default: 1 },
+				{ fieldname: "review_notes", label: __("复核说明"), fieldtype: "Small Text" },
+			],
+			primary_action_label: __("保存"),
+			primary_action: async (values) => {
+				await frappe.xcall("china_finance.services.statement_mapping_console.save_reclassification_rule", {
+					...values, source_direction: (this.data.rows.find((row) => row.row_code === values.source_row_code) || {}).balance_direction || "Debit Positive", name: rule.name || null, company: this.company.get_value(), template: this.data.template.name,
+				});
+				dialog.hide();
+				frappe.show_alert({ message: __("展示调整规则已保存"), indicator: "green" });
+				this.refresh();
+			},
+		});
+		dialog.set_values({
+			source_row_code: rule.source_row_code || options[0]?.value,
+			source_account: rule.source_account || "",
+			normal_sign: __("正数"),
+			target_row_code: rule.target_row_code || options[1]?.value || options[0]?.value,
+			effective_from: rule.effective_from || this.data.configuration?.mapping_effective_from,
+			effective_to: rule.effective_to || null, enabled: rule.enabled ?? 1, review_notes: rule.review_notes || "",
+		});
+		const get_source_account_options = (row_code) => [{ label: __("全部科目"), value: "" }].concat(
+			(rows.find((row) => row.row_code === row_code)?.mappings || []).map((mapping) => ({
+				label: mapping.account, value: mapping.account,
+			}))
+		);
+		const refresh_source_accounts = (preserve_value = false) => {
+			const current = preserve_value ? dialog.get_value("source_account") : "";
+			const source_options = get_source_account_options(dialog.get_value("source_row_code"));
+			dialog.set_df_property("source_account", "options", source_options);
+			dialog.set_value(
+				"source_account",
+				source_options.some((option) => option.value === current) ? current : ""
+			);
+		};
+		refresh_source_accounts(true);
+		dialog.fields_dict.source_row_code.$input.on("change", () => refresh_source_accounts());
+		const update_sign_scope = () => {
+			const has_source_account = Boolean(dialog.get_value("source_account"));
+			dialog.set_df_property(
+				"normal_sign",
+				"label",
+				has_source_account ? __("来源科目余额贡献符号") : __("正常余额符号")
+			);
+			dialog.set_df_property(
+				"normal_sign",
+				"description",
+				has_source_account
+					? __("按该科目对来源报表项目的余额贡献判断；负数时按规则重分类")
+					: __("报表项目正常显示为正数，负数时按规则重分类")
+			);
+		};
+		dialog.fields_dict.source_account.$input.on("change", update_sign_scope);
+		update_sign_scope();
+		dialog.show();
 	}
 
 	render_configuration() {
@@ -630,18 +762,25 @@ class ChinaStatementMapping {
 			? `${mapping.account_number} ${mapping.account_name}`
 			: mapping.account_name;
 		const $chip = $(
-			`<span class="smc-chip" title="${frappe.utils.escape_html(__(mapping.mapping_source || "Manual"))}"></span>`,
+			`<span class="smc-chip smc-chip--link" title="${frappe.utils.escape_html(__("查看该科目总账"))}"></span>`,
 		);
+		$chip.on("click", () => frappe.set_route("query-report", "General Ledger", {
+			company: this.company.get_value(), account: mapping.account,
+		}));
 		$chip.append(
 			`<span class="smc-chip__dot ${mapping.reviewed ? "smc-chip__dot--reviewed" : "smc-chip__dot--pending"}"></span>`,
 		);
 		$chip.append(`<span>${frappe.utils.escape_html(label)}</span>`);
+		if (mapping.debit_total !== undefined) {
+			const totals = `借 ${frappe.format(mapping.debit_total, { fieldtype: "Currency" })} · 贷 ${frappe.format(mapping.credit_total, { fieldtype: "Currency" })} · 余额 ${frappe.format(mapping.balance, { fieldtype: "Currency" })}`;
+			$chip.attr("title", totals);
+		}
 		if (mapping.sign_multiplier === -1) {
 			$chip.append('<span class="smc-chip__sign">×(-1)</span>');
 		}
 		if (this.can_write) {
 			const $remove = $(`<button class="smc-chip__remove" title="${__("Remove Mapping")}">×</button>`);
-			$remove.on("click", () => this.remove_mapping(mapping));
+			$remove.on("click", (event) => { event.stopPropagation(); this.remove_mapping(mapping); });
 			$chip.append($remove);
 		}
 		return $chip;

@@ -60,6 +60,11 @@ def execute(filters=None):
 		comparison_values = {row["row_code"]: row["amount"] for row in comparison["rows"]}
 		for row in result["rows"]:
 			row["comparison_amount"] = comparison_values.get(row["row_code"], 0)
+			row["variance_amount"] = flt(row["amount"] - row["comparison_amount"], 2)
+			row["variance_rate"] = (
+				flt(row["variance_amount"] / abs(row["comparison_amount"]) * 100, 2)
+				if abs(row["comparison_amount"]) > 0.01 else None
+			)
 		result["warnings"].extend(comparison["warnings"])
 	elif comparison_to:
 		result["warnings"].append(
@@ -68,6 +73,15 @@ def execute(filters=None):
 		comparison_to = None
 	warnings = list(dict.fromkeys(result["warnings"]))
 	message_parts = [_('编制状态：草表。正式法定财务报表须从已通过检查的结账运行单生成。')]
+	if result.get("checks"):
+		failed_checks = [check for check in result["checks"] if not check["passed"]]
+		blocking_checks = [check for check in failed_checks if check.get("blocking", True)]
+		if blocking_checks:
+			message_parts.append(_("报表检查：有 {0} 项阻断问题，暂不可作为正式报表。").format(len(blocking_checks)))
+		elif failed_checks:
+			message_parts.append(_("报表检查：通过；另有 {0} 项需复核。").format(len(failed_checks)))
+		else:
+			message_parts.append(_("报表检查：全部通过。"))
 	message_parts.extend(warnings)
 	message = "<br>".join(message_parts)
 	if filters.statement_type == "Balance Sheet":
@@ -80,7 +94,7 @@ def execute(filters=None):
 		)
 	if filters.statement_type == "Profit and Loss":
 		return (
-			get_columns(),
+			get_columns(include_variance=True),
 			result["rows"],
 			message,
 			get_profit_and_loss_chart(result["rows"], filters.company, filters),
@@ -487,14 +501,20 @@ def execute_account_activity_balance(filters):
 	return party_columns, output
 
 
-def get_columns():
-	return [
+def get_columns(include_variance=False):
+	columns = [
 		{"label": _("项目"), "fieldname": "label", "fieldtype": "Data", "width": 420},
 		{"label": _("期初金额"), "fieldname": "opening_amount", "fieldtype": "Currency", "width": 160},
 		{"label": _("本期金额/期末余额"), "fieldname": "amount", "fieldtype": "Currency", "width": 180},
 		{"label": _("本年累计"), "fieldname": "year_to_date_amount", "fieldtype": "Currency", "width": 160},
 		{"label": _("比较期金额"), "fieldname": "comparison_amount", "fieldtype": "Currency", "width": 180},
 	]
+	if include_variance:
+		columns.extend([
+			{"label": _("增减额"), "fieldname": "variance_amount", "fieldtype": "Currency", "width": 160},
+			{"label": _("增减率"), "fieldname": "variance_rate", "fieldtype": "Percent", "width": 130},
+		])
+	return columns
 
 
 def get_equity_columns(matrix):
@@ -557,6 +577,7 @@ def build_balance_sheet_rows(rows):
 			"asset_opening_amount": asset.get("opening_amount"),
 			"asset_amount": asset.get("amount"),
 			"asset_comparison_amount": asset.get("comparison_amount"),
+			"asset_source_accounts": asset.get("source_accounts", []),
 			"asset_indent": asset.get("indent", 0),
 			"asset_bold": asset.get("bold", 0),
 			"liability_equity_label": liability_equity.get("label"),
@@ -565,6 +586,7 @@ def build_balance_sheet_rows(rows):
 			"liability_equity_opening_amount": liability_equity.get("opening_amount"),
 			"liability_equity_amount": liability_equity.get("amount"),
 			"liability_equity_comparison_amount": liability_equity.get("comparison_amount"),
+			"liability_equity_source_accounts": liability_equity.get("source_accounts", []),
 			"liability_equity_indent": liability_equity.get("indent", 0),
 			"liability_equity_bold": liability_equity.get("bold", 0),
 		})
@@ -768,7 +790,7 @@ def get_profit_and_loss_metrics(rows):
 			"TAX_SURCHARGES",
 			"SELLING_EXPENSES",
 			"ADMIN_EXPENSES",
-			"RD_EXPENSES",
+			"RESEARCH_EXPENSES",
 			"FINANCE_EXPENSES",
 			"NONOPERATING_EXPENSE",
 			"INCOME_TAX",
@@ -776,6 +798,7 @@ def get_profit_and_loss_metrics(rows):
 	)
 	return {
 		"income": amounts.get("OPERATING_REVENUE", 0),
+		"gross_profit": amounts.get("OPERATING_REVENUE", 0) - amounts.get("OPERATING_COST", 0),
 		"expenses": total_expenses,
 		"profit": amounts.get("NET_PROFIT", 0),
 	}
@@ -804,9 +827,18 @@ def get_profit_and_loss_chart(rows, company, filters):
 
 def get_profit_and_loss_summary(rows, company):
 	metrics = get_profit_and_loss_metrics(rows)
+	income = metrics["income"]
+	metrics["gross_margin"] = (
+		flt(metrics["gross_profit"] / abs(income) * 100, 2) if abs(income) > 0.01 else None
+	)
+	metrics["net_margin"] = (
+		flt(metrics["profit"] / abs(income) * 100, 2) if abs(income) > 0.01 else None
+	)
 	currency = frappe.get_cached_value("Company", company, "default_currency")
 	return [
 		{"value": metrics["income"], "label": _("本年收入"), "datatype": "Currency", "currency": currency},
+		{"value": metrics["gross_profit"], "label": _("本年毛利"), "datatype": "Currency", "currency": currency},
+		{"value": metrics["gross_margin"], "label": _("毛利率"), "datatype": "Percent", "indicator": "Green" if metrics["gross_margin"] is not None and metrics["gross_margin"] >= 0 else "Red"},
 		{"value": metrics["expenses"], "label": _("本年费用"), "datatype": "Currency", "currency": currency},
 		{
 			"value": metrics["profit"],
@@ -815,6 +847,7 @@ def get_profit_and_loss_summary(rows, company):
 			"currency": currency,
 			"indicator": "Green" if metrics["profit"] >= 0 else "Red",
 		},
+		{"value": metrics["net_margin"], "label": _("净利率"), "datatype": "Percent", "indicator": "Green" if metrics["net_margin"] is not None and metrics["net_margin"] >= 0 else "Red"},
 	]
 
 

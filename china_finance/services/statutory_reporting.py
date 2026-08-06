@@ -177,7 +177,14 @@ def get_statutory_report_readiness_data(company, from_date, to_date):
 	for statement_type in STATEMENT_TYPES:
 		try:
 			comparison_from, comparison_to = get_comparison_period(company, statement_type, from_date, to_date)
-			build_statement(company, statement_type, comparison_from, comparison_to)
+			comparison_result = build_statement(company, statement_type, comparison_from, comparison_to)
+			failed_checks = [
+				check["message"] for check in comparison_result.get("checks", [])
+				if not check["passed"] and check.get("blocking", True)
+			]
+			if failed_checks:
+				comparison_ok = False
+				comparison_details.append(f"{STATEMENT_LABELS[statement_type]}: {'；'.join(failed_checks)}")
 		except Exception as exc:
 			comparison_ok = False
 			comparison_details.append(f"{STATEMENT_LABELS[statement_type]}: {exc}")
@@ -223,9 +230,27 @@ def _build_excel(snapshots, company):
 	workbook = xlsxwriter.Workbook(buffer, {"in_memory": True})
 	header = workbook.add_format({"bold": True, "bg_color": "#D9EAF7", "border": 1})
 	amount = workbook.add_format({"num_format": "#,##0.00;[Red]-#,##0.00", "border": 1})
+	percent = workbook.add_format({"num_format": "0.00%;[Red]-0.00%", "border": 1})
 	text_format = workbook.add_format({"border": 1})
+	audit_rows = []
 	for snapshot in snapshots:
 		payload, rows = _snapshot_rows(snapshot)
+		for check in payload.get("checks", []):
+			audit_rows.append([
+				STATEMENT_LABELS.get(snapshot.statement_type, snapshot.statement_type),
+				"检查",
+				check.get("code", ""),
+				_("通过") if check.get("passed") else _("需复核"),
+				check.get("message", ""),
+			])
+		for item in payload.get("reclassifications", []):
+			audit_rows.append([
+				STATEMENT_LABELS.get(snapshot.statement_type, snapshot.statement_type),
+				"展示调整",
+				item.get("period", ""),
+				item.get("amount", 0),
+				f"{item.get('source_account') or item.get('reason', '')} → {item.get('target_label', '')}",
+			])
 		rows = _filing_rows(snapshot, payload, rows, company)
 		standard = payload.get("accounting_standard") or ("小企业会计准则" if "小企业" in snapshot.statement_type else "企业会计准则")
 		worksheet = workbook.add_worksheet(STATEMENT_LABELS[snapshot.statement_type][:31])
@@ -288,7 +313,9 @@ def _build_excel(snapshots, company):
 			worksheet.set_column(7, 8, 18)
 		else:
 			start_row = 3 if _is_small_enterprise_snapshot(payload) else 3
-			if _is_small_enterprise_snapshot(payload):
+			if _is_small_enterprise_snapshot(payload) and snapshot.statement_type == "Profit and Loss":
+				worksheet.write_row(3, 0, ["项目", "行次", "本期金额", "本年累计金额", "比较期金额", "增减额", "增减率"], header)
+			elif _is_small_enterprise_snapshot(payload):
 				worksheet.write_row(3, 0, ["项目", "行次", "本期金额", "本年累计金额"], header)
 			else:
 				worksheet.write_row(2, 0, ["行次", "项目", "本期金额/期末余额", "比较期金额"], header)
@@ -298,15 +325,35 @@ def _build_excel(snapshots, company):
 					worksheet.write(index, 1, row.get("statutory_line_number") or "", text_format)
 					worksheet.write_number(index, 2, flt(row.get("amount")), amount)
 					worksheet.write_number(index, 3, flt(row.get("year_to_date_amount")), amount)
+					if snapshot.statement_type == "Profit and Loss":
+						worksheet.write_number(index, 4, flt(row.get("comparison_amount")), amount)
+						worksheet.write_number(index, 5, flt(row.get("variance_amount")), amount)
+						worksheet.write_number(index, 6, flt(row.get("variance_rate")) / 100 if row.get("variance_rate") is not None else 0, percent)
 					continue
 				worksheet.write(index, 0, row.get("statutory_line_number") or "", text_format)
 				worksheet.write(index, 1, ("　" * int(row.get("indent", 0))) + (row.get("label") or ""), text_format)
 				worksheet.write_number(index, 2, flt(row.get("amount")), amount)
 				worksheet.write_number(index, 3, flt(row.get("comparison_amount")), amount)
+				if snapshot.statement_type == "Profit and Loss":
+					worksheet.write_number(index, 4, flt(row.get("variance_amount")), amount)
+					worksheet.write_number(index, 5, flt(row.get("variance_rate")) / 100 if row.get("variance_rate") is not None else 0, percent)
 			worksheet.set_column(0, 0, 10)
 			worksheet.set_column(1, 1, 48)
-			worksheet.set_column(2, 3, 20)
-	notes = _get_notes_payload(snapshots)
+			worksheet.set_column(2, 6 if snapshot.statement_type == "Profit and Loss" else 3, 20)
+		notes = _get_notes_payload(snapshots)
+	if audit_rows:
+		worksheet = workbook.add_worksheet("检查与展示调整")
+		worksheet.write_row(0, 0, ["报表", "类型", "项目", "状态/金额", "说明"], header)
+		for index, row in enumerate(audit_rows, 1):
+			for column, value in enumerate(row):
+				if column == 3 and isinstance(value, (int, float)):
+					worksheet.write_number(index, column, flt(value), amount)
+				else:
+					worksheet.write(index, column, value, text_format)
+		worksheet.set_column(0, 0, 22)
+		worksheet.set_column(1, 2, 18)
+		worksheet.set_column(3, 3, 18)
+		worksheet.set_column(4, 4, 100)
 	if notes:
 		worksheet = workbook.add_worksheet("财务报表附注")
 		worksheet.write_row(0, 0, [company, "财务报表附注", f"{notes.get('from_date')} 至 {notes.get('to_date')}", f"版本：{notes.get('version')}"], header)
@@ -371,6 +418,7 @@ def _build_pdf_html(snapshots, company):
 				for row in matrix["rows"]:
 					parts.append("<tr><td>" + frappe.utils.escape_html(row.get("label") or "") + "</td>" + "".join(f"<td class='num'>{flt(row.get(item['fieldname'])):,.2f}</td>" for item in matrix["components"]) + f"<td class='num'>{flt(row.get('total')):,.2f}</td></tr>")
 				parts.append("</tbody></table>")
+			_append_pdf_audit(parts, payload)
 			continue
 		if snapshot.statement_type == "Balance Sheet":
 			asset_end = next((index for index, row in enumerate(rows) if row.get("row_code") == "TOTAL_ASSETS"), len(rows) - 1)
@@ -384,18 +432,29 @@ def _build_pdf_html(snapshots, company):
 				parts.append("<tr>" + "".join(f"<td>{frappe.utils.escape_html(str(cell))}</td>" for cell in cells) + "</tr>")
 			parts.append("</tbody></table>")
 		else:
-			if _is_small_enterprise_snapshot(payload):
+			if _is_small_enterprise_snapshot(payload) and snapshot.statement_type == "Profit and Loss":
+				parts.append("<table><thead><tr><th>项目</th><th>行次</th><th>本期金额</th><th>本年累计金额</th><th>比较期金额</th><th>增减额</th><th>增减率</th></tr></thead><tbody>")
+			elif _is_small_enterprise_snapshot(payload):
 				parts.append("<table><thead><tr><th>项目</th><th>行次</th><th>本期金额</th><th>本年累计金额</th></tr></thead><tbody>")
 			else:
 				parts.append("<table><thead><tr><th>行次</th><th>项目</th><th>本期金额/期末余额</th><th>比较期金额</th></tr></thead><tbody>")
 			for row in rows:
 				label = ("　" * int(row.get("indent", 0))) + (row.get("label") or "")
 				if _is_small_enterprise_snapshot(payload):
-					parts.append(f"<tr><td>{frappe.utils.escape_html(label)}</td><td>{row.get('statutory_line_number') or ''}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('year_to_date_amount')):,.2f}</td></tr>")
+					if snapshot.statement_type == "Profit and Loss":
+						variance_rate = f"{flt(row.get('variance_rate')):,.2f}%" if row.get("variance_rate") is not None else "—"
+						parts.append(f"<tr><td>{frappe.utils.escape_html(label)}</td><td>{row.get('statutory_line_number') or ''}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('year_to_date_amount')):,.2f}</td><td class='num'>{flt(row.get('comparison_amount')):,.2f}</td><td class='num'>{flt(row.get('variance_amount')):,.2f}</td><td class='num'>{variance_rate}</td></tr>")
+					else:
+						parts.append(f"<tr><td>{frappe.utils.escape_html(label)}</td><td>{row.get('statutory_line_number') or ''}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('year_to_date_amount')):,.2f}</td></tr>")
 				else:
-					parts.append(f"<tr><td>{row.get('statutory_line_number') or ''}</td><td>{frappe.utils.escape_html(label)}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('comparison_amount')):,.2f}</td></tr>")
+					if snapshot.statement_type == "Profit and Loss":
+						variance_rate = f"{flt(row.get('variance_rate')):,.2f}%" if row.get("variance_rate") is not None else "—"
+						parts.append(f"<tr><td>{row.get('statutory_line_number') or ''}</td><td>{frappe.utils.escape_html(label)}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('comparison_amount')):,.2f}</td><td class='num'>{flt(row.get('variance_amount')):,.2f}</td><td class='num'>{variance_rate}</td></tr>")
+					else:
+						parts.append(f"<tr><td>{row.get('statutory_line_number') or ''}</td><td>{frappe.utils.escape_html(label)}</td><td class='num'>{flt(row.get('amount')):,.2f}</td><td class='num'>{flt(row.get('comparison_amount')):,.2f}</td></tr>")
 			parts.append("</tbody></table>")
-	notes = _get_notes_payload(snapshots)
+		_append_pdf_audit(parts, payload)
+		notes = _get_notes_payload(snapshots)
 	if notes:
 		parts.append("<h1>财务报表附注</h1>")
 		for label, fieldname in (
@@ -416,6 +475,28 @@ def _build_pdf_html(snapshots, company):
 		parts.append("<h2>报表重要项目及现金流补充资料</h2><pre>" + frappe.utils.escape_html(json.dumps(notes.get("statement_data", {}), ensure_ascii=False, indent=2)) + "</pre>")
 	parts.append(f"<p>生成时间：{now_datetime()}　批准人：{snapshots[0].approved_by or ''}　批准时间：{snapshots[0].approved_on or ''}</p></body></html>")
 	return "".join(parts)
+
+
+def _append_pdf_audit(parts, payload):
+	checks = payload.get("checks", [])
+	reclassifications = payload.get("reclassifications", [])
+	if not checks and not reclassifications:
+		return
+	parts.append("<h2>检查与展示调整</h2><table><thead><tr><th>类型</th><th>项目</th><th>状态/金额</th><th>说明</th></tr></thead><tbody>")
+	for check in checks:
+		status = "通过" if check.get("passed") else "需复核"
+		parts.append(
+			f"<tr><td>检查</td><td>{frappe.utils.escape_html(str(check.get('code') or ''))}</td>"
+			f"<td>{status}</td><td>{frappe.utils.escape_html(str(check.get('message') or ''))}</td></tr>"
+		)
+	for item in reclassifications:
+		source = item.get("source_account") or item.get("reason") or ""
+		destination = f"{source} → {item.get('target_label') or ''}"
+		parts.append(
+			f"<tr><td>展示调整</td><td>{frappe.utils.escape_html(str(item.get('period') or ''))}</td>"
+			f"<td class='num'>{flt(item.get('amount')):,.2f}</td><td>{frappe.utils.escape_html(destination)}</td></tr>"
+		)
+	parts.append("</tbody></table>")
 
 
 @frappe.whitelist()

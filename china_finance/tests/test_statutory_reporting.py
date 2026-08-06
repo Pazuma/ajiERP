@@ -8,12 +8,17 @@ from frappe.tests import UnitTestCase
 
 from china_finance.services.financial_statement import (
 	apply_temporary_inventory_accrual_presentation,
+	apply_balance_sheet_reclassifications,
 	apply_vat_net_presentation,
+	build_statement_checks,
 	get_mapping_for_date,
 	render_rows,
 	validate_formula_graph,
 )
 from china_finance.services.statutory_reporting import _build_excel
+from china_finance.china_finance.report.china_financial_statements.china_financial_statements import (
+	get_profit_and_loss_metrics,
+)
 from china_finance.setup.templates import ENTERPRISE_ROWS, build_seed_rows
 
 
@@ -25,6 +30,55 @@ def row(code, row_type="Mapped Accounts", formula=None, direction="Debit Positiv
 
 
 class TestStatutoryFormulaEngine(UnitTestCase):
+	def test_balance_sheet_check_reports_difference(self):
+		rows = [
+			{"row_code": "TOTAL_ASSETS", "label": "资产合计", "row_type": "Formula", "amount": 100},
+			{"row_code": "TOTAL_LIABILITIES_EQUITY", "label": "负债和权益合计", "row_type": "Formula", "amount": 90},
+		]
+		checks = build_statement_checks("Balance Sheet", rows, [])
+		self.assertFalse(next(item for item in checks if item["code"] == "BALANCE_SHEET_BALANCE")["passed"])
+
+	def test_profit_and_loss_check_flags_negative_mapped_amount(self):
+		rows = [{"row_code": "OPERATING_REVENUE", "label": "营业收入", "row_type": "Mapped Accounts", "amount": -1}]
+		checks = build_statement_checks("Profit and Loss", rows, [])
+		check = next(item for item in checks if item["code"] == "NEGATIVE_PROFIT_AND_LOSS_AMOUNT")
+		self.assertFalse(check["passed"])
+		self.assertFalse(check["blocking"])
+
+	def test_statement_check_flags_account_mapped_to_multiple_rows(self):
+		rows = [{"row_code": "A", "label": "项目A", "row_type": "Mapped Accounts", "amount": 1}]
+		mappings = [SimpleNamespace(account="1001", row_code="A"), SimpleNamespace(account="1001", row_code="B")]
+		checks = build_statement_checks("Profit and Loss", rows, mappings)
+		self.assertFalse(next(item for item in checks if item["code"] == "CROSS_ROW_REPORT_MAPPING")["passed"])
+
+	def test_unmapped_account_check_is_review_only(self):
+		checks = build_statement_checks(
+			"Balance Sheet",
+			[],
+			[],
+			[{"account": "1001 - TEST", "balance": 250}],
+		)
+		check = next(item for item in checks if item["code"] == "UNMAPPED_ACCOUNT_BALANCE")
+		self.assertFalse(check["passed"])
+		self.assertFalse(check["blocking"])
+
+	def test_ar_ap_reconciliation_is_review_only(self):
+		checks = build_statement_checks(
+			"Balance Sheet", [], [], ar_ap_check={"passed": False, "count": 2, "difference": 12.5}
+		)
+		check = next(item for item in checks if item["code"] == "AR_AP_LEDGER_RECONCILIATION")
+		self.assertFalse(check["passed"])
+		self.assertFalse(check["blocking"])
+
+	def test_profit_and_loss_metrics_include_research_expenses(self):
+		rows = [
+			{"row_code": "OPERATING_REVENUE", "year_to_date_amount": 100},
+			{"row_code": "OPERATING_COST", "year_to_date_amount": 20},
+			{"row_code": "RESEARCH_EXPENSES", "year_to_date_amount": 10},
+			{"row_code": "NET_PROFIT", "year_to_date_amount": 70},
+		]
+		self.assertEqual(get_profit_and_loss_metrics(rows)["expenses"], 30)
+
 	def test_formula_dependency_order_is_independent_of_row_order(self):
 		template = SimpleNamespace(rows=[
 			row("TOTAL", "Formula", "SUBTOTAL + C"),
@@ -72,6 +126,33 @@ class TestStatutoryFormulaEngine(UnitTestCase):
 		apply_temporary_inventory_accrual_presentation(values, 90)
 		self.assertEqual(values["OTHER_CURRENT_ASSETS"], 90)
 		self.assertEqual(values["ACCOUNTS_PAYABLE"], 0)
+
+	def test_debit_employee_payable_is_reclassified_without_changing_gl_mapping(self):
+		template = SimpleNamespace(rows=[
+			row("EMPLOYEE_BENEFITS_PAYABLE", direction="Credit Positive"),
+			row("OTHER_CURRENT_ASSETS"),
+		])
+		values = {"EMPLOYEE_BENEFITS_PAYABLE": -100, "OTHER_CURRENT_ASSETS": 25}
+		items = apply_balance_sheet_reclassifications(values, template, "本期")
+		self.assertEqual(values["EMPLOYEE_BENEFITS_PAYABLE"], 0)
+		self.assertEqual(values["OTHER_CURRENT_ASSETS"], 125)
+		self.assertEqual(items[0]["amount"], 100)
+
+	def test_credit_receivable_is_reclassified_to_contract_liability(self):
+		template = SimpleNamespace(rows=[
+			row("ACCOUNTS_RECEIVABLE"),
+			row("ADVANCES_FROM_CUSTOMERS", direction="Credit Positive"),
+		])
+		values = {"ACCOUNTS_RECEIVABLE": -80, "ADVANCES_FROM_CUSTOMERS": 10}
+		apply_balance_sheet_reclassifications(values, template, "本期")
+		self.assertEqual(values["ACCOUNTS_RECEIVABLE"], 0)
+		self.assertEqual(values["ADVANCES_FROM_CUSTOMERS"], 90)
+
+	def test_normal_balances_and_missing_targets_are_unchanged(self):
+		template = SimpleNamespace(rows=[row("EMPLOYEE_BENEFITS_PAYABLE", direction="Credit Positive")])
+		values = {"EMPLOYEE_BENEFITS_PAYABLE": 100}
+		self.assertEqual(apply_balance_sheet_reclassifications(values, template, "本期"), [])
+		self.assertEqual(values["EMPLOYEE_BENEFITS_PAYABLE"], 100)
 
 	def test_formal_excel_contains_four_table_metadata_and_notes(self):
 		payload = {

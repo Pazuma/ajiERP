@@ -2,6 +2,7 @@ frappe.query_reports["China Financial Statements"] = {
 	after_datatable_render() {
 		const report = frappe.query_report;
 		report.page.main.find(".china-balance-sheet-panels").remove();
+		report.page.main.find(".china-balance-sheet-checks").remove();
 		report.page.main.find(".china-activity-balance-panel").remove();
 		report.$report.removeClass("china-activity-balance-report");
 		report.$report.show();
@@ -16,6 +17,11 @@ frappe.query_reports["China Financial Statements"] = {
 			.map((row) => make_balance_sheet_side_row(row, "liability_equity"));
 		const $panels = $("<div class='china-balance-sheet-panels'></div>");
 		apply_balance_sheet_compact_style();
+		const report_message = report.$report_message?.html() || report.raw_data?.message || "";
+		if (report_message) {
+			const $checks = $("<div class='china-balance-sheet-checks'></div>").html(report_message);
+			$panels.before($checks);
+		}
 		const asset_panel = append_balance_sheet_panel($panels, __("资产"));
 		const liability_equity_panel = append_balance_sheet_panel($panels, __("负债和所有者权益"));
 		report.$report.before($panels).hide();
@@ -50,6 +56,7 @@ frappe.query_reports["China Financial Statements"] = {
 			});
 		}
 		add_china_finance_export_actions(report);
+		bind_source_account_links();
 		if (!report.get_filter_value("company")) {
 			report.set_filter_value("company", frappe.defaults.get_user_default("Company"));
 		}
@@ -83,6 +90,9 @@ frappe.query_reports["China Financial Statements"] = {
 	},
 	formatter(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
+		if (data?.source_accounts?.length && column.fieldname === "label") {
+			value = source_account_link(value, data.source_accounts);
+		}
 		const balance_sheet_side = column.fieldname === "asset_label" ? "asset" :
 			column.fieldname === "liability_equity_label" ? "liability_equity" : null;
 		if (data && balance_sheet_side) {
@@ -108,6 +118,15 @@ function apply_balance_sheet_compact_style() {
         .china-balance-sheet-panels .dt-header .dt-cell__content {
             font-size: 11px;
         }
+		.china-balance-sheet-checks {
+			margin: 8px 0 12px;
+			padding: 10px 14px;
+			border: 1px solid var(--border-color);
+			border-radius: var(--border-radius);
+			background: var(--subtle-fg);
+			color: var(--text-muted);
+			font-size: 12px;
+		}
 		`)
 		.appendTo(document.head);
 }
@@ -237,7 +256,38 @@ function make_balance_sheet_side_row(row, side) {
 		opening_amount: row[`${side}_opening_amount`],
 		amount: row[`${side}_amount`],
 		comparison_amount: row[`${side}_comparison_amount`],
+		source_accounts: row[`${side}_source_accounts`] || [],
 	};
+}
+
+function source_account_link(label, accounts) {
+	if (!accounts?.length) return label;
+	const account = accounts[0];
+	const title = frappe.utils.escape_html(__("查看来源科目总账") + "：\n" + accounts.join("\n"));
+	return `<a href="#" class="china-finance-source-account-link" title="${title}" data-account="${frappe.utils.escape_html(account)}">${label}</a>`;
+}
+
+function bind_source_account_links() {
+	if (frappe._china_finance_source_account_links_bound) return;
+	frappe._china_finance_source_account_links_bound = true;
+	$(document).on("click.china_finance_source_account", ".china-finance-source-account-link", function (event) {
+		event.preventDefault();
+		const account = $(this).attr("data-account");
+		const report = frappe.query_report;
+		const company = report?.get_filter_value("company");
+		if (!account || !company) return;
+		const filters = {
+			company,
+			account,
+			from_date: report.get_filter_value("from_date"),
+			to_date: report.get_filter_value("to_date"),
+		};
+		for (const fieldname of ["finance_book", "cost_center", "project"]) {
+			const value = report.get_filter_value(fieldname);
+			if (value) filters[fieldname] = value;
+		}
+		frappe.set_route("query-report", "General Ledger", filters);
+	});
 }
 
 function append_balance_sheet_panel($panels, title) {
@@ -269,6 +319,9 @@ function render_balance_sheet_tree(panel, rows, currency) {
 			width: 260,
 			format: (value, row, column, data) => {
 				let label = frappe.utils.escape_html(value ?? "");
+				if (data?.source_accounts?.length) {
+					label = source_account_link(label, data.source_accounts);
+				}
 				if (bold_row(data)) label = `<strong>${label}</strong>`;
 				return label;
 			},

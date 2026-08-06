@@ -1,0 +1,28 @@
+{
+ "autoname": "hash",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["company", "template", "source_row_code", "source_account", "source_direction", "target_row_code", "effective_from", "effective_to", "enabled", "review_notes"],
+ "fields": [
+  {"fieldname":"company","fieldtype":"Link","in_list_view":1,"label":"公司","options":"Company","reqd":1},
+  {"fieldname":"template","fieldtype":"Link","in_list_view":1,"label":"报表模板","options":"China Financial Statement Template","reqd":1},
+  {"fieldname":"source_row_code","fieldtype":"Data","in_list_view":1,"label":"异常余额项目","reqd":1},
+  {"fieldname":"source_account","fieldtype":"Link","in_list_view":1,"label":"来源科目","options":"Account","description":"留空表示适用于该报表项目的全部科目。"},
+  {"fieldname":"source_direction","fieldtype":"Select","in_list_view":1,"label":"内部正常余额方向","description":"内部用于根据总账借贷计算余额符号；控制台按正负号展示。","options":"Debit Positive\nCredit Positive","reqd":1},
+  {"fieldname":"target_row_code","fieldtype":"Data","in_list_view":1,"label":"重分类目标项目","reqd":1},
+  {"fieldname":"effective_from","fieldtype":"Date","in_list_view":1,"label":"生效日期","reqd":1},
+  {"fieldname":"effective_to","fieldtype":"Date","label":"失效日期"},
+  {"default":"1","fieldname":"enabled","fieldtype":"Check","in_list_view":1,"label":"启用"},
+  {"fieldname":"review_notes","fieldtype":"Small Text","label":"复核说明"}
+ ],
+ "module": "China Finance",
+ "name": "China Financial Statement Reclassification Rule",
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1},
+  {"role":"China Finance Manager","read":1,"write":1,"create":1,"delete":1},
+  {"role":"China Finance Auditor","read":1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
