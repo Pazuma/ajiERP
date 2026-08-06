@@ -193,96 +193,6 @@
 		}
 	}
 
-	const BackButtonClass = "deeplinkerp-desk-back-button";
-
-	function isDeskRoute() {
-		const path = window.location.pathname || "";
-		return path === "/app" || path.startsWith("/app/") || path === "/desk" || path.startsWith("/desk/");
-	}
-
-	function goBack() {
-		if (window.history.length > 1) {
-			window.history.back();
-			return;
-		}
-
-		if (window.frappe?.set_route) {
-			frappe.set_route("desk", "home");
-		} else {
-			window.location.href = "/desk/home";
-		}
-	}
-
-	function makeBackButton() {
-		const label = translate("返回");
-		const tooltip = translate("返回上一页");
-		const icon = window.frappe?.utils?.icon
-			? frappe.utils.icon("left", "sm")
-			: '<span aria-hidden="true">&larr;</span>';
-
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = `btn btn-default btn-sm ${BackButtonClass}`;
-		button.title = tooltip;
-		button.setAttribute("aria-label", tooltip);
-		button.innerHTML = `<span class="deeplinkerp-back-icon">${icon}</span><span class="deeplinkerp-back-label">${label}</span>`;
-		button.addEventListener("click", goBack);
-		return button;
-	}
-
-	function addBackButtonStyles() {
-		if (document.getElementById("deeplinkerp-desk-back-button-style")) return;
-
-		const style = document.createElement("style");
-		style.id = "deeplinkerp-desk-back-button-style";
-		style.textContent = `
-			.${BackButtonClass} {
-				align-items: center;
-				display: inline-flex;
-				gap: 4px;
-				margin-right: 8px;
-				white-space: nowrap;
-			}
-
-			.${BackButtonClass} .deeplinkerp-back-icon {
-				align-items: center;
-				display: inline-flex;
-			}
-
-			@media (max-width: 767px) {
-				.${BackButtonClass} .deeplinkerp-back-label {
-					display: none;
-				}
-			}
-		`;
-		document.head.appendChild(style);
-	}
-
-	function addBackButton() {
-		if (!isDeskRoute()) {
-			document.querySelectorAll(`.${BackButtonClass}`).forEach((button) => button.remove());
-			return;
-		}
-
-		document.querySelectorAll(".standard-actions").forEach((actions) => {
-			if (actions.querySelector(`.${BackButtonClass}`)) return;
-
-			const button = makeBackButton();
-			const menu = actions.querySelector(".menu-btn-group");
-			if (menu) {
-				actions.insertBefore(button, menu);
-			} else {
-				actions.prepend(button);
-			}
-		});
-	}
-
-	function setupBackButton() {
-		addBackButtonStyles();
-		setTimeout(addBackButton, 0);
-		setTimeout(addBackButton, 250);
-	}
-
 	function patchSidebarSubtitle() {
 		if (
 			!window.frappe?.ui?.Sidebar ||
@@ -314,7 +224,6 @@
 	function refreshDeskEnhancements() {
 		patchSidebarSubtitle();
 		applyBranding();
-		setupBackButton();
 	}
 
 	function bindDeskEvents() {
