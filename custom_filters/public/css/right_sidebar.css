@@ -1,5 +1,6 @@
 .custom-filters-right-sidebar-container {
 	position: relative;
+	order: -1;
 	flex-shrink: 0;
 	width: 50px;
 	height: 100vh;
@@ -7,20 +8,15 @@
 }
 
 .custom-filters-right-sidebar {
-	position: absolute;
+	position: relative;
 	top: 0;
-	right: 0;
+	left: 0;
 	display: flex;
 	flex-direction: column;
 	width: 50px;
 	height: 100vh;
-	border-left: 1px solid var(--sidebar-border-color, #ededed);
+	border-right: 1px solid var(--sidebar-border-color, #ededed);
 	background: var(--surface-menu-bar, var(--fg-color, #f8f9fa));
-	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.custom-filters-right-sidebar-container.expanded .custom-filters-right-sidebar {
-	width: var(--sidebar-width, 220px);
 }
 
 .custom-filters-right-sidebar-items {
@@ -38,11 +34,6 @@
 
 .custom-filters-right-sidebar-items::-webkit-scrollbar {
 	display: none;
-}
-
-.custom-filters-right-sidebar-container.expanded .custom-filters-right-sidebar-items {
-	align-items: stretch;
-	padding: 8px;
 }
 
 .custom-filters-right-sidebar-item {
@@ -66,13 +57,8 @@
 	font-family: inherit;
 }
 
-.custom-filters-right-sidebar-container.expanded .custom-filters-right-sidebar-item {
-	flex-direction: row;
-	justify-content: flex-start;
-	width: 100%;
-	min-height: 34px;
-	padding: 0 8px;
-	gap: 8px;
+.custom-filters-right-sidebar-item:focus {
+	outline: none;
 }
 
 .custom-filters-right-sidebar-item:hover {
@@ -80,13 +66,25 @@
 }
 
 .custom-filters-right-sidebar-item.active {
-	background: var(--sidebar-active-color, #ffffff);
-	box-shadow: inset 2px 0 0 var(--primary, #2490ef);
+	position: relative;
+	z-index: 1021;
+	background: var(--sidebar-hover-color, #f3f3f3);
+	border-radius: 10px;
+	box-shadow: inset 3px 0 0 var(--primary, #2490ef);
+}
+
+/* Keep the active state compact and app-like; the native sidebar remains visually separate. */
+.custom-filters-right-sidebar-item.active::after {
+	display: none;
 }
 
 .custom-filters-right-sidebar-item:focus-visible {
 	outline: 2px solid var(--primary, #2490ef);
 	outline-offset: -2px;
+}
+
+.custom-filters-right-sidebar-item.active:focus-visible {
+	outline: none;
 }
 
 .custom-filters-right-sidebar-item-icon {
@@ -120,72 +118,19 @@
 }
 
 .custom-filters-right-sidebar-item-label {
-	display: block;
+	display: -webkit-box;
 	flex: 0 0 auto;
 	width: 100%;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 2;
 	white-space: normal;
-	font-size: 9px;
+	font-size: 10px;
 	line-height: 13px;
 	text-align: center;
 	color: var(--ink-gray-8, var(--text-color, #111827));
-}
-
-.custom-filters-right-sidebar-container.expanded .custom-filters-right-sidebar-item-label {
-	display: block;
-	flex: 1 1 auto;
-	width: auto;
-	-webkit-line-clamp: 1;
-	white-space: nowrap;
-	font-size: var(--text-sm, 13px);
-	line-height: 1;
-	text-align: left;
-}
-
-.custom-filters-right-sidebar-toggle-btn {
-	position: absolute;
-	left: -12px;
-	bottom: 80px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 24px;
-	height: 24px;
-	padding: 0;
-	border: 1px solid var(--sidebar-border-color, #ededed);
-	border-radius: 50%;
-	background: var(--surface-menu-bar, var(--fg-color, #f8f9fa));
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-	color: var(--ink-gray-8, var(--text-color, #111827));
-	cursor: pointer;
-	outline: none;
-	opacity: 0;
-	visibility: hidden;
-	transition: opacity 0.15s ease, visibility 0.15s ease, background-color 0.15s ease;
-	z-index: 1023;
-	-webkit-appearance: none;
-	appearance: none;
-	font-family: inherit;
-}
-
-.custom-filters-right-sidebar-toggle-btn svg {
-	width: 12px;
-	height: 12px;
-}
-
-.custom-filters-right-sidebar-toggle-btn:hover {
-	background: var(--sidebar-hover-color, #f3f3f3);
-}
-
-.custom-filters-right-sidebar:hover .custom-filters-right-sidebar-toggle-btn,
-.custom-filters-right-sidebar-toggle-btn:focus-visible {
-	opacity: 1;
-	visibility: visible;
 }
 
 .custom-filters-right-sidebar-flyout {
@@ -193,8 +138,8 @@
 	visibility: hidden;
 	opacity: 0;
 	pointer-events: none;
-	transform: translateX(4px) scale(0.98);
-	transform-origin: right center;
+	transform: translateX(-4px) scale(0.98);
+	transform-origin: left center;
 	position: fixed;
 	z-index: 1050;
 	min-width: 168px;
@@ -294,7 +239,6 @@
 @media (prefers-reduced-motion: reduce) {
 	.custom-filters-right-sidebar,
 	.custom-filters-right-sidebar-item,
-	.custom-filters-right-sidebar-toggle-btn,
 	.custom-filters-right-sidebar-flyout,
 	.custom-filters-right-sidebar-flyout-item {
 		transition: none !important;

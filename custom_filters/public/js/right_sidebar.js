@@ -2,7 +2,7 @@
 	if (window.__custom_filters_right_sidebar_loaded) return;
 	window.__custom_filters_right_sidebar_loaded = true;
 
-	const RIGHT_SIDEBAR_VERSION = "2026.08.05.1";
+	const RIGHT_SIDEBAR_VERSION = "2026.08.07.3";
 	const BAR_ID = "custom-filters-right-sidebar";
 	const FLYOUT_ID = "custom-filters-right-sidebar-flyout";
 	const FLYOUT_CLOSE_DELAY = 200;
@@ -28,7 +28,6 @@
 		constructor() {
 			this.container = null;
 			this.bar = null;
-			this.toggle_button = null;
 			this.flyout = null;
 			this.items = [];
 			this.children_by_label = {};
@@ -39,11 +38,6 @@
 			this.close_timer = null;
 			this.route_frame = null;
 			this.bound = false;
-			try {
-				this.expanded = localStorage.getItem("custom_filters:right_sidebar_expanded") === "1";
-			} catch (error) {
-				this.expanded = false;
-			}
 		}
 
 		init() {
@@ -58,7 +52,6 @@
 			document.body.appendChild(this.flyout);
 			this.bind_events();
 			this.bind_route();
-			this.apply_expanded_state();
 			this.update_visibility();
 			this.update_active();
 			console.info(`[custom_filters right_sidebar] version ${RIGHT_SIDEBAR_VERSION}`);
@@ -91,7 +84,6 @@
 		build_container() {
 			const container = document.createElement("div");
 			container.className = "custom-filters-right-sidebar-container";
-			if (this.expanded) container.classList.add("expanded");
 
 			const bar = document.createElement("div");
 			bar.id = BAR_ID;
@@ -103,16 +95,6 @@
 			items.className = "custom-filters-right-sidebar-items";
 			this.items.forEach((icon) => items.appendChild(this.make_item(icon)));
 			bar.appendChild(items);
-
-			const toggle = document.createElement("button");
-			toggle.type = "button";
-			toggle.className = "custom-filters-right-sidebar-toggle-btn";
-			toggle.setAttribute("aria-label", translate("Toggle sidebar"));
-			toggle.setAttribute("aria-expanded", this.expanded ? "true" : "false");
-			toggle.innerHTML = '<svg class="icon icon-xs" aria-hidden="true"><use href="#icon-left"></use></svg>';
-			toggle.addEventListener("click", () => this.toggle_expanded());
-			this.toggle_button = toggle;
-			bar.appendChild(toggle);
 
 			container.appendChild(bar);
 			this.bar = bar;
@@ -146,14 +128,12 @@
 			label.textContent = translate(icon.label || "");
 			item.appendChild(label);
 
-			// 文件夹悬停已弹出子菜单，不再显示名称 tooltip
-			if (!is_folder) {
-				item.title = translate(icon.label || "");
-				item.setAttribute("data-toggle", "tooltip");
-				item.setAttribute("data-placement", "left");
-			}
+			item.title = translate(icon.label || "");
+			item.setAttribute("data-toggle", "tooltip");
+			item.setAttribute("data-placement", "left");
 
 			item.addEventListener("click", () => {
+				item.blur();
 				if (is_folder) {
 					const is_open = this.flyout_folder === icon.label && this.flyout.classList.contains("show");
 					if (is_open) {
@@ -274,10 +254,9 @@
 			this.flyout.classList.add("show");
 			const rect = trigger.getBoundingClientRect();
 			const top = Math.max(8, Math.min(rect.top, window.innerHeight - this.flyout.offsetHeight - 8));
-			const bar_width = this.expanded ? this.expanded_width() : 50;
 			Object.assign(this.flyout.style, {
-				right: `${bar_width + 8}px`,
-				left: "auto",
+				left: `${rect.right + 8}px`,
+				right: "auto",
 				top: `${top}px`,
 			});
 		}
@@ -303,44 +282,10 @@
 			this.close_timer = null;
 		}
 
-		toggle_expanded() {
-			this.expanded = !this.expanded;
-			try {
-				localStorage.setItem("custom_filters:right_sidebar_expanded", this.expanded ? "1" : "0");
-			} catch (error) {
-				// localStorage 不可用时仅本次会话生效
-			}
-			this.apply_expanded_state();
-		}
-
-		apply_expanded_state() {
-			if (!this.container) return;
-			this.container.classList.toggle("expanded", this.expanded);
-			this.close_flyout();
-			if (this.toggle_button) {
-				const use = this.toggle_button.querySelector("use");
-				if (use) use.setAttribute("href", this.expanded ? "#icon-right" : "#icon-left");
-				this.toggle_button.setAttribute("aria-expanded", this.expanded ? "true" : "false");
-			}
-			this.setup_tooltips();
-		}
-
-		expanded_width() {
-			const value = parseInt(
-				getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width"),
-				10
-			);
-			return Number.isFinite(value) ? value : 220;
-		}
-
 		setup_tooltips() {
 			if (!window.$ || !$.fn || !$.fn.tooltip || !this.container) return;
 			const $items = $(this.container).find('[data-toggle="tooltip"]');
-			if (this.expanded) {
-				$items.tooltip("dispose");
-			} else {
-				$items.tooltip({ boundary: "window", container: "body", trigger: "hover" });
-			}
+			$items.tooltip({ boundary: "window", container: "body", trigger: "hover" });
 		}
 
 		bind_events() {
@@ -397,7 +342,12 @@
 			});
 
 			// 与左侧边栏同一触发源：页面渲染完成后同步显隐（desktop.js 设置 hide_sidebar）
-			$(document).on("page-change", () => this.update_visibility());
+			$(document).on("page-change", () => {
+				this.update_visibility();
+				this.update_active();
+				window.setTimeout(() => this.update_active(), 100);
+				window.setTimeout(() => this.update_active(), 300);
+			});
 		}
 
 		update_visibility() {
@@ -418,6 +368,42 @@
 		update_active() {
 			if (!this.container) return;
 
+			const sidebar = frappe.app && frappe.app.sidebar;
+			const sidebar_titles = new Set(
+				[
+					sidebar && sidebar.sidebar_title,
+					sidebar && sidebar.workspace_title,
+					sidebar && sidebar.header_title,
+					sidebar && sidebar.app,
+					sidebar && sidebar.module,
+				]
+					.filter(Boolean)
+					.map((title) => normalize_path(title))
+			);
+
+			let active_label = null;
+			const icon_matches_sidebar = (icon) => {
+				const labels = [
+					icon.label,
+					translate(icon.label || ""),
+					icon.app,
+					icon.module,
+					icon.label === "Accounting" ? "Accounts" : null,
+				]
+					.filter(Boolean)
+					.map((label) => normalize_path(label));
+				return labels.some((label) => sidebar_titles.has(label));
+			};
+
+			this.items.some((icon) => {
+				const related_icons = [icon, ...(this.children_by_label[icon.label] || [])];
+				if (related_icons.some(icon_matches_sidebar)) {
+					active_label = icon.label;
+					return true;
+				}
+				return false;
+			});
+
 			const candidates = new Set();
 			const route_key = normalize_path(
 				(frappe.get_route ? frappe.get_route() : []).join("/")
@@ -426,12 +412,21 @@
 			if (route_key) candidates.add(route_key);
 			if (path_key) candidates.add(path_key);
 
-			let active_label = null;
 			this.items.forEach((icon) => {
 				if (active_label) return;
-				const route = this.resolve_route(icon);
-				if (!route || /^https?:\/\//i.test(route)) return;
-				if (candidates.has(normalize_path(route))) active_label = icon.label;
+				const related_icons = [icon, ...(this.children_by_label[icon.label] || [])];
+				if (
+					related_icons.some((related_icon) => {
+						const route = this.resolve_route(related_icon);
+						return (
+							route &&
+							!/^https?:\/\//i.test(route) &&
+							candidates.has(normalize_path(route))
+						);
+					})
+				) {
+					active_label = icon.label;
+				}
 			});
 
 			if (active_label === this.active_label) return;
@@ -439,7 +434,13 @@
 			this.container
 				.querySelectorAll(".custom-filters-right-sidebar-item")
 				.forEach((el) => {
-					el.classList.toggle("active", el.dataset.iconLabel === active_label);
+					const is_active = el.dataset.iconLabel === active_label;
+					el.classList.toggle("active", is_active);
+					if (is_active) {
+						el.setAttribute("aria-current", "page");
+					} else {
+						el.removeAttribute("aria-current");
+					}
 				});
 		}
 	}
