@@ -86,7 +86,7 @@ def execute(filters=None):
 	message = "<br>".join(message_parts)
 	if filters.statement_type == "Balance Sheet":
 		return (
-			get_balance_sheet_columns(bool(comparison_to)),
+			get_balance_sheet_columns(bool(comparison_to), filters.company),
 			build_balance_sheet_rows(result["rows"]),
 			message,
 			get_balance_sheet_chart(result["rows"], filters.company, filters),
@@ -94,7 +94,7 @@ def execute(filters=None):
 		)
 	if filters.statement_type == "Profit and Loss":
 		return (
-			get_columns(include_variance=True),
+			get_columns(include_variance=True, company=filters.company),
 			result["rows"],
 			message,
 			get_profit_and_loss_chart(result["rows"], filters.company, filters),
@@ -102,15 +102,15 @@ def execute(filters=None):
 		)
 	if filters.statement_type == "Cash Flow":
 		return (
-			get_columns(),
+			get_columns(company=filters.company),
 			result["rows"],
 			message,
 			get_cash_flow_chart(result["rows"], filters.company, filters),
 			get_cash_flow_summary(result["rows"], filters.company, filters),
 		)
 	if filters.statement_type == "Changes in Equity" and result.get("equity_matrix"):
-		return get_equity_columns(result["equity_matrix"]), result["equity_matrix"]["rows"], message
-	return get_columns(), result["rows"], message
+		return get_equity_columns(result["equity_matrix"], filters.company), result["equity_matrix"]["rows"], message
+	return get_columns(company=filters.company), result["rows"], message
 
 
 def execute_native_trial_balance(filters, activity_balance=False):
@@ -501,7 +501,15 @@ def execute_account_activity_balance(filters):
 	return party_columns, output
 
 
-def get_columns(include_variance=False):
+def _set_report_currency(columns, company):
+	"""Bind report currency fields to the selected company's currency."""
+	for column in columns:
+		if column.get("fieldtype") == "Currency":
+			column["options"] = "Company:company:default_currency"
+	return columns
+
+
+def get_columns(include_variance=False, company=None):
 	columns = [
 		{"label": _("项目"), "fieldname": "label", "fieldtype": "Data", "width": 420},
 		{"label": _("期初金额"), "fieldname": "opening_amount", "fieldtype": "Currency", "width": 160},
@@ -514,20 +522,20 @@ def get_columns(include_variance=False):
 			{"label": _("增减额"), "fieldname": "variance_amount", "fieldtype": "Currency", "width": 160},
 			{"label": _("增减率"), "fieldname": "variance_rate", "fieldtype": "Percent", "width": 130},
 		])
-	return columns
+	return _set_report_currency(columns, company)
 
 
-def get_equity_columns(matrix):
+def get_equity_columns(matrix, company=None):
 	columns = [{"label": _("项目"), "fieldname": "label", "fieldtype": "Data", "width": 320}]
 	columns.extend(
 		{"label": _(component["label"]), "fieldname": component["fieldname"], "fieldtype": "Currency", "width": 150}
 		for component in matrix["components"]
 	)
 	columns.append({"label": _("所有者权益合计"), "fieldname": "total", "fieldtype": "Currency", "width": 170})
-	return columns
+	return _set_report_currency(columns, company)
 
 
-def get_balance_sheet_columns(include_comparison=False):
+def get_balance_sheet_columns(include_comparison=False, company=None):
 	columns = [
 		{"label": _("资产"), "fieldname": "asset_label", "fieldtype": "Data", "width": 280},
 		{"label": _("期初余额"), "fieldname": "asset_opening_amount", "fieldtype": "Currency", "width": 140},
@@ -542,7 +550,7 @@ def get_balance_sheet_columns(include_comparison=False):
 	])
 	if include_comparison:
 		columns.append({"label": _("比较期余额"), "fieldname": "liability_equity_comparison_amount", "fieldtype": "Currency", "width": 150})
-	return columns
+	return _set_report_currency(columns, company)
 
 
 def build_balance_sheet_rows(rows):
@@ -754,7 +762,7 @@ def get_balance_sheet_chart(rows, company, filters):
 		},
 		"type": "bar",
 		"fieldtype": "Currency",
-		"currency": frappe.get_cached_value("Company", company, "default_currency"),
+		"options": "Company:company:default_currency",
 		"colors": ["#2563eb", "#f59e0b", "#16a34a"],
 	}
 
@@ -820,7 +828,7 @@ def get_profit_and_loss_chart(rows, company, filters):
 		},
 		"type": "bar",
 		"fieldtype": "Currency",
-		"currency": frappe.get_cached_value("Company", company, "default_currency"),
+		"options": "Company:company:default_currency",
 		"colors": ["#ec6d9d", "#3187d4", "#45b978"],
 	}
 
@@ -900,7 +908,7 @@ def get_cash_flow_chart(rows, company, filters):
 		},
 		"type": "bar",
 		"fieldtype": "Currency",
-		"currency": frappe.get_cached_value("Company", company, "default_currency"),
+		"options": "Company:company:default_currency",
 		"colors": ["#16a34a", "#2563eb", "#f59e0b", "#e76f51"],
 	}
 
