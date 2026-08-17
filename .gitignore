@@ -3,6 +3,8 @@
 
 # mounted volume
 sites
+backup/
+.claude/settings.local.json
 
 development/*
 !development/README.md
