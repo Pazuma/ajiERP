@@ -233,7 +233,7 @@ def _get_buying_price_list(doc):
 	price_list = doc.get("buying_price_list")
 	if price_list:
 		return price_list
-	price_list = frappe.db.get_single_value("Buying Settings", "default_buying_price_list")
+	price_list = frappe.db.get_single_value("Buying Settings", "buying_price_list")
 	if price_list:
 		return price_list
 	return frappe.db.get_value("Price List", {"buying": 1, "enabled": 1}, "name")

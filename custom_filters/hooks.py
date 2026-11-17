@@ -26,14 +26,14 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 app_include_css = [
-	"/assets/custom_filters/css/desk_tabs.css",
+	"/assets/custom_filters/css/desk_tabs.css?v=2026101301",
 	"/assets/custom_filters/css/right_sidebar.css",
 ]
 app_include_js = [
 	"custom_filters/public/js/naming_series_i18n.js",
-	"/assets/custom_filters/js/desk_tabs.js",
+	"/assets/custom_filters/js/desk_tabs.js?v=2026102201",
 	"/assets/custom_filters/js/desktop_user_menu.js",
-	"/assets/custom_filters/js/right_sidebar.js",
+	"/assets/custom_filters/js/right_sidebar.js?v=2026102201",
 	"/assets/custom_filters/js/info_card_i18n.js",
 	"/assets/custom_filters/js/warehouse_query.js",
 ]

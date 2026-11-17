@@ -755,3 +755,14 @@ Unreconcile Payment Entries,取消收付款凭证核销
 "Account: {0} is not permitted under Payment Entry",科目：{0} 不允许用于收付款凭证
 "Bank Transaction {0} added as Payment Entry",银行交易 {0} 已作为收付款凭证添加
 Only Value available for Payment Entry,收付款凭证仅支持金额
+Fixed Rate,固定单价
+Quantity Range,数量区间
+Step Discount,阶梯降价
+Progressive Discount,累进降价
+Tier Table,阶梯价格表
+Supplier Formula,供应商公式报价
+Pricing Rule Type,报价规则类型
+Pricing Tiers,数量阶梯
+Unit rate = {0},单价 = {0}
+{0} discount step(s),命中 {0} 个降价阶梯
+Quantity does not match any pricing tier.,采购数量未命中任何价格区间。

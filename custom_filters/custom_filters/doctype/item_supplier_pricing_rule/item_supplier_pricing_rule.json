@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "autoname": "ISPR-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["item_code","item_name","supplier","supplier_name","supplier_part_no","rule_type","column_break_rule","uom","currency","company","minimum_order_qty","valid_from","valid_upto","parameters_section","rule_parameters","tiers","formula","summary","source_section","source_supplier_quotation","attachment","remarks","disabled"],
+ "fields": [
+  {"fieldname":"item_code","fieldtype":"Link","label":"Item Code","options":"Item","reqd":1,"in_list_view":1},
+  {"fieldname":"item_name","fieldtype":"Data","label":"Item Name","fetch_from":"item_code.item_name","read_only":1},
+  {"fieldname":"supplier","fieldtype":"Link","label":"Supplier","options":"Supplier","reqd":1,"in_list_view":1},
+  {"fieldname":"supplier_name","fieldtype":"Data","label":"Supplier Name","fetch_from":"supplier.supplier_name","read_only":1},
+  {"fieldname":"supplier_part_no","fieldtype":"Data","label":"Supplier Part Number"},
+  {"fieldname":"rule_type","fieldtype":"Select","label":"Pricing Rule Type","options":"Fixed Rate\nQuantity Range\nStep Discount\nProgressive Discount\nTier Table","reqd":1,"in_list_view":1},
+  {"fieldname":"column_break_rule","fieldtype":"Column Break"},
+  {"fieldname":"uom","fieldtype":"Link","label":"Pricing UOM","options":"UOM","reqd":1},
+  {"fieldname":"currency","fieldtype":"Link","label":"Currency","options":"Currency","reqd":1},
+  {"fieldname":"company","fieldtype":"Link","label":"Company","options":"Company"},
+  {"fieldname":"minimum_order_qty","fieldtype":"Float","label":"Minimum Order Quantity","non_negative":1},
+  {"fieldname":"valid_from","fieldtype":"Date","label":"Valid From","default":"Today"},
+  {"fieldname":"valid_upto","fieldtype":"Date","label":"Valid Until"},
+  {"fieldname":"parameters_section","fieldtype":"Section Break","label":"Rule Parameters"},
+  {"fieldname":"rule_parameters","fieldtype":"Code","label":"Rule Parameters","options":"JSON","hidden":1},
+  {"fieldname":"tiers","fieldtype":"Table","label":"Pricing Tiers","options":"Item Supplier Pricing Tier","depends_on":"eval:doc.rule_type=='Quantity Range' || doc.rule_type=='Tier Table'"},
+  {"fieldname":"formula","fieldtype":"Small Text","label":"Generated Formula","read_only":1},
+  {"fieldname":"summary","fieldtype":"Data","label":"Rule Summary","read_only":1},
+  {"fieldname":"source_section","fieldtype":"Section Break","label":"Source"},
+  {"fieldname":"source_supplier_quotation","fieldtype":"Link","label":"Supplier Quotation","options":"Supplier Quotation"},
+  {"fieldname":"attachment","fieldtype":"Attach","label":"Attachment"},
+  {"fieldname":"remarks","fieldtype":"Small Text","label":"Remarks"},
+  {"fieldname":"disabled","fieldtype":"Check","label":"Disabled","default":"0","in_list_view":1}
+ ],
+ "module": "Custom Filters",
+ "name": "Item Supplier Pricing Rule",
+ "permissions": [
+  {"role":"Purchase Manager","create":1,"read":1,"write":1,"delete":1,"report":1,"export":1,"share":1},
+  {"role":"Purchase User","create":1,"read":1,"write":1,"report":1,"export":1},
+  {"role":"System Manager","create":1,"read":1,"write":1,"delete":1,"report":1,"export":1,"share":1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

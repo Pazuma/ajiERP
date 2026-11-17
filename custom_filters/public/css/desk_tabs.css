@@ -510,23 +510,25 @@ body.custom-filters-desk-tabs-ready .page-head {
 }
 
 .cf-bom-native-table-wrap {
-	width: min(930px, 100%);
+	width: 100%;
 	margin-left: auto;
 	margin-right: auto;
-	height: 360px;
+	height: auto;
 	overflow: auto;
 	border: 1px solid var(--border-color);
 	border-radius: 8px;
 	contain: paint;
+	background: #fff;
 }
 
 .cf-bom-native-table {
 	width: 100%;
 	min-width: 980px;
-	border-collapse: separate;
+	border-collapse: collapse;
 	border-spacing: 0;
 	table-layout: fixed;
 	font-size: var(--text-sm);
+	background: #fff;
 }
 
 .cf-bom-native-table th,
@@ -546,6 +548,11 @@ body.custom-filters-desk-tabs-ready .page-head {
 	z-index: 1;
 	background: var(--subtle-fg);
 	font-weight: 600;
+}
+
+.cf-bom-native-table tbody td {
+	background: #fff;
+	font-weight: 400;
 }
 
 .cf-bom-native-table th:nth-child(1) { width: 240px; }

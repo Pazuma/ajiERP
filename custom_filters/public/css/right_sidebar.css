@@ -70,7 +70,7 @@
 	z-index: 1021;
 	background: var(--sidebar-hover-color, #f3f3f3);
 	border-radius: 10px;
-	box-shadow: inset 3px 0 0 var(--primary, #2490ef);
+	box-shadow: inset 0 0 0 2px var(--ink-gray-9, #111827);
 }
 
 /* Keep the active state compact and app-like; the native sidebar remains visually separate. */

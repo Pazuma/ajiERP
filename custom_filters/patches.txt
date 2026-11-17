@@ -19,3 +19,4 @@ custom_filters.patches.v0_0_1.rename_legacy_liability_root_accounts
 custom_filters.patches.v0_0_1.add_production_plan_transfer_qty
 custom_filters.patches.v0_0_1.fix_item_bom_where_used_full_width
 custom_filters.patches.v0_0_1.fix_item_bom_where_used_full_width_columns
+custom_filters.patches.v0_0_1.add_item_purchase_pricing_display

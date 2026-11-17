@@ -25,6 +25,34 @@ def after_migrate():
 					"in_list_view": 1,
 					"insert_after": "supplier",
 				}
+			],
+			"Item Supplier": [
+				{
+					"fieldname": "custom_active_pricing_rule",
+					"fieldtype": "Link",
+					"label": "Active Pricing Rule",
+					"options": "Item Supplier Pricing Rule",
+					"read_only": 1,
+					"insert_after": "supplier_part_no",
+				},
+				{
+					"fieldname": "custom_pricing_rule_summary",
+					"fieldtype": "Data",
+					"label": "Pricing Rule Summary",
+					"read_only": 1,
+					"in_list_view": 1,
+					"insert_after": "custom_active_pricing_rule",
+				},
+			],
+			"Item Price": [
+				{
+					"fieldname": "custom_item_supplier_pricing_rule",
+					"fieldtype": "Link",
+					"label": "Item Supplier Pricing Rule",
+					"options": "Item Supplier Pricing Rule",
+					"read_only": 1,
+					"insert_after": "reference",
+				}
 			]
 		},
 		update=True,

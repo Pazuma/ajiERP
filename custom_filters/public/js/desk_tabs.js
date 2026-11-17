@@ -22,7 +22,9 @@
 	function normalize_route(route) {
 		return (route || (window.frappe && frappe.get_route ? frappe.get_route() : []) || [])
 			.map(function (part) {
-				return decodeURIComponent(String(part || "").trim());
+				// Frappe route components are already decoded. A document name
+				// may contain a literal percent sign (for example, 13% tax).
+				return String(part || "").trim();
 			})
 			.filter(Boolean);
 	}

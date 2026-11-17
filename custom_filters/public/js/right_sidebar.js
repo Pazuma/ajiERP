@@ -17,7 +17,13 @@
 			.split("?")[0]
 			.split("/")
 			.map(function (part) {
-				return decodeURIComponent(String(part || "").trim());
+				const value = String(part || "").trim();
+				try {
+					return decodeURIComponent(value);
+				} catch (error) {
+					if (error instanceof URIError) return value;
+					throw error;
+				}
 			})
 			.filter(Boolean)
 			.join("/")
@@ -207,7 +213,8 @@
 		}
 
 		resolve_route(icon) {
-			if (this.route_cache.has(icon.label)) return this.route_cache.get(icon.label);
+			const cached_route = this.route_cache.get(icon.label);
+			if (cached_route) return cached_route;
 			let route = null;
 			try {
 				route = frappe.utils.get_route_for_icon(icon) || null;
@@ -215,7 +222,10 @@
 				route = null;
 			}
 			if (typeof route !== "string" || !route) route = null;
-			this.route_cache.set(icon.label, route);
+			// Workspace sidebar data can finish initializing after this controller.
+			// Do not make an early unresolved route permanent; retry on click.
+			if (route) this.route_cache.set(icon.label, route);
+			else this.route_cache.delete(icon.label);
 			return route;
 		}
 
@@ -406,7 +416,7 @@
 
 			const candidates = new Set();
 			const route_key = normalize_path(
-				(frappe.get_route ? frappe.get_route() : []).join("/")
+				(frappe.get_route ? frappe.get_route() || [] : []).join("/")
 			);
 			const path_key = normalize_path(window.location.pathname);
 			if (route_key) candidates.add(route_key);

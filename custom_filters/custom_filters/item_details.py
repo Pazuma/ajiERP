@@ -19,7 +19,15 @@ def get_item_tier_pricing(item_code):
     if not frappe.has_permission("Pricing Rule", "read"):
         return {"no_permission": True, "rows": []}
 
-    return {"no_permission": False, "rows": get_tier_pricing_rows(item_code)}
+    return {"no_permission": False, "rows": get_tier_pricing_rows(item_code, "selling")}
+
+
+@frappe.whitelist()
+def get_item_purchase_pricing(item_code):
+    validate_item_read_permission(item_code)
+    if not frappe.has_permission("Pricing Rule", "read"):
+        return {"no_permission": True, "rows": []}
+    return {"no_permission": False, "rows": get_tier_pricing_rows(item_code, "buying")}
 
 
 def validate_item_read_permission(item_code):
@@ -60,11 +68,14 @@ def get_bom_where_used_rows(item_code):
     )
 
 
-def get_tier_pricing_rows(item_code):
+def get_tier_pricing_rows(item_code, price_side=None):
+    if price_side not in (None, "buying", "selling"):
+        frappe.throw(_("无效的价格方向"))
     return frappe.db.sql(
         """
         select
             pr.name as pricing_rule,
+            pr.rule_description as rule_description,
             pric.uom as uom,
             pr.for_price_list as price_list,
             pr.currency as currency,
@@ -88,9 +99,10 @@ def get_tier_pricing_rows(item_code):
         where
             pric.item_code = %s
             and pric.parenttype = 'Pricing Rule'
+            and (%s is null or (case when %s = 'buying' then pr.buying else pr.selling end) = 1)
         order by pr.disable asc, pr.valid_from desc, pr.priority desc, pr.name asc, pric.idx asc
         limit 200
         """,
-        (item_code,),
+        (item_code, price_side, price_side),
         as_dict=True,
     )
