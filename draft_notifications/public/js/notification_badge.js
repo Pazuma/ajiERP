@@ -6,6 +6,29 @@
 	let lastAlertNotificationName = null;
 	let pollTimer = null;
 	let realtimeBound = false;
+	let sessionExpired = false;
+	let pendingBadgeRequest = null;
+
+	function fetchBadgeState() {
+		if (sessionExpired) return Promise.resolve(null);
+		if (pendingBadgeRequest) return pendingBadgeRequest;
+		pendingBadgeRequest = Promise.resolve(frappe.call({
+			method: "draft_notifications.notification_log.get_badge_state",
+			type: "GET",
+			cache: false,
+		})).then(({ message }) => {
+			if (message?.session_expired) {
+				sessionExpired = true;
+				clearInterval(pollTimer);
+				pollTimer = null;
+				renderBadge(0);
+				frappe.app.handle_session_expired();
+				return null;
+			}
+			return message;
+		}).finally(() => { pendingBadgeRequest = null; });
+		return pendingBadgeRequest;
+	}
 
 	function injectStyles() {
 		if (document.getElementById("draft-notifications-unread-badge-style")) return;
@@ -75,19 +98,9 @@
 	function refreshUnreadNotificationBadge() {
 		if (!window.frappe?.call || !frappe.session?.user || frappe.session.user === "Guest") return;
 
-		frappe
-			.call({
-				method: "frappe.client.get_count",
-				args: {
-					doctype: "Notification Log",
-					filters: {
-						for_user: frappe.session.user,
-						read: 0,
-					},
-				},
-			})
+		fetchBadgeState()
 			.then((response) => {
-				const count = toInteger(response.message || 0);
+				const count = toInteger(response?.unread_count || 0);
 				renderBadge(count);
 				lastUnreadCount = count;
 			})
@@ -108,29 +121,8 @@
 			return Promise.resolve(null);
 		}
 
-		return frappe
-			.call({
-				method: "frappe.client.get_list",
-				args: {
-					doctype: "Notification Log",
-					fields: [
-						"name",
-						"subject",
-						"document_type",
-						"document_name",
-						"link",
-						"read",
-						"creation",
-					],
-					filters: {
-						for_user: frappe.session.user,
-					},
-					order_by: "creation desc",
-					limit_page_length: 1,
-				},
-				cache: false,
-			})
-			.then((response) => (response.message || [])[0] || null)
+		return fetchBadgeState()
+			.then((response) => response?.latest || null)
 			.catch(() => null);
 	}
 
