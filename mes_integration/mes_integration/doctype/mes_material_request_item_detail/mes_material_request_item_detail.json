@@ -1,0 +1,147 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-05-29 00:00:00",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "material_request_item_idx",
+  "item_code",
+  "item_name",
+  "column_break_item",
+  "model",
+  "model_code",
+  "color",
+  "color_code",
+  "article_code",
+  "production_section",
+  "batch_no",
+  "quantity_section",
+  "order_qty",
+  "issue_qty",
+  "uom",
+  "material_request_item",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "material_request_item_idx",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "物料需求明细行号"
+  },
+  {
+   "columns": 2,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "物料编码",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "物料名称",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_item",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "型号"
+  },
+  {
+   "fieldname": "model_code",
+   "fieldtype": "Data",
+   "label": "型号代码"
+  },
+  {
+   "columns": 2,
+   "fieldname": "color",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "颜色"
+  },
+  {
+   "fieldname": "color_code",
+   "fieldtype": "Data",
+   "label": "颜色代码"
+  },
+  {
+   "fieldname": "article_code",
+   "fieldtype": "Data",
+   "label": "成品货号"
+  },
+  {
+   "fieldname": "production_section",
+   "fieldtype": "Section Break",
+   "label": "生产信息"
+  },
+  {
+   "fieldname": "batch_no",
+   "fieldtype": "Data",
+   "label": "生产批次号"
+  },
+  {
+   "fieldname": "quantity_section",
+   "fieldtype": "Section Break",
+   "label": "数量"
+  },
+  {
+   "columns": 2,
+   "fieldname": "order_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "订单数量"
+  },
+  {
+   "columns": 2,
+   "fieldname": "issue_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "需求量"
+  },
+  {
+   "columns": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "单位",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "material_request_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "物料需求明细"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "备注"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Mes Integration",
+ "name": "MES Material Request Item Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

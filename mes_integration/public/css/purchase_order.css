@@ -1,0 +1,53 @@
+.mes-po-aggregate-price-note {
+	margin-top: 12px;
+	color: var(--text-color, #36414c);
+	font-size: 12px;
+}
+
+.mes-po-aggregate-price-note .mes-po-note-title {
+	font-size: 13px;
+	font-weight: 600;
+	margin: 0 0 6px;
+}
+
+.mes-po-aggregate-price-note ul {
+	margin: 0;
+	padding-left: 18px;
+}
+
+.mes-po-standard-grid-collapse {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	margin-left: 4px;
+	padding: 0;
+	border: 0 !important;
+	border-style: none !important;
+	border-radius: 0;
+	background: transparent !important;
+	color: var(--text-muted, #6c7680);
+	box-shadow: none !important;
+	outline: 0;
+	font: inherit;
+	line-height: 1;
+	appearance: none;
+	vertical-align: -3px;
+	transition: color 120ms ease;
+}
+.mes-po-standard-grid-collapse .icon {
+	width: 14px;
+	height: 14px;
+}
+.mes-po-standard-grid-collapse:hover,
+.mes-po-standard-grid-collapse:active,
+.mes-po-standard-grid-collapse:focus,
+.mes-po-standard-grid-collapse:focus-visible {
+	border: 0 !important;
+	border-style: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	outline: 0;
+}
+.mes-po-standard-grid-collapse:hover { color: var(--text-color, #36414c); }

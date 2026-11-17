@@ -1,0 +1,1091 @@
+from math import ceil
+
+import frappe
+from frappe import _
+
+from mes_integration.mes_integration.settings import is_mes_integration_enabled, throw_mes_integration_disabled
+from frappe.model.mapper import get_mapped_doc
+from frappe.utils import cint, flt, now
+
+
+CUSTOM_ISSUE_MATERIAL_REQUEST_TYPES = (
+    "Material Issue",
+    "Material Transfer for Manufacture",
+    "Injection Molding Issuance",
+)
+
+
+@frappe.whitelist()
+def create_and_submit_material_request_from_mes(data=None, material_request=None):
+    """Create a Material Request draft from MES and submit it immediately."""
+    from mes_integration.mes_integration.stock_entry import validate_mes_api_user
+
+    payload = get_mes_material_request_payload(data=data, material_request=material_request)
+
+    if not isinstance(payload, dict):
+        frappe.throw(_("缺少请求数据或数据格式不正确"))
+
+    validate_mes_api_user()
+    validate_mes_material_request_permissions()
+
+    material_request_data = extract_material_request_data(payload)
+
+    if not isinstance(material_request_data, dict):
+        frappe.throw(_("缺少 Material Request 数据或数据格式不正确"))
+
+    if not is_mes_integration_enabled(material_request_data.get("company")):
+        throw_mes_integration_disabled(material_request_data.get("company"))
+
+    material_request_data = material_request_data.copy()
+    material_request_data["doctype"] = "Material Request"
+
+    material_request_doc = frappe.get_doc(material_request_data)
+    validate_mes_material_request_data(material_request_doc)
+
+    material_request_doc.insert()
+    material_request_doc.submit()
+
+    frappe.response["data"] = {
+        "status": "success",
+        "message": _("物料需求已创建并提交。"),
+        "material_request": material_request_doc.name,
+        "material_request_type": material_request_doc.material_request_type,
+        "material_request_docstatus": material_request_doc.docstatus,
+        "material_request_url": frappe.utils.get_url_to_form(
+            "Material Request", material_request_doc.name
+        ),
+        "timestamp": now(),
+    }
+
+
+def get_mes_material_request_payload(data=None, material_request=None):
+    from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+    payload = parse_json_if_needed(data if data is not None else material_request)
+    if isinstance(payload, dict):
+        return payload
+
+    if getattr(frappe, "request", None) and frappe.request.is_json:
+        request_json = frappe.request.get_json(silent=True) or {}
+        if isinstance(request_json, dict):
+            if request_json.get("data") is not None:
+                return parse_json_if_needed(request_json.get("data"))
+            return request_json
+
+    form_dict = getattr(frappe, "form_dict", None) or {}
+    for fieldname in ("data", "material_request"):
+        if form_dict.get(fieldname) is not None:
+            return parse_json_if_needed(form_dict.get(fieldname))
+
+    return {
+        key: value
+        for key, value in dict(form_dict).items()
+        if key not in ("cmd", "method") and not key.startswith("_")
+    }
+
+
+def extract_material_request_data(payload):
+    from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+    if not isinstance(payload, dict):
+        return payload
+
+    if payload.get("material_request") is not None:
+        return parse_json_if_needed(payload.get("material_request"))
+
+    if payload.get("data") is not None:
+        nested_payload = parse_json_if_needed(payload.get("data"))
+        return extract_material_request_data(nested_payload)
+
+    return payload
+
+
+def validate_mes_material_request_permissions():
+    for permission_type in ("create", "submit"):
+        if not frappe.has_permission("Material Request", permission_type):
+            frappe.throw(
+                _("当前用户缺少 {0} 的 {1} 权限").format(
+                    "Material Request", permission_type
+                ),
+                frappe.PermissionError,
+            )
+
+
+def validate_mes_material_request_data(material_request):
+    if material_request.doctype != "Material Request":
+        frappe.throw(_("只能通过此接口创建 Material Request"))
+
+    if material_request.docstatus != 0:
+        frappe.throw(_("MES 传入的物料需求必须是草稿状态"))
+
+    if not material_request.get("material_request_type"):
+        frappe.throw(_("缺少物料需求类型 material_request_type"))
+
+    if not material_request.get("company"):
+        frappe.throw(_("缺少物料需求公司"))
+
+    if not material_request.get("items"):
+        frappe.throw(_("物料需求至少需要一行明细"))
+
+    for row in material_request.get("items"):
+        if not row.get("item_code"):
+            frappe.throw(_("第 {0} 行缺少物料号").format(row.idx))
+
+        if flt(row.get("qty")) <= 0:
+            frappe.throw(_("第 {0} 行数量必须大于 0").format(row.idx))
+
+
+@frappe.whitelist()
+def make_merged_purchase_order(material_requests=None, supplier=None, selected_items=None):
+	"""Build one unsaved Purchase Order from multiple submitted purchase requests.
+
+	The standard ERPNext mapper remains the source of truth for quantities and
+	field mapping. This wrapper only validates the multi-source contract before
+	passing the same target document through the standard mapper.
+	"""
+	from erpnext.stock.doctype.material_request.material_request import (
+		make_purchase_order as erpnext_make_purchase_order,
+	)
+
+	names = _parse_unique_names(material_requests, "采购申请")
+	if len(names) > 50:
+		frappe.throw(_("单次最多合并 50 张采购申请。"))
+
+	if not supplier:
+		frappe.throw(_("请选择供应商。"))
+
+	item_names = set(_parse_unique_names(selected_items, "采购申请明细"))
+	frappe.has_permission("Purchase Order", "create", throw=True)
+	supplier_doc = frappe.get_cached_doc("Supplier", supplier)
+	supplier_doc.check_permission("read")
+
+	requests = []
+	all_item_names = set()
+	company = None
+	for name in names:
+		material_request = frappe.get_doc("Material Request", name)
+		material_request.check_permission("read")
+		if material_request.docstatus != 1:
+			frappe.throw(_("采购申请 {0} 必须是已提交状态。").format(name))
+		if material_request.material_request_type != "Purchase":
+			frappe.throw(_("采购申请 {0} 不是采购类型，不能合并。").format(name))
+		if material_request.status in ("Stopped", "Cancelled"):
+			frappe.throw(_("采购申请 {0} 当前状态为 {1}，不能合并。").format(name, material_request.status))
+		if company and material_request.company != company:
+			frappe.throw(_("只能合并同一公司的采购申请。"))
+		company = company or material_request.company
+		request_item_names = {row.name for row in material_request.get("items", [])}
+		all_item_names.update(request_item_names)
+		requests.append(material_request)
+
+	if not item_names:
+		item_names = all_item_names
+	unknown_items = item_names - all_item_names
+	if unknown_items:
+		frappe.throw(_("存在不属于所选采购申请的明细：{0}").format(", ".join(sorted(unknown_items))))
+
+	target_doc = frappe.new_doc("Purchase Order")
+	target_doc.company = company
+	target_doc.supplier = supplier
+	for material_request in requests:
+		request_item_names = {
+			row.name
+			for row in material_request.get("items", [])
+			if row.name in item_names and flt(row.stock_qty) > flt(row.ordered_qty)
+		}
+		if not request_item_names:
+			frappe.throw(_("采购申请 {0} 没有可下单的剩余明细。").format(material_request.name))
+		target_doc = erpnext_make_purchase_order(
+			material_request.name,
+			target_doc=target_doc,
+			args={"filtered_children": list(request_item_names)},
+		)
+
+	if not target_doc.get("items"):
+		frappe.throw(_("选中的采购申请没有可下单明细。"))
+
+	target_doc.company = company
+	target_doc.supplier = supplier
+	target_doc.set_onload("load_after_mapping", False)
+	return target_doc
+
+
+def _parse_unique_names(value, label):
+	from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+	value = parse_json_if_needed(value)
+	if value is None or value == "":
+		return []
+	if isinstance(value, str):
+		value = [value]
+	if not isinstance(value, (list, tuple, set)):
+		frappe.throw(_("{0} 参数格式不正确。").format(label))
+
+	names = []
+	for name in value:
+		if not isinstance(name, str) or not name.strip():
+			frappe.throw(_("{0} 包含空值或无效名称。").format(label))
+		name = name.strip()
+		if name not in names:
+			names.append(name)
+	if not names and label == "采购申请":
+		frappe.throw(_("请至少选择一张采购申请。"))
+	return names
+
+
+@frappe.whitelist()
+def make_stock_entry_from_material_request(source_name, target_doc=None):
+    material_request_type = frappe.db.get_value("Material Request", source_name, "material_request_type")
+
+    if material_request_type in CUSTOM_ISSUE_MATERIAL_REQUEST_TYPES:
+        return make_issue_stock_entry(source_name, target_doc)
+
+    from erpnext.stock.doctype.material_request.material_request import make_stock_entry
+
+    return make_stock_entry(source_name, target_doc)
+
+
+@frappe.whitelist()
+def make_issue_stock_entry(source_name, target_doc=None):
+    def update_item(source, target, source_parent):
+        qty = (
+            flt(flt(source.stock_qty) - flt(source.ordered_qty)) / target.conversion_factor
+            if flt(source.stock_qty) > flt(source.ordered_qty)
+            else 0
+        )
+        stock_entry_purpose = get_stock_entry_purpose(source_parent)
+        target.qty = qty
+        target.transfer_qty = qty * source.conversion_factor
+        target.conversion_factor = source.conversion_factor
+
+        if stock_entry_purpose == "Material Issue":
+            target.s_warehouse = source.get("warehouse") or source_parent.get("set_warehouse")
+        else:
+            target.s_warehouse = source.get("from_warehouse") or source_parent.get("set_from_warehouse")
+            target.t_warehouse = source_parent.get("set_warehouse") or source.get("warehouse")
+
+    def set_missing_values(source, target):
+        stock_entry_purpose = get_stock_entry_purpose(source)
+        target.purpose = stock_entry_purpose
+        target.stock_entry_type = get_stock_entry_type(source)
+        if stock_entry_purpose == "Material Issue":
+            target.from_warehouse = (
+                source.get("set_warehouse")
+                or get_single_material_request_item_source_warehouse(source)
+            )
+        else:
+            target.from_warehouse = source.get("set_from_warehouse")
+            target.to_warehouse = source.get("set_warehouse")
+        target.set_transfer_qty()
+        target.set_actual_qty()
+        target.calculate_rate_and_amount(raise_error_if_no_rate=False)
+        target.set_job_card_data()
+
+    return get_mapped_doc(
+        "Material Request",
+        source_name,
+        {
+            "Material Request": {
+                "doctype": "Stock Entry",
+                "validation": {
+                    "docstatus": ["=", 1],
+                    "material_request_type": ["in", CUSTOM_ISSUE_MATERIAL_REQUEST_TYPES],
+                },
+            },
+            "Material Request Item": {
+                "doctype": "Stock Entry Detail",
+                "field_map": {
+                    "name": "material_request_item",
+                    "parent": "material_request",
+                    "uom": "stock_uom",
+                    "job_card_item": "job_card_item",
+                },
+                "field_no_map": ["expense_account"],
+                "postprocess": update_item,
+                "condition": lambda doc: (
+                    flt(doc.ordered_qty, doc.precision("ordered_qty"))
+                    < flt(doc.stock_qty, doc.precision("ordered_qty"))
+                ),
+            },
+        },
+        target_doc,
+        set_missing_values,
+    )
+
+
+def get_stock_entry_purpose(material_request):
+    if material_request.material_request_type in ("Material Issue", "Injection Molding Issuance"):
+        return "Material Issue"
+
+    return "Material Transfer for Manufacture"
+
+
+def get_stock_entry_type(material_request):
+    if material_request.material_request_type == "Injection Molding Issuance":
+        return "Injection Molding Issuance"
+
+    return get_stock_entry_purpose(material_request)
+
+
+def get_single_material_request_item_source_warehouse(material_request):
+    warehouses = {
+        row.get("from_warehouse") or row.get("warehouse")
+        for row in material_request.get("items", [])
+        if row.get("from_warehouse") or row.get("warehouse")
+    }
+
+    return warehouses.pop() if len(warehouses) == 1 else None
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def issue_warehouse_query(doctype, txt, searchfield, start, page_len, filters):
+    filters = filters or {}
+    item_code = filters.get("item_code")
+    company = filters.get("company")
+
+    if not item_code:
+        return []
+
+    from frappe.desk.reportview import get_match_cond
+
+    return frappe.db.sql(
+        """
+        SELECT
+            warehouse.name,
+            CONCAT_WS(' : ', 'Actual Qty', IFNULL(ROUND(bin.actual_qty, 2), 0)) AS actual_qty
+        FROM `tabWarehouse` warehouse
+        LEFT JOIN `tabBin` bin
+            ON bin.warehouse = warehouse.name
+            AND bin.item_code = %(item_code)s
+        WHERE warehouse.is_group = 0
+            AND IFNULL(warehouse.disabled, 0) = 0
+            AND (%(company)s IS NULL OR %(company)s = '' OR IFNULL(warehouse.company, '') IN ('', %(company)s))
+            AND warehouse.name LIKE %(txt)s
+            {mcond}
+        ORDER BY IFNULL(bin.actual_qty, 0) DESC, warehouse.name ASC
+        LIMIT %(page_len)s OFFSET %(start)s
+        """.format(mcond=get_match_cond("Warehouse")),
+        {
+            "item_code": item_code,
+            "company": company,
+            "txt": f"%{txt}%",
+            "page_len": page_len,
+            "start": start,
+        },
+    )
+
+
+@frappe.whitelist()
+def get_item_warehouse_actual_qty(item_code, warehouse):
+	if not item_code or not warehouse:
+		return 0
+
+	return flt(
+		frappe.db.get_value(
+			"Bin",
+			{"item_code": item_code, "warehouse": warehouse},
+			"actual_qty",
+		)
+	)
+
+
+@frappe.whitelist()
+def get_issue_dialog_stock_shortages(material_request_name, items=None):
+	"""Return current stock shortages for the issue dialog.
+
+	This is a read-only companion endpoint.  The existing issue/submit endpoint
+	continues to enforce the final stock check and keeps its original contract.
+	"""
+	mr = frappe.get_doc("Material Request", material_request_name)
+	mr.check_permission("read")
+	can_create_purchase_request = frappe.has_permission("Material Request", "create")
+
+	issue_rows = get_issue_dialog_rows(items)
+	mr_items = {row.name: row for row in mr.get("items", [])}
+	grouped = {}
+	for index, issue_row in enumerate(issue_rows, start=1):
+		mr_item_name = issue_row.get("material_request_item")
+		mr_item = mr_items.get(mr_item_name)
+		if not mr_item:
+			frappe.throw(_("第 {0} 行物料需求明细不存在或不属于当前物料需求").format(index))
+
+		if issue_row.get("item_code") and issue_row.get("item_code") != mr_item.item_code:
+			frappe.throw(_("第 {0} 行物料编码与物料需求明细不一致").format(index))
+
+		warehouse = issue_row.get("s_warehouse")
+		if not warehouse:
+			continue
+
+		uom = get_issue_dialog_row_uom(issue_row, mr_item)
+		conversion_factor = get_issue_dialog_row_conversion_factor(mr_item, uom)
+		key = (mr_item.item_code, warehouse)
+		bucket = grouped.setdefault(
+			key,
+			{
+				"item_code": mr_item.item_code,
+				"item_name": mr_item.get("item_name") or mr_item.item_code,
+				"warehouse": warehouse,
+				"uom": uom,
+				"stock_uom": mr_item.get("stock_uom") or uom,
+				"schedule_date": mr_item.get("schedule_date"),
+				"conversion_factor": conversion_factor,
+				"material_request_items": [],
+				"requested_stock_qty": 0,
+			},
+		)
+		bucket["requested_stock_qty"] += flt(issue_row.get("qty")) * conversion_factor
+		if mr_item_name and mr_item_name not in bucket["material_request_items"]:
+			bucket["material_request_items"].append(mr_item_name)
+
+	shortages = []
+	for bucket in grouped.values():
+		available_stock_qty = get_item_warehouse_actual_qty(bucket["item_code"], bucket["warehouse"])
+		shortage_stock_qty = flt(bucket["requested_stock_qty"]) - flt(available_stock_qty)
+		if shortage_stock_qty <= 0:
+			continue
+
+		conversion_factor = flt(bucket["conversion_factor"]) or 1
+		shortages.append(
+			{
+				"item_code": bucket["item_code"],
+				"item_name": bucket["item_name"],
+				"warehouse": bucket["warehouse"],
+				"uom": bucket["uom"],
+				"stock_uom": bucket["stock_uom"],
+				"conversion_factor": conversion_factor,
+				"requested_qty": flt(bucket["requested_stock_qty"]) / conversion_factor,
+				"requested_stock_qty": flt(bucket["requested_stock_qty"]),
+				"available_qty": flt(available_stock_qty) / conversion_factor,
+				"available_stock_qty": flt(available_stock_qty),
+				"shortage_qty": flt(shortage_stock_qty) / conversion_factor,
+				"shortage_stock_qty": flt(shortage_stock_qty),
+				"material_request_item": bucket["material_request_items"][0]
+				if bucket["material_request_items"]
+				else None,
+				"material_request_items": bucket["material_request_items"],
+				"schedule_date": bucket["schedule_date"],
+			}
+		)
+
+	return {
+		"has_shortage": bool(shortages),
+		"can_create_purchase_request": can_create_purchase_request,
+		# Backward-compatible alias for callers not yet migrated to the purchase
+		# request terminology. It now reflects Material Request permission.
+		"can_create_purchase_order": can_create_purchase_request,
+		"material_request": material_request_name,
+		"items": shortages,
+	}
+
+
+@frappe.whitelist()
+def get_stock_entry_submit_stock_shortages(stock_entry=None):
+	"""Return a Stock Entry draft's current shortages after a failed submit.
+
+	This is deliberately a read-only companion to ERPNext's stock validation.
+	The submit path and its ``NegativeStockError`` remain unchanged.
+	"""
+	from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+	stock_entry = parse_json_if_needed(stock_entry)
+	if not isinstance(stock_entry, dict) or stock_entry.get("doctype") != "Stock Entry":
+		frappe.throw(_("缺少有效的物料移动数据"))
+
+	if not frappe.has_permission("Stock Entry", "write"):
+		frappe.throw(_("当前用户缺少 Stock Entry 的写入权限"), frappe.PermissionError)
+
+	items = [row for row in stock_entry.get("items", []) if isinstance(row, dict)]
+	item_codes = list({row.get("item_code") for row in items if row.get("item_code")})
+	item_details = {
+		item.name: item
+		for item in frappe.get_all(
+			"Item", filters={"name": ["in", item_codes]}, fields=["name", "item_name", "stock_uom"]
+		)
+	} if item_codes else {}
+
+	grouped = {}
+	for row in items:
+		item_code = row.get("item_code")
+		warehouse = row.get("s_warehouse")
+		item = item_details.get(item_code)
+		if not item or not warehouse:
+			continue
+
+		requested_stock_qty = flt(row.get("transfer_qty"))
+		if requested_stock_qty <= 0:
+			requested_stock_qty = flt(row.get("qty")) * (flt(row.get("conversion_factor")) or 1)
+		if requested_stock_qty <= 0:
+			continue
+
+		key = (item_code, warehouse)
+		bucket = grouped.setdefault(
+			key,
+			{
+				"item_code": item_code,
+				"item_name": item.get("item_name") or item_code,
+				"warehouse": warehouse,
+				"stock_uom": item.get("stock_uom") or row.get("stock_uom") or row.get("uom"),
+				"requested_stock_qty": 0,
+			},
+		)
+		bucket["requested_stock_qty"] += requested_stock_qty
+
+	shortages = []
+	for bucket in grouped.values():
+		available_stock_qty = get_item_warehouse_actual_qty(bucket["item_code"], bucket["warehouse"])
+		shortage_stock_qty = flt(bucket["requested_stock_qty"]) - flt(available_stock_qty)
+		if shortage_stock_qty <= 0:
+			continue
+
+		shortages.append(
+			{
+				"item_code": bucket["item_code"],
+				"item_name": bucket["item_name"],
+				"warehouse": bucket["warehouse"],
+				"uom": bucket["stock_uom"],
+				"stock_uom": bucket["stock_uom"],
+				"conversion_factor": 1,
+				"requested_qty": flt(bucket["requested_stock_qty"]),
+				"available_qty": flt(available_stock_qty),
+				"shortage_qty": flt(shortage_stock_qty),
+			}
+		)
+
+	return {
+		"has_shortage": bool(shortages),
+		"can_create_purchase_request": frappe.has_permission("Material Request", "create"),
+		"can_create_purchase_order": frappe.has_permission("Material Request", "create"),
+		"items": shortages,
+	}
+
+
+@frappe.whitelist()
+def get_issue_dialog_default_uoms(item_codes=None):
+    """Return configured MES default issue UOMs for the Material Request issue dialog."""
+    from erpnext.stock.get_item_details import get_conversion_factor
+    from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+    if not frappe.db.has_column("Item", "custom_mes_issue_uom"):
+        return {"default_uoms": {}, "warnings": []}
+
+    item_codes = parse_json_if_needed(item_codes)
+    if not isinstance(item_codes, list):
+        return {"default_uoms": {}, "warnings": []}
+
+    item_codes = list(dict.fromkeys(item_code for item_code in item_codes if item_code))
+    if not item_codes:
+        return {"default_uoms": {}, "warnings": []}
+
+    items = frappe.get_all(
+        "Item",
+        filters={"name": ["in", item_codes]},
+        fields=["name", "custom_mes_issue_uom"],
+    )
+
+    default_uoms = {}
+    warnings = []
+    for item in items:
+        uom = item.get("custom_mes_issue_uom")
+        if not uom:
+            continue
+
+        conversion_factor = 0
+        try:
+            conversion_factor = flt(get_conversion_factor(item.name, uom).get("conversion_factor"))
+        except Exception:
+            conversion_factor = 0
+
+        if conversion_factor:
+            default_uoms[item.name] = {
+                "uom": uom,
+                "conversion_factor": conversion_factor,
+            }
+        else:
+            warnings.append(
+                _("物料 {0} 的 MES 默认发料单位 {1} 缺少有效换算设置，已使用物料需求单位。").format(
+                    item.name,
+                    uom,
+                )
+            )
+
+    return {"default_uoms": default_uoms, "warnings": warnings}
+
+
+@frappe.whitelist()
+def issue_and_push_to_dlm_from_dialog(material_request_name, items=None):
+    """Create, submit and push a Stock Entry from editable Material Request issue rows."""
+    from mes_integration.mes_integration.stock_entry import push_to_mes
+
+    lock_material_request_for_issue(material_request_name)
+
+    mr = frappe.get_doc("Material Request", material_request_name)
+    if not is_mes_integration_enabled(mr.get("company")):
+        throw_mes_integration_disabled(mr.get("company"))
+    validate_material_request_can_issue_to_dlm(mr)
+
+    issue_rows = get_issue_dialog_rows(items)
+    stock_entry = build_stock_entry_from_material_request_issue_rows(mr, issue_rows)
+    stock_entry.insert()
+    stock_entry.submit()
+
+    try:
+        push_result = push_to_mes(stock_entry.name)
+    except Exception:
+        frappe.log_error(title="DLM 推送失败（弹窗发料并推送）", message=frappe.get_traceback())
+        return {
+            "status": "partial",
+            "message": _("物料移动 {0} 已创建并提交，但推送至 DLM 失败，请手动推送。").format(
+                stock_entry.name
+            ),
+            "material_request": mr.name,
+            "stock_entry": stock_entry.name,
+        }
+
+    return {
+        "status": "success",
+        "message": _("物料移动 {0} 已创建、提交并推送至 DLM。").format(stock_entry.name),
+        "material_request": mr.name,
+        "stock_entry": stock_entry.name,
+        "push_result": push_result,
+    }
+
+
+def lock_material_request_for_issue(material_request_name):
+    frappe.db.sql(
+        "SELECT name FROM `tabMaterial Request` WHERE name = %s FOR UPDATE",
+        material_request_name,
+    )
+    frappe.db.sql(
+        "SELECT name FROM `tabMaterial Request Item` WHERE parent = %s FOR UPDATE",
+        material_request_name,
+    )
+
+
+def validate_material_request_can_issue_to_dlm(mr):
+    if mr.docstatus != 1:
+        frappe.throw(_("物料需求必须已提交"))
+
+    if mr.status in ("Stopped", "Cancelled"):
+        frappe.throw(_("已停止或已取消的物料需求不能发料"))
+
+    if mr.material_request_type not in CUSTOM_ISSUE_MATERIAL_REQUEST_TYPES:
+        frappe.throw(_("只有物料发料、工单发料、注塑发料可以发料并推送至 DLM"))
+
+
+def get_issue_dialog_rows(items):
+    from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+    rows = parse_json_if_needed(items)
+    if not isinstance(rows, list):
+        frappe.throw(_("缺少发料明细或发料明细格式不正确"))
+
+    return [row for row in rows if isinstance(row, dict) and flt(row.get("qty")) > 0]
+
+
+def build_stock_entry_from_material_request_issue_rows(mr, issue_rows):
+    if not issue_rows:
+        frappe.throw(_("没有可发料的明细"))
+
+    mr_items = {row.name: row for row in mr.get("items", [])}
+    real_time_issued_stock_qty = get_realtime_issued_stock_qty_by_mr_item(mr_items.keys())
+    validate_issue_dialog_rows_not_duplicated(issue_rows)
+    validate_issue_dialog_stock_availability(issue_rows, mr_items)
+
+    stock_entry = frappe.new_doc("Stock Entry")
+    stock_entry.company = mr.company
+    stock_entry.stock_entry_type = get_stock_entry_type(mr)
+    stock_entry.purpose = get_stock_entry_purpose(mr)
+    stock_entry.custom_stock_entry_no = mr.get("custom_stock_entry_no")
+    stock_entry.from_warehouse = get_stock_entry_source_warehouse(mr, issue_rows, mr_items)
+    if stock_entry.purpose != "Material Issue":
+        stock_entry.to_warehouse = get_stock_entry_target_warehouse(mr, issue_rows, mr_items)
+
+    for index, issue_row in enumerate(issue_rows, start=1):
+        mr_item = validate_issue_dialog_row(mr, mr_items, issue_row, index, real_time_issued_stock_qty)
+        qty = flt(issue_row.get("qty"))
+        uom = get_issue_dialog_row_uom(issue_row, mr_item)
+        conversion_factor = get_issue_dialog_row_conversion_factor(mr_item, uom)
+        stock_entry.append(
+            "items",
+            {
+                "item_code": mr_item.item_code,
+                "item_name": mr_item.get("item_name"),
+                "description": mr_item.get("description"),
+                "qty": qty,
+                "transfer_qty": qty * conversion_factor,
+                "uom": uom,
+                "stock_uom": mr_item.get("stock_uom"),
+                "conversion_factor": conversion_factor,
+                "s_warehouse": issue_row.get("s_warehouse"),
+                "t_warehouse": issue_row.get("t_warehouse") if stock_entry.purpose != "Material Issue" else None,
+                "material_request": mr.name,
+                "material_request_item": mr_item.name,
+                "allow_zero_valuation_rate": 1,
+            },
+        )
+
+    stock_entry.set_transfer_qty()
+    stock_entry.set_actual_qty()
+    stock_entry.calculate_rate_and_amount(raise_error_if_no_rate=False)
+    stock_entry.set_job_card_data()
+    return stock_entry
+
+
+def validate_issue_dialog_row(mr, mr_items, issue_row, index, real_time_issued_stock_qty=None):
+    mr_item_name = issue_row.get("material_request_item")
+    if not mr_item_name or mr_item_name not in mr_items:
+        frappe.throw(_("第 {0} 行物料需求明细不存在或不属于当前物料需求").format(index))
+
+    mr_item = mr_items[mr_item_name]
+    if issue_row.get("item_code") and issue_row.get("item_code") != mr_item.item_code:
+        frappe.throw(_("第 {0} 行物料编码与物料需求明细不一致").format(index))
+
+    qty = flt(issue_row.get("qty"))
+    if qty <= 0:
+        frappe.throw(_("第 {0} 行本次发料数量必须大于 0").format(index))
+
+    uom = get_issue_dialog_row_uom(issue_row, mr_item)
+    conversion_factor = get_issue_dialog_row_conversion_factor(mr_item, uom)
+    remaining_stock_qty = get_material_request_item_remaining_stock_qty(
+        mr_item,
+        real_time_issued_stock_qty,
+    )
+    issue_stock_qty = qty * conversion_factor
+    max_issue_stock_qty = get_issue_dialog_max_issue_stock_qty(remaining_stock_qty, conversion_factor)
+    if issue_stock_qty > max_issue_stock_qty:
+        remaining_qty = flt(max_issue_stock_qty / conversion_factor)
+        frappe.throw(
+            _("第 {0} 行本次发料数量 {1} 超过剩余数量 {2}").format(
+                index,
+                qty,
+                remaining_qty,
+            )
+        )
+
+    if not issue_row.get("s_warehouse"):
+        frappe.throw(_("第 {0} 行缺少发料仓").format(index))
+
+    if get_stock_entry_purpose(mr) != "Material Issue" and not issue_row.get("t_warehouse"):
+        frappe.throw(_("第 {0} 行缺少目标仓库").format(index))
+
+    return mr_item
+
+
+def validate_issue_dialog_rows_not_duplicated(issue_rows):
+    seen = set()
+    for row in issue_rows:
+        mr_item_name = row.get("material_request_item")
+        if not mr_item_name:
+            continue
+
+        if mr_item_name in seen:
+            frappe.throw(_("物料需求明细 {0} 在本次发料中重复").format(mr_item_name))
+
+        seen.add(mr_item_name)
+
+
+def validate_issue_dialog_stock_availability(issue_rows, mr_items):
+    requested_stock_qty_by_item_warehouse = {}
+    row_indexes_by_item_warehouse = {}
+
+    for index, row in enumerate(issue_rows, start=1):
+        mr_item = mr_items.get(row.get("material_request_item"))
+        if not mr_item or not row.get("s_warehouse"):
+            continue
+
+        uom = get_issue_dialog_row_uom(row, mr_item)
+        conversion_factor = get_issue_dialog_row_conversion_factor(mr_item, uom)
+        key = (mr_item.item_code, row.get("s_warehouse"))
+        requested_stock_qty_by_item_warehouse[key] = flt(
+            requested_stock_qty_by_item_warehouse.get(key)
+        ) + flt(row.get("qty")) * conversion_factor
+        row_indexes_by_item_warehouse.setdefault(key, []).append(index)
+
+    for (item_code, warehouse), requested_stock_qty in requested_stock_qty_by_item_warehouse.items():
+        actual_qty = get_item_warehouse_actual_qty(item_code, warehouse)
+        if requested_stock_qty > actual_qty:
+            frappe.throw(
+                _("第 {0} 行物料 {1} 发料数量 {2} 超过仓库 {3} 实际数量 {4}").format(
+                    ", ".join(str(row_index) for row_index in row_indexes_by_item_warehouse[(item_code, warehouse)]),
+                    item_code,
+                    flt(requested_stock_qty),
+                    warehouse,
+                    flt(actual_qty),
+                )
+            )
+
+
+def get_realtime_issued_stock_qty_by_mr_item(mr_item_names):
+    mr_item_names = tuple(mr_item_names or [])
+    if not mr_item_names:
+        return {}
+
+    placeholders = ", ".join(["%s"] * len(mr_item_names))
+    rows = frappe.db.sql(
+        f"""
+        SELECT
+            sed.material_request_item,
+            SUM(
+                CASE
+                    WHEN IFNULL(se.is_return, 0) = 1 THEN -IFNULL(sed.transfer_qty, 0)
+                    ELSE IFNULL(sed.transfer_qty, 0)
+                END
+            ) AS issued_stock_qty
+        FROM `tabStock Entry Detail` sed
+        INNER JOIN `tabStock Entry` se ON se.name = sed.parent
+        WHERE sed.material_request_item IN ({placeholders})
+            AND sed.docstatus = 1
+            AND se.docstatus = 1
+            AND IFNULL(sed.s_warehouse, '') != ''
+        GROUP BY sed.material_request_item
+        """,
+        mr_item_names,
+        as_dict=True,
+    )
+
+    return {row.material_request_item: flt(row.issued_stock_qty) for row in rows}
+
+
+def get_material_request_item_remaining_qty(
+    mr_item,
+    real_time_issued_stock_qty=None,
+    conversion_factor=None,
+):
+    conversion_factor = flt(conversion_factor) or flt(mr_item.get("conversion_factor")) or 1
+    remaining_stock_qty = get_material_request_item_remaining_stock_qty(
+        mr_item,
+        real_time_issued_stock_qty,
+    )
+    return flt(remaining_stock_qty / conversion_factor)
+
+
+def get_material_request_item_remaining_stock_qty(mr_item, real_time_issued_stock_qty=None):
+    conversion_factor = flt(mr_item.get("conversion_factor")) or 1
+    requested_stock_qty = flt(mr_item.get("stock_qty")) or flt(mr_item.get("qty")) * conversion_factor
+
+    if real_time_issued_stock_qty is not None:
+        issued_stock_qty = flt(real_time_issued_stock_qty.get(mr_item.name))
+    else:
+        issued_stock_qty = flt(mr_item.get("custom_transferred_qty") or mr_item.get("ordered_qty"))
+
+    return max(requested_stock_qty - issued_stock_qty, 0)
+
+
+def get_issue_dialog_max_issue_stock_qty(remaining_stock_qty, conversion_factor):
+    remaining_stock_qty = flt(remaining_stock_qty)
+    conversion_factor = flt(conversion_factor) or 1
+    if remaining_stock_qty <= 0:
+        return 0
+
+    return ceil(remaining_stock_qty / conversion_factor) * conversion_factor
+
+
+def get_issue_dialog_row_uom(issue_row, mr_item):
+    return issue_row.get("uom") or mr_item.get("uom") or mr_item.get("stock_uom")
+
+
+def get_issue_dialog_row_conversion_factor(mr_item, uom):
+    from erpnext.stock.get_item_details import get_conversion_factor
+
+    conversion_factor = flt(get_conversion_factor(mr_item.item_code, uom).get("conversion_factor"))
+    if not conversion_factor:
+        frappe.throw(
+            _("物料 {0} 缺少单位 {1} 的换算设置").format(mr_item.item_code, uom)
+        )
+
+    return conversion_factor
+
+
+def get_stock_entry_source_warehouse(mr, issue_rows, mr_items):
+    warehouses = {
+        row.get("s_warehouse")
+        for row in issue_rows
+        if row.get("s_warehouse") and row.get("material_request_item") in mr_items
+    }
+    return next(iter(warehouses)) if len(warehouses) == 1 else None
+
+
+def get_stock_entry_target_warehouse(mr, issue_rows, mr_items):
+    warehouses = {
+        row.get("t_warehouse")
+        for row in issue_rows
+        if row.get("t_warehouse") and row.get("material_request_item") in mr_items
+    }
+    if len(warehouses) == 1:
+        return next(iter(warehouses))
+
+    return mr.get("set_warehouse")
+
+
+@frappe.whitelist()
+def submit_issue_and_push_to_dlm(material_request_name):
+    """
+    一键操作：提交物料需求 → 发料出库 → 提交出库单 → 推送至 DLM。
+
+    步骤 1-3 在同一事务中，任一失败则全部回滚。
+    步骤 4 (push_to_mes) 内部会独立 commit，推送失败时 Stock Entry 仍已提交，
+    返回 partial 状态提示用户手动推送。
+    """
+    mr = frappe.get_doc("Material Request", material_request_name)
+    if not is_mes_integration_enabled(mr.get("company")):
+        throw_mes_integration_disabled(mr.get("company"))
+
+    if mr.docstatus != 0:
+        frappe.throw(_("物料需求必须是草稿状态"))
+
+    # Step 1: 提交物料需求
+    mr.submit()
+
+    # Step 2: 创建发料出库单（基于已提交的物料需求映射）
+    stock_entry = make_issue_stock_entry(mr.name)
+    stock_entry.insert()
+
+    # Step 3: 提交出库单
+    stock_entry.submit()
+
+    # Step 4: 推送至 DLM
+    # push_to_mes 内部在 HTTP 失败时会 frappe.db.commit() 再 raise，
+    # 因此捕获异常，将推送失败视为非致命错误（出库单已提交但未推送）。
+    from mes_integration.mes_integration.stock_entry import push_to_mes
+
+    try:
+        push_result = push_to_mes(stock_entry.name)
+    except Exception:
+        frappe.log_error(title="DLM 推送失败（发料并推送）", message=frappe.get_traceback())
+        return {
+            "status": "partial",
+            "message": _("物料需求已提交，出库单 {0} 已创建并提交，但推送至 DLM 失败，请手动推送。").format(
+                stock_entry.name
+            ),
+            "material_request": mr.name,
+            "stock_entry": stock_entry.name,
+        }
+
+    return {
+        "status": "success",
+        "message": _("物料需求已提交，出库单 {0} 已创建、提交并推送至 DLM。").format(stock_entry.name),
+        "material_request": mr.name,
+        "stock_entry": stock_entry.name,
+        "push_result": push_result,
+    }
+
+
+@frappe.whitelist()
+def batch_issue_and_push_to_dlm(material_requests=None, items=None):
+    """Issue and push submitted, partially unissued Material Requests one by one."""
+    from mes_integration.mes_integration.stock_entry import parse_json_if_needed
+
+    names = parse_json_if_needed(material_requests)
+    grouped_items = parse_json_if_needed(items) if items else {}
+    if not isinstance(names, list) or not names:
+        frappe.throw(_("请选择至少一个物料需求。"))
+
+    results = []
+    for index, name in enumerate(dict.fromkeys(names), start=1):
+        savepoint = f"batch_material_request_{index}"
+        try:
+            frappe.db.savepoint(savepoint)
+            mr = frappe.get_doc("Material Request", name)
+            validate_batch_issue_material_request(mr)
+            issue_rows = grouped_items.get(mr.name) if isinstance(grouped_items, dict) else None
+            result = issue_and_push_to_dlm_from_dialog(mr.name, issue_rows or build_batch_issue_rows(mr))
+            results.append({"material_request": mr.name, **result})
+        except Exception:
+            frappe.db.rollback(save_point=savepoint)
+            results.append(
+                {
+                    "material_request": name,
+                    "status": "failed",
+                    "message": frappe.get_exception_message(),
+                }
+            )
+
+    return {
+        "status": "success" if all(row["status"] == "success" for row in results) else "partial",
+        "results": results,
+    }
+
+
+def validate_batch_issue_material_request(mr):
+    if mr.docstatus != 1:
+        frappe.throw(_("物料需求 {0} 必须已提交。").format(mr.name))
+    if mr.per_ordered >= 100:
+        frappe.throw(_("物料需求 {0} 已发料完成。").format(mr.name))
+
+
+def build_batch_issue_rows(mr):
+    issue_rows = []
+    for row in mr.items:
+        conversion_factor = flt(row.conversion_factor) or 1
+        remaining_stock_qty = max(flt(row.stock_qty) - flt(row.ordered_qty), 0)
+        if remaining_stock_qty <= 0:
+            continue
+
+        issue_rows.append(
+            {
+                "material_request_item": row.name,
+                "item_code": row.item_code,
+                "item_name": row.item_name,
+                "uom": row.uom or row.stock_uom,
+                "request_uom": row.uom or row.stock_uom,
+                "stock_uom": row.stock_uom or row.uom,
+                "conversion_factor": conversion_factor,
+                "qty": remaining_stock_qty / conversion_factor,
+                "s_warehouse": row.from_warehouse or row.warehouse or mr.set_from_warehouse or mr.set_warehouse,
+                "t_warehouse": row.warehouse or mr.set_warehouse,
+            }
+        )
+
+    if not issue_rows:
+        frappe.throw(_("物料需求 {0} 没有可发料的明细。").format(mr.name))
+    return issue_rows
+
+
+def validate_item_details(doc, method=None):
+    if not is_mes_integration_enabled(doc.get("company")):
+        return
+
+    details = doc.get("custom_item_details") or []
+    if not details:
+        return
+
+    item_rows_by_idx = {cint(row.idx): row for row in doc.get("items") if row.idx}
+    item_codes = {row.item_code for row in doc.get("items") if row.item_code}
+
+    for detail in details:
+        if flt(detail.order_qty) < 0:
+            frappe.throw(_("Row {0}: Order Qty cannot be negative").format(detail.idx))
+
+        if flt(detail.issue_qty) < 0:
+            frappe.throw(_("Row {0}: Issue Qty cannot be negative").format(detail.idx))
+
+        if detail.material_request_item_idx:
+            item_row = item_rows_by_idx.get(cint(detail.material_request_item_idx))
+
+            if not item_row:
+                frappe.throw(
+                    _("Row {0}: Material Request Item Row {1} does not exist").format(
+                        detail.idx, detail.material_request_item_idx
+                    )
+                )
+
+            if detail.item_code and detail.item_code != item_row.item_code:
+                frappe.throw(
+                    _("Row {0}: Item Code must match Material Request Item Row {1}").format(
+                        detail.idx, detail.material_request_item_idx
+                    )
+                )
+
+            detail.item_code = item_row.item_code
+            detail.item_name = item_row.item_name
+            detail.uom = detail.get("uom") or item_row.get("uom") or item_row.get("stock_uom")
+            detail.material_request_item = item_row.name
+        elif detail.item_code not in item_codes:
+            frappe.throw(
+                _("Row {0}: Item Code {1} is not in this Material Request").format(
+                    detail.idx, detail.item_code
+                )
+            )
+        elif not detail.get("uom") and detail.item_code:
+            detail.uom = frappe.db.get_value("Item", detail.item_code, "stock_uom")
