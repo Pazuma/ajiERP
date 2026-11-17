@@ -1,0 +1,2 @@
+item_group,item_code,item_name,custom_remarks,custom_product_status,description
+All Item Groups,ITEM-TEST-001,物料-test-001,导入夹具-test-001,测试,测试物料，仅用于导入验证

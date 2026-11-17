@@ -1,0 +1,172 @@
+{
+  "Selling": {
+    "sidebars": ["Selling"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "Customer", "label": "客户"},
+      {"link_type": "DocType", "link_to": "Quotation", "label": "报价单"},
+      {"link_type": "DocType", "link_to": "Sales Order", "label": "销售订单"},
+      {"link_type": "DocType", "link_to": "Delivery Note", "label": "送货单"},
+      {"link_type": "DocType", "link_to": "Sales Invoice", "label": "销售发票"},
+      {"link_type": "DocType", "link_to": "Item Price", "label": "物料价格"},
+      {"link_type": "DocType", "link_to": "Item", "label": "物料表"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Blanket Order", "reason": "长期框架订单"},
+      {"link_type": "DocType", "link_to": "Sales Partner", "reason": "渠道合作资料"},
+      {"link_type": "DocType", "link_to": "Sales Person", "reason": "业务员辅助档案"},
+      {"link_type": "DocType", "link_to": "Campaign", "reason": "营销追踪"},
+      {"link_type": "DocType", "link_to": "UTM Source", "reason": "营销来源"},
+      {"link_type": "DocType", "link_to": "Customer Group", "reason": "客户组织规则"},
+      {"link_type": "DocType", "link_to": "Territory", "reason": "销售区域规则"},
+      {"link_type": "DocType", "link_to": "Contact", "reason": "客户关联联系人"},
+      {"link_type": "DocType", "link_to": "Address", "reason": "客户关联地址"},
+      {"link_type": "DocType", "link_to": "Coupon Code", "reason": "优惠专项配置"},
+      {"link_type": "DocType", "link_to": "Loyalty Program", "reason": "会员专项配置"},
+      {"link_type": "DocType", "link_to": "Loyalty Point Entry", "reason": "会员积分记录"},
+      {"link_type": "DocType", "link_to": "Shipping Rule", "reason": "特殊配送规则"},
+      {"link_type": "DocType", "link_to": "Promotional Scheme", "reason": "促销规则"},
+      {"link_type": "DocType", "link_to": "Pricing Rule", "reason": "特殊定价规则"}
+    ]
+  },
+  "Buying": {
+    "sidebars": ["Buying"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "Supplier", "label": "供应商"},
+      {"link_type": "DocType", "link_to": "Material Request", "label": "采购申请"},
+      {"link_type": "DocType", "link_to": "Request for Quotation", "label": "询价单"},
+      {"link_type": "DocType", "link_to": "Supplier Quotation", "label": "供应商报价"},
+      {"link_type": "DocType", "link_to": "Purchase Order", "label": "采购订单"},
+      {"link_type": "DocType", "link_to": "Purchase Receipt", "label": "采购收货"},
+      {"link_type": "DocType", "link_to": "Purchase Invoice", "label": "采购发票"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Supplier Group", "reason": "供应商组织规则"},
+      {"link_type": "DocType", "link_to": "Contact", "reason": "供应商关联联系人"},
+      {"link_type": "DocType", "link_to": "Address", "reason": "供应商关联地址"},
+      {"link_type": "DocType", "link_to": "Purchase Comparison", "reason": "专项采购比价"},
+      {"link_type": "DocType", "link_to": "Supplier Quote Import", "reason": "报价批量导入工具"},
+      {"link_type": "DocType", "link_to": "Purchase Delay Risk Rule", "reason": "采购延迟规则"},
+      {"link_type": "DocType", "link_to": "Misc Purchase Invoice Request", "reason": "非标准采购发票辅助流程"},
+      {"link_type": "DocType", "link_to": "Quote LLM Settings", "reason": "报价辅助配置"},
+      {"link_type": "DocType", "link_to": "Subcontracting Order", "reason": "委外专项订单"},
+      {"link_type": "DocType", "link_to": "Subcontracting Receipt", "reason": "委外专项收货"},
+      {"link_type": "DocType", "link_to": "Subcontracting BOM", "reason": "委外专项 BOM"}
+    ]
+  },
+  "Stock": {
+    "sidebars": ["Stock"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "Item Group", "label": "物料组"},
+      {"link_type": "DocType", "link_to": "Warehouse", "label": "仓库"},
+      {"link_type": "DocType", "link_to": "UOM", "label": "单位"},
+      {"link_type": "DocType", "link_to": "Stock Entry", "label": "库存凭证"},
+      {"link_type": "Report", "link_to": "Outbound List", "label": "出库清单"},
+      {"link_type": "DocType", "link_to": "Purchase Receipt", "label": "采购入库"},
+      {"link_type": "DocType", "link_to": "Delivery Note", "label": "销售出库"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Product Bundle", "reason": "组合销售配置"},
+      {"link_type": "DocType", "link_to": "Item Alternative", "reason": "替代料资料"},
+      {"link_type": "DocType", "link_to": "Item Manufacturer", "reason": "厂商料号资料"},
+      {"link_type": "DocType", "link_to": "Customs Tariff Number", "reason": "关务资料"},
+      {"link_type": "DocType", "link_to": "Item Attribute", "reason": "物料变式属性"},
+      {"link_type": "DocType", "link_to": "Item Variant Settings", "reason": "物料变式配置"},
+      {"link_type": "DocType", "link_to": "UOM Conversion Factor", "reason": "单位换算规则"},
+      {"link_type": "DocType", "link_to": "Landed Cost Voucher", "reason": "成本分摊专项单据"},
+      {"link_type": "DocType", "link_to": "Delivery Trip", "reason": "配送路线专项单据"},
+      {"link_type": "DocType", "link_to": "Quality Inspection Template", "reason": "质检模板"},
+      {"link_type": "DocType", "link_to": "Quality Inspection", "reason": "质检专项单据"},
+      {"link_type": "DocType", "link_to": "Serial No", "reason": "序列号专项维护"},
+      {"link_type": "DocType", "link_to": "Batch", "reason": "批次专项维护"},
+      {"link_type": "DocType", "link_to": "Serial and Batch Bundle", "reason": "序列号批次组合维护"}
+    ]
+  },
+  "Accounts": {
+    "sidebars": ["Accounts", "Accounts Setup"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "Payment Entry", "label": "收付款"},
+      {"link_type": "DocType", "link_to": "Sales Invoice", "label": "销售发票"},
+      {"link_type": "DocType", "link_to": "Purchase Invoice", "label": "采购发票"},
+      {"link_type": "DocType", "link_to": "Account", "label": "会计科目"},
+      {"link_type": "DocType", "link_to": "Company", "label": "公司"},
+      {"link_type": "DocType", "link_to": "Cost Center", "label": "成本中心"},
+      {"link_type": "DocType", "link_to": "Mode of Payment", "label": "收付款方式"},
+      {"link_type": "DocType", "link_to": "Bank Account", "label": "银行账户"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Payment Request", "reason": "催收通知辅助流程"},
+      {"link_type": "DocType", "link_to": "Dunning", "reason": "逾期催收专项单据"},
+      {"link_type": "DocType", "link_to": "Journal Entry Template", "reason": "账务模板"},
+      {"link_type": "DocType", "link_to": "Invoice Discounting", "reason": "发票融资专项单据"},
+      {"link_type": "DocType", "link_to": "Subscription Plan", "reason": "订阅专项配置"},
+      {"link_type": "DocType", "link_to": "Subscription", "reason": "订阅专项单据"},
+      {"link_type": "DocType", "link_to": "Shareholder", "reason": "股东专项资料"},
+      {"link_type": "DocType", "link_to": "Share Transfer", "reason": "股权变更专项单据"},
+      {"link_type": "DocType", "link_to": "Bank", "reason": "银行基础资料"},
+      {"link_type": "DocType", "link_to": "Bank Clearance", "reason": "银行清账专项单据"},
+      {"link_type": "DocType", "link_to": "Budget", "reason": "预算配置"},
+      {"link_type": "DocType", "link_to": "Accounting Dimension", "reason": "会计维度配置"},
+      {"link_type": "DocType", "link_to": "Cost Center Allocation", "reason": "成本中心分摊配置"},
+      {"link_type": "DocType", "link_to": "Monthly Distribution", "reason": "月度分摊配置"}
+    ]
+  },
+  "Projects": {
+    "sidebars": ["Projects"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "Project", "label": "项目"},
+      {"link_type": "DocType", "link_to": "Task", "label": "任务"},
+      {"link_type": "DocType", "link_to": "Timesheet", "label": "工时表"},
+      {"link_type": "DocType", "link_to": "Activity Type", "label": "活动类型"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Project Template", "reason": "项目模板"},
+      {"link_type": "DocType", "link_to": "Project Progress Template", "reason": "项目流程进度模板"},
+      {"link_type": "DocType", "link_to": "Project Type", "reason": "项目分类规则"},
+      {"link_type": "DocType", "link_to": "Project Update", "reason": "项目进度辅助记录"},
+      {"link_type": "DocType", "link_to": "Activity Cost", "reason": "工时成本规则"}
+    ]
+  },
+  "Manufacturing": {
+    "sidebars": ["Manufacturing"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "BOM", "label": "BOM汇总"},
+      {"link_type": "DocType", "link_to": "Work Order", "label": "生产工单"},
+      {"link_type": "DocType", "link_to": "Job Card", "label": "工序作业卡"},
+      {"link_type": "DocType", "link_to": "Stock Entry", "label": "库存凭证"},
+      {"link_type": "DocType", "link_to": "Timesheet", "label": "工时记录"},
+      {"link_type": "DocType", "link_to": "Plant Floor", "label": "车间"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Workstation Type", "reason": "工位类型配置"},
+      {"link_type": "DocType", "link_to": "Workstation", "reason": "工位基础资料"},
+      {"link_type": "DocType", "link_to": "Operation", "reason": "工序基础资料"},
+      {"link_type": "DocType", "link_to": "Routing", "reason": "工艺路线配置"},
+      {"link_type": "DocType", "link_to": "Engineering Drawing", "reason": "工程图纸资料"},
+      {"link_type": "DocType", "link_to": "Engineering Drawing Settings", "reason": "工程图纸设置"}
+    ]
+  },
+  "Assets": {
+    "sidebars": ["Assets"],
+    "common_links": [
+      {"link_type": "DocType", "link_to": "Asset", "label": "固定资产"},
+      {"link_type": "DocType", "link_to": "Asset Category", "label": "资产类别"},
+      {"link_type": "DocType", "link_to": "Location", "label": "位置"}
+    ],
+    "links": [
+      {"link_type": "DocType", "link_to": "Asset Movement", "reason": "资产调拨"},
+      {"link_type": "DocType", "link_to": "Asset Maintenance Team", "reason": "资产维护团队"},
+      {"link_type": "DocType", "link_to": "Asset Maintenance", "reason": "资产维护计划"},
+      {"link_type": "DocType", "link_to": "Asset Maintenance Log", "reason": "资产维护记录"},
+      {"link_type": "DocType", "link_to": "Asset Value Adjustment", "reason": "资产价值调整"},
+      {"link_type": "DocType", "link_to": "Asset Repair", "reason": "资产维修"},
+      {"link_type": "DocType", "link_to": "Asset Capitalization", "reason": "资产资本化"}
+    ]
+  },
+  "KPI Dashboard": {
+    "sidebars": ["KPI Dashboard"],
+    "links": [
+      {"link_type": "DocType", "link_to": "Aging Period Rule", "reason": "应收账龄规则"},
+      {"link_type": "DocType", "link_to": "KPI Target", "reason": "运营指标目标配置"}
+    ]
+  }
+}

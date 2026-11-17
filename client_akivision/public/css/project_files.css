@@ -1,0 +1,58 @@
+.project-files-panel {
+	max-width: 960px;
+}
+
+.project-files-toolbar,
+.project-file-item,
+.project-file-main,
+.project-file-actions {
+	display: flex;
+	align-items: center;
+}
+
+.project-files-toolbar {
+	justify-content: flex-end;
+	margin-bottom: 12px;
+}
+
+.project-files-list {
+	border-top: 1px solid var(--border-color);
+}
+
+.project-file-item {
+	justify-content: space-between;
+	min-height: 64px;
+	padding: 10px 4px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.project-file-main {
+	min-width: 0;
+	gap: 10px;
+}
+
+.project-file-icon {
+	color: var(--text-muted);
+}
+
+.project-file-details {
+	min-width: 0;
+}
+
+.project-file-details > a {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.project-file-actions {
+	flex: 0 0 auto;
+	gap: 6px;
+	margin-left: 12px;
+}
+
+.project-files-empty {
+	padding: 28px 4px;
+	text-align: center;
+}

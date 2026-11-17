@@ -20,6 +20,8 @@ class SampleLoanOut(Document):
 
     def validate(self):
         self.set_defaults()
+        from client_akivision.utils.sample_loan_settings import prepare
+        prepare(self)
         self.validate_contract_no()
         self.validate_serial_numbers()
         self.calculate_totals()
@@ -48,7 +50,7 @@ class SampleLoanOut(Document):
         seen_serials = set()
         for row in self.items:
             self.set_item_customer_defaults(row)
-            if not row.customer:
+            if not row.customer and not row.get("supplier"):
                 frappe.throw(_("Row {0}: Customer is required.").format(row.idx))
 
             if not row.serial_no:
@@ -96,7 +98,7 @@ class SampleLoanOut(Document):
 
     def set_item_customer_defaults(self, row):
         """Carry legacy header values into rows while new documents use row-level data."""
-        if not row.customer and self.customer:
+        if not row.customer and not row.get("supplier") and self.customer:
             row.customer = self.customer
         if not row.loaned_by:
             row.loaned_by = self.loaned_by or frappe.session.user

@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "records": {
+    "customer_list": {
+      "doctype": "Customer",
+      "list_fields": ["custom_customer_code", "customer_name", "customer_group", "territory", "custom_responsible_business_name"],
+      "detail_sections": [
+        {"label": "基础资料", "fields": ["custom_customer_code", "customer_name", "customer_group", "territory", "custom_responsible_business_name"]},
+        {"label": "Excel 联系信息", "fields": ["custom_excel_contact_name", "custom_excel_contact_phone", "custom_excel_address"]}
+      ],
+      "child_tables": [],
+      "related_records": ["联系人与地址", "销售订单", "送货单/发票", "收款与账龄", "服务记录"],
+      "computed_fields": ["应收余额", "账龄", "最近交易日期"],
+      "search_fields": ["custom_customer_code", "customer_name"],
+      "filter_fields": ["customer_group", "territory", "custom_responsible_business_name"],
+      "field_placements": {
+        "custom_customer_code": "list", "customer_name": "list", "customer_group": "list", "territory": "list",
+        "custom_responsible_business_name": "list", "custom_excel_contact_name": "detail",
+        "custom_excel_contact_phone": "detail", "custom_excel_address": "detail"
+      }
+    },
+    "supplier_list": {
+      "doctype": "Supplier",
+      "list_fields": ["custom_supplier_code", "supplier_name", "supplier_primary_contact", "supplier_group", "supplier_type", "custom_cooperation_status", "custom_credit_days"],
+      "detail_sections": [
+        {"label": "基础资料", "fields": ["custom_supplier_code", "supplier_name", "supplier_group", "supplier_type", "custom_cooperation_status", "custom_credit_days"]},
+        {"label": "采购与备注", "fields": ["custom_supplier_remarks"]}
+      ],
+      "child_tables": [],
+      "related_records": ["联系人与地址", "供应商价格", "采购订单", "收货/发票", "付款", "供应商绩效"],
+      "computed_fields": ["最近采购日期", "及时率", "应付余额"],
+      "search_fields": ["custom_supplier_code", "supplier_name"],
+      "filter_fields": ["supplier_group", "supplier_type", "custom_cooperation_status"],
+      "field_placements": {
+        "custom_supplier_code": "list", "supplier_name": "list", "supplier_primary_contact": "list", "supplier_group": "list", "supplier_type": "list",
+        "custom_cooperation_status": "list", "custom_credit_days": "list", "custom_supplier_remarks": "detail"
+      }
+    },
+    "contact_list": {
+      "doctype": "Contact",
+      "list_fields": ["first_name", "company_name", "status"],
+      "detail_sections": [{"label": "联系人资料", "fields": ["first_name", "last_name", "company_name", "designation", "department", "status"]}],
+      "child_tables": [],
+      "related_records": ["客户", "供应商", "地址"],
+      "computed_fields": [],
+      "search_fields": ["name", "first_name", "company_name"],
+      "filter_fields": ["status", "company_name"],
+      "field_placements": {
+        "first_name": "list", "last_name": "detail", "company_name": "list",
+        "designation": "detail", "department": "detail", "status": "list"
+      }
+    },
+    "payment_terms": {
+      "doctype": "Payment Terms Template",
+      "list_fields": ["custom_mode_code", "template_name"],
+      "detail_sections": [{"label": "基础资料", "fields": ["custom_mode_code", "template_name"]}],
+      "child_tables": [{"table_field": "terms", "label": "分期规则", "fields": ["payment_term"]}],
+      "related_records": ["销售订单", "采购订单", "发票"],
+      "computed_fields": ["到期日"],
+      "search_fields": ["custom_mode_code", "template_name"],
+      "filter_fields": [],
+      "field_placements": {"custom_mode_code": "list", "template_name": "list", "terms.payment_term": "child"}
+    },
+    "project_list": {
+      "doctype": "Project",
+      "list_fields": ["custom_project_code", "project_name", "custom_application_date", "expected_start_date", "expected_end_date", "custom_project_leader"],
+      "detail_sections": [{"label": "项目资料", "fields": ["custom_project_code", "project_name", "custom_application_date", "expected_start_date", "expected_end_date", "estimated_costing", "custom_project_budget_total", "custom_project_leader", "custom_department_manager", "custom_business_impact"]}],
+      "child_tables": [{"table_field": "custom_project_budget_details", "label": "预算明细", "fields": ["expense_category", "amount", "calculation_basis", "remarks"]}],
+      "related_records": ["任务", "销售/采购订单", "工单", "工时", "费用"],
+      "computed_fields": ["实际成本", "完成率", "剩余预算"],
+      "search_fields": ["custom_project_code", "project_name"],
+      "filter_fields": ["custom_project_leader", "expected_start_date", "expected_end_date"],
+      "field_placements": {"custom_project_code": "list", "project_name": "list", "custom_application_date": "list", "expected_start_date": "list", "expected_end_date": "list", "estimated_costing": "detail", "custom_project_budget_total": "detail", "custom_project_leader": "list", "custom_department_manager": "detail", "custom_business_impact": "detail", "custom_project_budget_details.expense_category": "child", "custom_project_budget_details.amount": "child", "custom_project_budget_details.calculation_basis": "child", "custom_project_budget_details.remarks": "child"}
+    },
+    "product_list": {
+      "doctype": "Item",
+      "list_fields": ["item_code", "item_name", "item_group", "custom_product_category", "custom_product_status"],
+      "detail_sections": [{"label": "基础资料", "fields": ["item_group", "item_code", "item_name", "custom_product_name", "custom_product_category", "custom_remarks", "custom_product_status", "description"]}],
+      "child_tables": [],
+      "related_records": ["BOM与工程图纸", "供应商价格", "采购/销售单据", "库存流水", "安全库存参数"],
+      "computed_fields": ["当前库存", "可用量", "在途量", "最近采购价"],
+      "search_fields": ["item_code", "item_name", "description"],
+      "filter_fields": ["item_group", "custom_product_category", "custom_product_status"],
+      "field_placements": {"item_group": "list", "item_code": "list", "item_name": "list", "custom_product_name": "detail", "custom_product_category": "list", "custom_remarks": "detail", "custom_product_status": "list", "description": "detail"}
+    },
+    "bom": {
+      "doctype": "BOM",
+      "list_fields": ["name", "custom_bom_code", "item", "custom_excel_model", "custom_excel_item_name", "custom_excel_drawing_no", "quantity", "custom_engineering_drawing_no", "is_active", "is_default"],
+      "detail_sections": [
+        {"label": "BOM 头信息", "fields": ["custom_bom_code", "item", "item_name", "custom_excel_model", "custom_excel_item_name", "custom_excel_drawing_no", "company", "quantity", "uom", "is_active", "is_default"]},
+        {"label": "工程图纸", "fields": ["custom_engineering_drawing", "custom_engineering_drawing_no", "custom_engineering_drawing_revision"]}
+      ],
+      "child_tables": [{"table_field": "items", "label": "物料明细", "fields": ["item_code", "item_name", "custom_excel_model", "custom_excel_item_name", "custom_excel_drawing_no", "custom_excel_level", "custom_engineering_drawing_no", "custom_engineering_drawing_revision", "qty", "uom", "bom_no"]}],
+      "related_records": ["工程图纸", "生产工单", "反向使用关系", "版本变更", "BOM 展开结构"],
+      "computed_fields": ["BOM 成本", "可用版本", "层级"],
+      "search_fields": ["name", "custom_bom_code", "item", "item_name"],
+      "filter_fields": ["item", "company", "is_active", "is_default"],
+      "field_placements": {"name": "list", "custom_bom_code": "list", "item": "list", "item_name": "detail", "custom_excel_model": "list", "custom_excel_item_name": "list", "custom_excel_drawing_no": "list", "company": "detail", "quantity": "list", "uom": "detail", "custom_engineering_drawing": "detail", "custom_engineering_drawing_no": "list", "custom_engineering_drawing_revision": "detail", "is_active": "list", "is_default": "list", "items.item_code": "child", "items.item_name": "child", "items.custom_excel_model": "child", "items.custom_excel_item_name": "child", "items.custom_excel_drawing_no": "child", "items.custom_excel_level": "child", "items.custom_import_level": "child", "items.custom_engineering_drawing_no": "child", "items.custom_engineering_drawing_revision": "child", "items.qty": "child", "items.uom": "child", "items.bom_no": "child"}
+    },
+    "safety_stock": {
+      "doctype": "Item",
+      "list_fields": ["item_code", "item_name", "item_group", "stock_uom"],
+      "detail_sections": [{"label": "物料基础资料", "fields": ["item_code", "item_name", "item_group", "stock_uom", "custom_safety_stock_remarks"]}],
+      "child_tables": [{"table_field": "reorder_levels", "label": "仓库补货参数", "fields": ["warehouse", "warehouse_reorder_level", "warehouse_reorder_qty", "material_request_type", "custom_max_stock_limit"]}],
+      "related_records": ["库存余额", "采购建议", "在途订单"],
+      "computed_fields": ["预警状态", "建议补货量"],
+      "search_fields": ["item_code", "item_name"],
+      "filter_fields": ["item_group", "stock_uom"],
+      "field_placements": {"item_code": "list", "item_name": "list", "item_group": "list", "stock_uom": "list", "custom_safety_stock_remarks": "detail", "reorder_levels.warehouse": "child", "reorder_levels.warehouse_reorder_level": "child", "reorder_levels.warehouse_reorder_qty": "child", "reorder_levels.material_request_type": "child", "reorder_levels.custom_max_stock_limit": "child"}
+    },
+    "sales_order": {
+      "doctype": "Sales Order",
+      "list_fields": ["name", "customer", "custom_excel_customer_code", "transaction_date", "po_no", "delivery_date", "custom_excel_sales_person", "custom_excel_order_status", "custom_excel_import_status", "custom_remarks"],
+      "detail_sections": [{"label": "订单头信息", "fields": ["customer", "custom_excel_customer_code", "transaction_date", "custom_excel_year", "custom_excel_month", "po_no", "delivery_date", "custom_excel_sales_person", "payment_terms_template", "custom_excel_payment_terms", "custom_excel_payment_days", "custom_is_high_tech_revenue", "custom_excel_order_status", "custom_excel_completion_flag", "custom_excel_full_completion", "custom_excel_invoice_no", "custom_excel_invoice_date", "custom_excel_received_amount", "custom_excel_unreceived_amount", "custom_excel_reconcile_cycle", "custom_excel_agreed_payment_date", "custom_excel_import_status", "custom_remarks"]}],
+      "child_tables": [{"table_field": "items", "label": "订单明细", "fields": ["item_code", "item_name", "custom_excel_goods_name", "custom_excel_model", "qty", "uom", "rate", "custom_excel_order_amount", "delivery_date", "custom_excel_cumulative_delivery_qty", "custom_excel_model_completion", "custom_excel_undelivered_qty", "custom_excel_source_row"]}],
+      "related_records": ["送货单", "销售发票", "收款单", "退换货", "审批记录"],
+      "computed_fields": ["行金额", "订单金额", "累计送货量", "未送货量", "交付状态", "收款状态"],
+      "search_fields": ["name", "po_no", "customer"],
+      "filter_fields": ["customer", "transaction_date", "delivery_date", "payment_terms_template"],
+      "field_placements": {"customer": "list", "custom_excel_customer_code": "list", "transaction_date": "list", "custom_excel_year": "detail", "custom_excel_month": "detail", "po_no": "list", "delivery_date": "list", "custom_excel_sales_person": "list", "payment_terms_template": "detail", "custom_excel_payment_terms": "detail", "custom_excel_payment_days": "detail", "custom_is_high_tech_revenue": "detail", "custom_excel_order_status": "list", "custom_excel_completion_flag": "detail", "custom_excel_full_completion": "detail", "custom_excel_invoice_no": "detail", "custom_excel_invoice_date": "detail", "custom_excel_received_amount": "detail", "custom_excel_unreceived_amount": "detail", "custom_excel_reconcile_cycle": "detail", "custom_excel_agreed_payment_date": "detail", "custom_excel_import_status": "list", "custom_remarks": "list", "items.item_code": "child", "items.item_name": "child", "items.custom_excel_goods_name": "child", "items.custom_excel_model": "child", "items.qty": "child", "items.uom": "child", "items.rate": "child", "items.custom_excel_order_amount": "child", "items.delivery_date": "child", "items.custom_excel_cumulative_delivery_qty": "child", "items.custom_excel_model_completion": "child", "items.custom_excel_undelivered_qty": "child", "items.custom_excel_source_row": "child"}
+    },
+    "purchase_order": {
+      "doctype": "Purchase Order",
+      "list_fields": ["name", "supplier", "custom_excel_order_no", "transaction_date", "schedule_date", "custom_excel_total_amount", "custom_excel_reconciliation_status"],
+      "detail_sections": [{"label": "采购头信息", "fields": ["supplier", "transaction_date", "schedule_date", "custom_excel_category", "custom_excel_order_no", "custom_excel_total_amount", "custom_excel_remarks", "custom_excel_source_file", "custom_excel_source_rows", "custom_excel_reconciliation_status"]}],
+      "child_tables": [{"table_field": "items", "label": "采购明细", "fields": ["item_code", "item_name", "custom_excel_sequence", "custom_excel_item_name", "qty", "uom", "rate", "custom_excel_amount", "custom_excel_tax_rate", "schedule_date", "custom_excel_model", "custom_excel_order_qty", "custom_excel_delivered_qty", "custom_excel_undelivered_qty", "custom_excel_delivery_1_qty", "custom_excel_delivery_1_date", "custom_excel_delivery_2_qty", "custom_excel_delivery_2_date", "custom_excel_delivery_3_qty", "custom_excel_delivery_3_date", "custom_excel_delivery_4_qty", "custom_excel_delivery_4_date", "custom_excel_delivery_5_qty", "custom_excel_delivery_5_date", "custom_excel_delivery_6_qty", "custom_excel_delivery_6_date", "custom_excel_delivery_7_qty", "custom_excel_delivery_7_date", "custom_excel_return_1_qty", "custom_excel_return_1_date", "custom_excel_return_2_qty", "custom_excel_return_2_date", "custom_excel_replenished_qty", "custom_excel_replenished_date", "custom_excel_pending_replenishment_qty", "custom_excel_reconciled_qty", "custom_excel_reconciliation_status", "custom_excel_item_remarks", "custom_excel_source_row"]}, {"table_field": "custom_delivery_plans", "label": "交货计划", "fields": ["purchase_order_item", "item_code", "sequence", "planned_qty", "planned_date", "remarks"]}],
+      "related_records": ["询价/比价", "采购收货", "退货", "采购发票", "付款"],
+      "computed_fields": ["订单金额", "已收数量", "未收数量", "到货状态", "对账状态"],
+      "search_fields": ["name", "supplier"],
+      "filter_fields": ["supplier", "transaction_date", "schedule_date", "payment_terms_template"],
+      "field_placements": {"supplier": "list", "custom_excel_order_no": "list", "transaction_date": "list", "schedule_date": "list", "custom_excel_total_amount": "list", "custom_excel_reconciliation_status": "list", "custom_excel_category": "detail", "custom_excel_remarks": "detail", "custom_excel_source_file": "detail", "custom_excel_source_rows": "detail", "items.item_code": "child", "items.item_name": "child", "items.custom_excel_item_name": "child", "items.qty": "child", "items.uom": "child", "items.rate": "child", "items.custom_excel_amount": "child", "items.custom_excel_tax_rate": "child", "items.schedule_date": "child", "items.custom_excel_model": "child", "items.custom_excel_order_qty": "child", "items.custom_excel_delivered_qty": "child", "items.custom_excel_undelivered_qty": "child", "items.custom_excel_reconciled_qty": "child", "items.custom_excel_reconciliation_status": "child", "items.custom_excel_item_remarks": "child", "items.custom_excel_source_row": "child", "custom_delivery_plans.purchase_order_item": "child", "custom_delivery_plans.item_code": "child", "custom_delivery_plans.sequence": "child", "custom_delivery_plans.planned_qty": "child", "custom_delivery_plans.planned_date": "child", "custom_delivery_plans.remarks": "child"}
+    },
+    "purchase_receipt": {
+      "doctype": "Purchase Receipt",
+      "list_fields": ["name", "supplier", "posting_date", "set_warehouse", "custom_excel_receipt_type", "custom_excel_delivery_note", "custom_lens_receipt_no", "custom_reconciliation_date", "remarks"],
+      "detail_sections": [{"label": "收货头信息", "fields": ["supplier", "posting_date", "posting_time", "set_warehouse", "supplier_delivery_note", "custom_excel_receipt_type", "custom_excel_delivery_note", "custom_lens_receipt_no", "custom_reconciliation_date", "custom_excel_supplier_name", "custom_excel_operator", "custom_excel_source_row", "remarks"]}],
+      "child_tables": [{"table_field": "items", "label": "收货明细", "fields": ["item_code", "item_name", "custom_excel_item_name", "custom_version", "custom_excel_version", "custom_applicable_model", "custom_excel_applicable_model", "custom_item_group", "custom_excel_item_group", "qty", "custom_excel_source_qty", "uom", "warehouse", "custom_excel_warehouse", "purchase_order", "custom_excel_purchase_order", "rate", "amount", "custom_excel_total_amount", "custom_excel_delivery_note", "custom_excel_source_row"]}],
+      "related_records": ["采购订单", "质量检验", "采购发票", "库存流水"],
+      "computed_fields": ["合格数量", "拒收数量", "供应商交期绩效"],
+      "search_fields": ["name", "supplier"],
+      "filter_fields": ["supplier", "posting_date", "set_warehouse", "custom_excel_receipt_type", "custom_excel_delivery_note", "custom_lens_receipt_no"],
+      "field_placements": {"supplier": "list", "posting_date": "list", "posting_time": "detail", "set_warehouse": "list", "supplier_delivery_note": "detail", "custom_excel_receipt_type": "list", "custom_excel_delivery_note": "list", "custom_lens_receipt_no": "list", "custom_reconciliation_date": "list", "custom_excel_supplier_name": "detail", "custom_excel_operator": "detail", "custom_excel_source_row": "detail", "remarks": "detail", "items.item_code": "child", "items.item_name": "child", "items.custom_excel_item_name": "child", "items.custom_version": "child", "items.custom_excel_version": "child", "items.custom_applicable_model": "child", "items.custom_excel_applicable_model": "child", "items.custom_item_group": "child", "items.custom_excel_item_group": "child", "items.qty": "child", "items.custom_excel_source_qty": "child", "items.uom": "child", "items.warehouse": "child", "items.custom_excel_warehouse": "child", "items.purchase_order": "child", "items.custom_excel_purchase_order": "child", "items.rate": "child", "items.amount": "child", "items.custom_excel_total_amount": "child", "items.custom_excel_delivery_note": "child", "items.custom_excel_source_row": "child"}
+    },
+    "delivery_note": {
+      "doctype": "Delivery Note",
+      "list_fields": ["name", "customer", "posting_date", "custom_excel_year", "custom_excel_month", "custom_excel_sales_person", "custom_excel_delivery_no", "custom_excel_invoice_no", "custom_excel_invoice_date", "custom_excel_order_status", "custom_remarks"],
+      "detail_sections": [{"label": "送货头信息", "fields": ["customer", "custom_excel_customer_name", "posting_date", "custom_excel_year", "custom_excel_month", "custom_excel_sales_person", "po_no", "custom_excel_delivery_no", "custom_excel_invoice_no", "custom_excel_invoice_date", "custom_excel_order_status", "custom_remarks"]}],
+      "child_tables": [{"table_field": "items", "label": "送货明细", "fields": ["item_code", "custom_excel_model", "custom_excel_unit", "qty", "uom", "rate", "custom_excel_order_amount", "warehouse"]}],
+      "related_records": ["销售订单", "销售发票", "收款", "退货", "序列号"],
+      "computed_fields": ["累计送货量", "开票状态", "收款状态"],
+      "search_fields": ["name", "customer"],
+      "filter_fields": ["customer", "posting_date"],
+      "field_placements": {"customer": "list", "custom_excel_customer_name": "detail", "posting_date": "list", "custom_excel_year": "list", "custom_excel_month": "list", "custom_excel_sales_person": "list", "po_no": "detail", "custom_excel_delivery_no": "list", "custom_excel_invoice_no": "list", "custom_excel_invoice_date": "list", "custom_excel_order_status": "list", "posting_time": "detail", "custom_remarks": "detail", "items.item_code": "child", "items.custom_excel_model": "child", "items.custom_excel_unit": "child", "items.qty": "child", "items.uom": "child", "items.rate": "child", "items.custom_excel_order_amount": "child", "items.warehouse": "child"}
+    },
+    "payment_received": {
+      "doctype": "Payment Entry",
+      "list_fields": ["name", "payment_type", "party", "posting_date", "paid_amount", "received_amount"],
+      "detail_sections": [{"label": "收款信息", "fields": ["payment_type", "party_type", "party", "posting_date", "paid_from", "paid_to", "paid_amount", "received_amount", "reference_no", "reference_date"]}],
+      "child_tables": [{"table_field": "references", "label": "收款核销", "fields": ["reference_doctype", "reference_name", "allocated_amount"]}],
+      "related_records": ["销售订单", "送货单", "销售发票", "银行流水"],
+      "computed_fields": ["已分配金额", "未分配金额", "结清状态", "应收账龄"],
+      "search_fields": ["name", "party", "reference_no"],
+      "filter_fields": ["party", "posting_date", "payment_type"],
+      "field_placements": {"payment_type": "list", "party_type": "detail", "party": "list", "posting_date": "list", "paid_from": "detail", "paid_to": "detail", "paid_amount": "list", "received_amount": "list", "reference_no": "detail", "reference_date": "detail", "references.reference_doctype": "child", "references.reference_name": "child", "references.allocated_amount": "child"}
+    },
+    "purchase_payment": {
+      "doctype": "Payment Entry",
+      "list_fields": ["name", "payment_type", "party", "posting_date", "paid_amount", "received_amount"],
+      "detail_sections": [{"label": "付款信息", "fields": ["payment_type", "party_type", "party", "posting_date", "paid_from", "paid_to", "paid_amount", "received_amount", "reference_no", "reference_date"]}],
+      "child_tables": [{"table_field": "references", "label": "付款核销", "fields": ["reference_doctype", "reference_name", "allocated_amount"]}],
+      "related_records": ["采购订单", "采购收货", "采购发票", "银行流水"],
+      "computed_fields": ["已分配金额", "未分配金额", "对账状态", "应付账龄"],
+      "search_fields": ["name", "party", "reference_no"],
+      "filter_fields": ["party", "posting_date", "payment_type"],
+      "field_placements": {"payment_type": "list", "party_type": "detail", "party": "list", "posting_date": "list", "paid_from": "detail", "paid_to": "detail", "paid_amount": "list", "received_amount": "list", "reference_no": "detail", "reference_date": "detail", "references.reference_doctype": "child", "references.reference_name": "child", "references.allocated_amount": "child"}
+    },
+    "stock_entry": {
+      "doctype": "Stock Entry",
+      "list_fields": ["name", "stock_entry_type", "posting_date", "from_warehouse", "to_warehouse"],
+      "detail_sections": [{"label": "库存事务", "fields": ["stock_entry_type", "posting_date", "posting_time", "from_warehouse", "to_warehouse", "remarks"]}],
+      "child_tables": [{"table_field": "items", "label": "库存明细", "fields": ["item_code", "qty", "uom", "s_warehouse", "t_warehouse", "basic_rate"]}],
+      "related_records": ["采购/销售单据", "工单", "盘点", "报废", "批次/SN"],
+      "computed_fields": ["实时库存", "累计入出库", "库存金额"],
+      "search_fields": ["name", "stock_entry_type"],
+      "filter_fields": ["stock_entry_type", "posting_date", "from_warehouse", "to_warehouse"],
+      "field_placements": {"stock_entry_type": "list", "posting_date": "list", "posting_time": "detail", "from_warehouse": "list", "to_warehouse": "list", "remarks": "detail", "items.item_code": "child", "items.qty": "child", "items.uom": "child", "items.s_warehouse": "child", "items.t_warehouse": "child", "items.basic_rate": "child"}
+    },
+    "finished_goods_status": {
+      "doctype": "Finished Goods Status",
+      "list_fields": ["serial_no", "status", "sub_status", "warehouse", "customer", "work_order_no"],
+      "detail_sections": [{"label": "成品状态", "fields": ["serial_no", "in_qty", "in_date", "status", "sub_status", "warehouse", "customer", "contact_person", "loan_or_sales_by", "loan_or_sales_no", "loan_or_sales_date", "work_order_no", "sample_loan_out", "sales_order", "remarks"]}],
+      "child_tables": [],
+      "related_records": ["序列号", "生产工单", "样品借出/归还", "销售订单/送货"],
+      "computed_fields": ["当前状态", "状态流转时长"],
+      "search_fields": ["serial_no", "customer", "work_order_no"],
+      "filter_fields": ["status", "sub_status", "warehouse"],
+      "field_placements": {"serial_no": "list", "in_qty": "detail", "in_date": "detail", "status": "list", "sub_status": "list", "warehouse": "list", "customer": "list", "contact_person": "detail", "loan_or_sales_by": "detail", "loan_or_sales_no": "detail", "loan_or_sales_date": "detail", "work_order_no": "list", "sample_loan_out": "detail", "sales_order": "detail", "remarks": "detail"}
+    },
+    "asset_list": {
+      "doctype": "Asset",
+      "list_fields": ["custom_asset_code", "asset_name", "custom_asset_specification", "custom_asset_serial_no", "asset_category", "location", "purchase_date", "custom_asset_status"],
+      "detail_sections": [{"label": "资产卡片", "fields": ["custom_asset_code", "asset_name", "custom_asset_specification", "custom_asset_serial_no", "purchase_date", "available_for_use_date", "custom_asset_depreciation_years", "net_purchase_amount", "custom_asset_monthly_depreciation", "location", "department", "custom_asset_department", "custodian", "custom_asset_custodian", "custom_asset_status", "custom_asset_remarks", "custom_national_asset_classification_code", "company", "asset_category", "total_number_of_depreciations", "frequency_of_depreciation"]}],
+      "child_tables": [],
+      "related_records": ["折旧明细", "维护记录", "资产移动", "处置记录", "附件"],
+      "computed_fields": ["累计折旧", "账面净值", "资产状态"],
+      "search_fields": ["custom_asset_code", "asset_name"],
+      "filter_fields": ["asset_category", "location", "purchase_date"],
+      "field_placements": {"custom_asset_code": "list", "asset_name": "list", "custom_asset_specification": "list", "custom_asset_serial_no": "list", "asset_category": "list", "location": "list", "purchase_date": "list", "available_for_use_date": "detail", "custom_asset_depreciation_years": "detail", "net_purchase_amount": "detail", "custom_asset_monthly_depreciation": "detail", "department": "detail", "custom_asset_department": "detail", "custodian": "detail", "custom_asset_custodian": "detail", "custom_asset_status": "list", "custom_asset_remarks": "detail", "custom_national_asset_classification_code": "detail", "company": "detail", "total_number_of_depreciations": "detail", "frequency_of_depreciation": "detail"}
+    },
+    "timesheet": {
+      "doctype": "Timesheet",
+      "list_fields": ["name", "employee"],
+      "detail_sections": [{"label": "工时头信息", "fields": ["employee", "custom_excel_employee_name", "custom_excel_department"]}],
+      "child_tables": [{"table_field": "time_logs", "label": "工时明细", "fields": ["activity_type", "project", "custom_work_order", "custom_excel_date", "hours", "custom_excel_total_hours", "from_time", "to_time"]}],
+      "related_records": ["工单", "项目", "人工成本", "审批"],
+      "computed_fields": ["总工时", "人工成本"],
+      "search_fields": ["name", "employee"],
+      "filter_fields": ["employee"],
+      "field_placements": {"employee": "list", "custom_excel_employee_name": "list", "custom_excel_department": "detail", "time_logs.activity_type": "child", "time_logs.project": "child", "time_logs.custom_work_order": "child", "time_logs.custom_excel_date": "child", "time_logs.hours": "child", "time_logs.custom_excel_total_hours": "child", "time_logs.from_time": "child", "time_logs.to_time": "child"}
+    },
+    "sample_loan_out": {
+      "doctype": "Sample Loan Out",
+      "list_fields": ["name", "customer", "loan_date", "expected_return_date", "loaned_by", "loan_form"],
+      "detail_sections": [{"label": "借出资料", "fields": ["customer", "company", "loan_date", "expected_return_date", "loan_form", "loaned_by", "phone", "remarks"]}],
+      "child_tables": [{"table_field": "items", "label": "样品明细", "fields": ["customer", "serial_no", "item_code", "source_warehouse", "loaned_by", "contact_person", "phone", "loan_form", "loan_warehouse"]}],
+      "related_records": ["样品归还", "转销售", "库存流水", "合同/附件"],
+      "computed_fields": ["物料编码（由SN带出）", "来源仓库（由SN带出）", "归还数量", "当前状态", "逾期天数"],
+      "search_fields": ["name", "customer"],
+      "filter_fields": ["customer", "loan_date", "expected_return_date", "loan_form"],
+      "field_placements": {"customer": "list", "company": "detail", "loan_date": "list", "expected_return_date": "list", "loan_form": "list", "loaned_by": "list", "phone": "detail", "remarks": "detail", "items.customer": "child", "items.serial_no": "child", "items.item_code": "child", "items.source_warehouse": "child", "items.loaned_by": "child", "items.contact_person": "child", "items.phone": "child", "items.loan_form": "child", "items.loan_warehouse": "child"}
+    },
+    "sample_loan_in": {
+      "doctype": "Sample Loan In",
+      "list_fields": ["name", "supplier", "loan_date", "expected_return_date", "loaned_by", "loan_form"],
+      "detail_sections": [{"label": "借入资料", "fields": ["supplier", "company", "loan_date", "expected_return_date", "loan_form", "contract_no", "loaned_by", "contact_person", "phone", "remarks"]}],
+      "child_tables": [{"table_field": "items", "label": "样品明细", "fields": ["supplier_part_no", "supplier_model", "item_code", "qty", "serial_no", "loan_warehouse"]}],
+      "related_records": ["归还记录", "去向/转借", "库存或非库存追踪", "合同/附件"],
+      "computed_fields": ["归还数量", "当前去向", "借入状态"],
+      "search_fields": ["name", "supplier"],
+      "filter_fields": ["supplier", "loan_date", "expected_return_date", "loan_form"],
+      "field_placements": {"supplier": "list", "company": "detail", "loan_date": "list", "expected_return_date": "list", "loan_form": "list", "contract_no": "detail", "loaned_by": "list", "contact_person": "detail", "phone": "detail", "remarks": "detail", "items.supplier_part_no": "child", "items.supplier_model": "child", "items.item_code": "child", "items.qty": "child", "items.serial_no": "child", "items.loan_warehouse": "child"}
+    },
+    "supplier_review": {"doctype":"Supplier", "list_fields": ["supplier_name", "custom_review_total_orders", "custom_review_on_time_orders", "custom_review_on_time_rate", "custom_review_rating"], "detail_sections": [{"label": "供应商绩效回顾", "fields": ["supplier_name", "custom_review_total_orders", "custom_review_on_time_orders", "custom_review_on_time_rate", "custom_review_delayed_orders", "custom_review_average_delay_days", "custom_review_rating"]}], "child_tables": [], "related_records": ["采购订单", "收货单"], "computed_fields": ["系统实时绩效"], "search_fields": ["supplier_name"], "filter_fields": ["custom_review_rating"]},
+    "live_stock": {"doctype":"Item", "list_fields": ["item_code", "item_name", "custom_live_stock_version", "custom_live_stock_applicable_model", "custom_live_stock_qty", "custom_live_stock_new_warehouse"], "detail_sections": [{"label": "实时库存快照", "fields": ["item_code", "item_name", "custom_live_stock_version", "custom_live_stock_applicable_model", "custom_live_stock_category", "custom_live_stock_opening_qty", "custom_live_stock_total_in_qty", "custom_live_stock_total_out_qty", "custom_live_stock_qty", "custom_live_stock_new_warehouse", "custom_live_stock_count_date", "custom_live_stock_unit_price", "custom_live_stock_total_value", "custom_live_stock_remarks", "custom_live_stock_old_warehouse"]}], "child_tables": [], "related_records": ["库存流水", "来源单据", "安全库存"], "computed_fields": ["系统当前库存", "库存金额", "在途量"], "search_fields": ["item_code", "item_name"], "filter_fields": ["custom_live_stock_new_warehouse", "custom_live_stock_count_date"]},
+    "summary_calculation": {"list_fields": ["指标名称", "统计期间", "当前值"], "detail_sections": [{"label": "统计明细", "fields": ["公式", "过滤条件", "来源单据"]}], "child_tables": [], "related_records": ["销售", "采购", "生产", "库存"], "computed_fields": ["汇总值", "达成率", "预警状态"], "search_fields": ["指标名称"], "filter_fields": ["统计期间"]},
+    "dashboard_summary": {"list_fields": ["指标名称", "当前值", "目标值", "预警状态"], "detail_sections": [{"label": "看板下钻", "fields": ["趋势", "异常明细", "统计口径"]}], "child_tables": [], "related_records": ["来源业务单据", "经营报表"], "computed_fields": ["当前值", "达成率", "预警状态"], "search_fields": ["指标名称"], "filter_fields": ["统计期间", "公司", "业务员", "仓库"]}
+  }
+}

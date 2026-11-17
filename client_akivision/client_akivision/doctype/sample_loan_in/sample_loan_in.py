@@ -13,6 +13,8 @@ from client_akivision.utils.sample_loan import (
 
 class SampleLoanIn(Document):
     def validate(self):
+        from client_akivision.utils.sample_loan_settings import prepare
+        prepare(self)
         self.set_defaults()
         self.validate_items()
         self.calculate_totals()

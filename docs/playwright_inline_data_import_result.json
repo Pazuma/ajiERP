@@ -1,0 +1,26 @@
+{
+  "tested_at": "2026-08-25T10:15:21.433Z",
+  "browser": "Chromium",
+  "results": [
+    {
+      "name": "导入入口弹窗化",
+      "status": "passed",
+      "details": "列表导入菜单打开弹窗且未改变路由"
+    },
+    {
+      "name": "简化默认路径与高级字段选择",
+      "status": "passed",
+      "details": "默认只显示推荐模板和上传入口，展开高级设置后展示字段选择"
+    },
+    {
+      "name": "上传与预览",
+      "status": "passed",
+      "details": "上传文件后在弹窗内展示预览"
+    },
+    {
+      "name": "后台导入反馈",
+      "status": "passed",
+      "details": "弹窗启动标准导入任务并显示完成状态"
+    }
+  ]
+}

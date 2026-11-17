@@ -1,0 +1,23 @@
+{
+ "app": "client_akivision",
+ "bg_color": "blue",
+ "creation": "2026-10-16 06:35:29.811028",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "database",
+ "icon_type": "Link",
+ "idx": 102,
+ "label": "\u57fa\u7840\u8d44\u6599",
+ "link_to": "\u57fa\u7840\u8d44\u6599",
+ "link_type": "Workspace Sidebar",
+ "logo_url": "/assets/erpnext/icons/desktop_icons/solid/stock.svg?v=master-data-blue-1",
+ "modified": "2026-10-16 06:35:29.811028",
+ "modified_by": "Administrator",
+ "name": "\u57fa\u7840\u8d44\u6599",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "sidebar": "\u57fa\u7840\u8d44\u6599",
+ "standard": 1
+}

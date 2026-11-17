@@ -1,0 +1,117 @@
+{
+ "doctype": "DocType",
+ "name": "Product Cost Investment",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "project",
+  "expense_type",
+  "actual_amount",
+  "budget_reference",
+  "remaining_estimate",
+  "allocation_percent",
+  "recovered_amount",
+  "separate_charge",
+  "recovery_method",
+  "amortization_qty",
+  "rd_markup_rate",
+  "source_key",
+  "source_refs",
+  "manual_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "project",
+   "label": "项目",
+   "fieldtype": "Link",
+   "options": "Project",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "expense_type",
+   "label": "投入分类",
+   "fieldtype": "Data",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "actual_amount",
+   "label": "已发生金额(报价币种)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "budget_reference",
+   "label": "预算参考(不计成本)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remaining_estimate",
+   "label": "预计剩余投入",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "allocation_percent",
+   "label": "本产品分摊比例(%)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "0",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "recovered_amount",
+   "label": "本产品已回收金额",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "separate_charge",
+   "label": "本次单独收取(未税)",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "recovery_method",
+   "label": "回收方式",
+   "fieldtype": "Select",
+   "options": "Amortize\nSeparate\nMixed",
+   "default": "Amortize"
+  },
+  {
+   "fieldname": "amortization_qty",
+   "label": "摊销数量",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "rd_markup_rate",
+   "label": "研发加价率(%)",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "source_key",
+   "label": "来源唯一键",
+   "fieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_refs",
+   "label": "来源记录",
+   "fieldtype": "Long Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "manual_reason",
+   "label": "手工依据",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": []
+}

@@ -8,9 +8,37 @@ const customer_list_before_render = customer_list_settings.before_render;
 customer_list_settings.add_fields = [
 	...(customer_list_settings.add_fields || []),
 	"customer_name",
+	"custom_customer_code",
 ];
 
+// Treat the system ID as a configurable column only in this list's metadata.
+customer_list_settings.hide_name_column = true;
+
 customer_list_settings.onload = function(listview) {
+	const id_field = { fieldname: "name", label: __("ID"), fieldtype: "Data",
+		in_list_view: 1, permlevel: 0, read_only: 1 };
+	listview.meta = { ...listview.meta, fields: listview.meta.fields
+		.filter((field) => field.fieldname !== "name")
+		.map((field) => field.fieldname === "custom_customer_code"
+			? { ...field, in_list_view: 1 } : field).concat(id_field) };
+	frappe.meta.docfield_map.Customer.name = id_field;
+	// The standard settings dialog reads the shared metadata, rather than
+	// listview.meta. Expose the list-only field while constructing that dialog.
+	const show_list_settings = listview.show_list_settings.bind(listview);
+	listview.show_list_settings = function () {
+		frappe.model.with_doctype("Customer", () => {
+			const get_meta = frappe.get_meta;
+			const list_meta = this.meta;
+			frappe.get_meta = function (doctype, ...args) {
+				return doctype === "Customer" ? list_meta : get_meta.call(this, doctype, ...args);
+			};
+			try {
+				show_list_settings();
+			} finally {
+				frappe.get_meta = get_meta;
+			}
+		});
+	};
 	if (customer_list_onload) {
 		customer_list_onload(listview);
 	}
@@ -24,6 +52,7 @@ customer_list_settings.onload = function(listview) {
 	}
 
 	setup_customer_columns(listview);
+	listview.setup_columns();
 	listview.render_header(true);
 };
 
@@ -47,65 +76,6 @@ customer_list_settings.formatters = {
 
 function setup_customer_columns(listview) {
 	customer_list_settings._listview = listview;
-
-	if (!Array.isArray(listview.columns)) {
-		return;
-	}
-
-	// 第一列：勾选框 + 客户编号（显示 name）
-	const subject_col = (listview.columns || []).find((col) => col.type === "Subject");
-	if (subject_col) {
-		subject_col.df = {
-			fieldname: "name",
-			label: __("客户编号"),
-			fieldtype: "Data",
-		};
-	}
-
-	// 第二列：客户名称
-	remove_customer_field_column(listview, "customer_name");
-	const customer_name_col = {
-		type: "Field",
-		df: {
-			fieldname: "customer_name",
-			label: __("客户名称"),
-			fieldtype: "Data",
-		},
-	};
-	listview.columns.splice(1, 0, customer_name_col);
-
-	// 移除末尾 Frappe 自动添加的 name ID 列，避免重复
-	remove_customer_field_column(listview, "name");
-
-	// 负责业务列放在最后一列
-	remove_customer_field_column(listview, "custom_first_sales_person");
-	const salesperson_col = {
-		type: "Field",
-		df: {
-			label: __("负责业务"),
-			fieldname: "custom_first_sales_person",
-			fieldtype: "Data",
-		},
-	};
-	listview.columns.push(salesperson_col);
-}
-
-function remove_customer_column(listview, fieldname) {
-	const index = (listview.columns || []).findIndex(
-		(col) => col.df?.fieldname === fieldname
-	);
-	if (index !== -1) {
-		listview.columns.splice(index, 1);
-	}
-}
-
-function remove_customer_field_column(listview, fieldname) {
-	const index = (listview.columns || []).findIndex(
-		(col) => col.type === "Field" && col.df?.fieldname === fieldname
-	);
-	if (index !== -1) {
-		listview.columns.splice(index, 1);
-	}
 }
 
 function load_customer_extra_columns(listview) {
@@ -151,3 +121,4 @@ function customer_list_text(value) {
 }
 
 })();
+// Export actions are registered by the shared document export list hook.

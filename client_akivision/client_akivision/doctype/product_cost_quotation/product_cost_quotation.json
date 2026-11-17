@@ -1,0 +1,442 @@
+{
+ "doctype": "DocType",
+ "name": "Product Cost Quotation",
+ "module": "Client Akivision",
+ "autoname": "format:PCQ-{YYYY}-{#####}",
+ "is_submittable": 1,
+ "track_changes": 1,
+ "engine": "InnoDB",
+ "title_field": "product_name",
+ "search_fields": "item_code,provisional_model,project",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "field_order": [
+  "customer_tab",
+  "identity",
+  "company",
+  "item_code",
+  "provisional_model",
+  "identity_col_2",
+  "product_name",
+  "commercial",
+  "customer",
+  "contact",
+  "contact_phone",
+  "commercial_col_2",
+  "quotation_date",
+  "currency",
+  "exchange_rate",
+  "commercial_col_3",
+  "tax_rate",
+  "sales_contact",
+  "sales_phone",
+  "quote_section",
+  "quote_preview",
+  "terms_tab",
+  "valid_until",
+  "terms",
+  "cost_tab",
+  "result",
+  "scenario_matrix",
+  "manual_entry_tab",
+  "actual_reference_header",
+  "references_tab",
+  "actual_reference_view",
+  "scenario_edit_section",
+  "scenarios",
+  "materials_tab",
+  "materials",
+  "operations_tab",
+  "operations",
+  "investments_tab",
+  "investments",
+  "source_section",
+  "bom_no",
+  "source_type",
+  "minimum_sales_qty",
+  "source_col",
+  "project",
+  "reference_work_order",
+  "pricing_method",
+  "pricing_details",
+  "target_margin",
+  "pricing_col_2",
+  "cost_ratio",
+  "estimate_details",
+  "estimate_acknowledged",
+  "estimate_col",
+  "estimate_reason",
+  "reference_data_section",
+  "actual_reference_json",
+  "reference_warnings_col",
+  "source_warnings",
+  "reference_metadata_section",
+  "source_refreshed_at",
+  "reference_metadata_col",
+  "calculation_version",
+  "reference_technical_section",
+  "snapshot_hash",
+  "previous_version",
+  "amended_from",
+  "quote_display_hash",
+  "source_context_json"
+ ],
+ "fields": [
+  {"fieldname": "customer_tab", "label": "对客报价", "fieldtype": "Tab Break"},
+  {"fieldname": "cost_tab", "label": "成本核算", "fieldtype": "Tab Break"},
+  {"fieldname": "manual_entry_tab", "label": "人工录入与确认", "fieldtype": "Tab Break"},
+  {"fieldname": "source_section", "label": "产品与来源设置", "fieldtype": "Section Break"},
+  {"fieldname": "scenario_edit_section", "label": "编辑批量与最终报价", "fieldtype": "Section Break"},
+  {"fieldname": "source_col", "fieldtype": "Column Break"},
+  {"fieldname": "quote_section", "label": "报价阶梯", "fieldtype": "Section Break"},
+  {"fieldname": "quote_preview", "label": "对客报价阶梯", "fieldtype": "HTML"},
+  {"fieldname": "sales_contact", "label": "我方联系人", "fieldtype": "Data"},
+  {"fieldname": "sales_phone", "label": "我方联系电话", "fieldtype": "Data"},
+  {"fieldname": "quote_display_hash", "label": "报价展示校验", "fieldtype": "Data", "read_only": 1, "hidden": 1},
+  {"fieldname": "source_context_json", "label": "来源上下文", "fieldtype": "Long Text", "read_only": 1, "hidden": 1},
+  {
+   "fieldname": "identity",
+   "label": "产品与来源",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "company",
+   "label": "公司",
+   "fieldtype": "Link",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "item_code",
+   "label": "产品",
+   "fieldtype": "Link",
+   "options": "Item",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "provisional_model",
+   "label": "暂定型号",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "identity_col_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_name",
+   "label": "产品名称",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "bom_no",
+   "label": "BOM版本",
+   "fieldtype": "Link",
+   "options": "BOM"
+  },
+  {
+   "fieldname": "source_type",
+   "label": "来源",
+   "fieldtype": "Select",
+   "options": "Direct\nItem\nProject\nWork Order",
+   "default": "Direct",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "identity_col_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project",
+   "label": "主项目",
+   "fieldtype": "Link",
+   "options": "Project",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "reference_work_order",
+   "label": "参考生产工单",
+   "fieldtype": "Link",
+   "options": "Work Order"
+  },
+  {
+   "fieldname": "commercial",
+   "label": "报价条件",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "customer",
+   "label": "客户",
+   "fieldtype": "Link",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "contact",
+   "label": "联系人",
+   "fieldtype": "Link",
+   "options": "Contact"
+  },
+  {
+   "fieldname": "contact_phone",
+   "label": "联系电话",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "commercial_col_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "quotation_date",
+   "label": "报价日期",
+   "fieldtype": "Date",
+   "default": "Today",
+   "reqd": 1
+  },
+  {
+   "fieldname": "currency",
+   "label": "报价币种",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "exchange_rate",
+   "label": "公司本币至报价币种汇率",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "1",
+   "reqd": 1
+  },
+  {
+   "fieldname": "commercial_col_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_rate",
+   "label": "销售税率(%)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "13"
+  },
+  {
+   "fieldname": "minimum_sales_qty",
+   "label": "建议接单MOQ",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "200"
+  },
+  {
+   "fieldname": "pricing_method",
+   "label": "定价方式",
+   "fieldtype": "Select",
+   "options": "Target Margin\nCost Ratio",
+   "default": "Target Margin",
+   "reqd": 1
+  },
+  {
+   "fieldname": "pricing_details",
+   "label": "定价参数",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "target_margin",
+   "label": "目标毛利率(%)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "40"
+  },
+  {
+   "fieldname": "pricing_col_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cost_ratio",
+   "label": "成本占售价比例(%)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "40"
+  },
+  {
+   "fieldname": "estimate_details",
+   "label": "估算确认",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "estimate_acknowledged",
+   "label": "确认估算依据及来源完整性",
+   "fieldtype": "Check"
+  },
+  {"fieldname": "estimate_col", "fieldtype": "Column Break"},
+  {
+   "fieldname": "estimate_reason",
+   "label": "估算确认说明",
+   "fieldtype": "Small Text",
+   "max_height": "75px"
+  },
+  {
+   "fieldname": "result",
+   "label": "核算概览",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "scenario_matrix",
+   "label": "批量成本与报价",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "scenarios",
+   "label": "批量报价",
+   "fieldtype": "Table",
+   "options": "Product Cost Scenario",
+   "reqd": 1
+  },
+  {
+   "fieldname": "materials_tab",
+   "label": "材料明细",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "materials",
+   "label": "材料",
+   "fieldtype": "Table",
+   "options": "Product Cost Material"
+  },
+  {
+   "fieldname": "operations_tab",
+   "label": "制造工时",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "operations",
+   "label": "工序",
+   "fieldtype": "Table",
+   "options": "Product Cost Operation"
+  },
+  {
+   "fieldname": "investments_tab",
+   "label": "项目投入",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "investments",
+   "label": "一次性投入",
+   "fieldtype": "Table",
+   "options": "Product Cost Investment"
+  },
+  {
+   "fieldname": "references_tab",
+   "label": "来源与实际参考",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "actual_reference_view",
+   "label": "工单实际参考与工时对比",
+   "fieldtype": "HTML"
+  },
+  {"fieldname": "actual_reference_header", "fieldtype": "HTML"},
+  {"fieldname": "reference_data_section", "fieldtype": "Section Break"},
+  {"fieldname": "reference_warnings_col", "fieldtype": "Column Break"},
+  {"fieldname": "reference_metadata_section", "fieldtype": "Section Break"},
+  {"fieldname": "reference_metadata_col", "fieldtype": "Column Break"},
+  {"fieldname": "reference_technical_section", "fieldtype": "Section Break", "label": "技术校验信息", "collapsible": 1, "collapsible_depends_on": "eval:0"},
+  {
+   "fieldname": "actual_reference_json",
+   "label": "工单实际参考",
+   "fieldtype": "Long Text",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "source_warnings",
+   "label": "来源提示",
+   "fieldtype": "Long Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_refreshed_at",
+   "label": "来源读取时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snapshot_hash",
+   "label": "快照校验",
+   "fieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "calculation_version",
+   "label": "核算版本",
+   "fieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_version",
+   "label": "上一版本",
+   "fieldtype": "Link",
+   "options": "Product Cost Quotation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "label": "修订自",
+   "fieldtype": "Link",
+   "options": "Product Cost Quotation",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "terms_tab",
+   "label": "条款",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "valid_until",
+   "label": "报价有效期",
+   "fieldtype": "Date"
+  },
+  {
+   "fieldname": "terms",
+   "label": "报价条款",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Accounts User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 1
+  }
+ ]
+}

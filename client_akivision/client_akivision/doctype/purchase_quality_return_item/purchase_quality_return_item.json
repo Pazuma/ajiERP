@@ -1,0 +1,13 @@
+{
+ "doctype":"DocType", "name":"Purchase Quality Return Item", "module":"Client Akivision", "engine":"InnoDB", "istable":1,
+ "field_order":["item_code","item_name","qty","uom","rejection_reason","purchase_order_item","quality_inspection_item"],
+ "fields":[
+  {"fieldname":"item_code","label":"物料编码","fieldtype":"Link","options":"Item","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"item_name","label":"物料名称","fieldtype":"Data","read_only":1,"in_list_view":1},
+  {"fieldname":"qty","label":"退货数量","fieldtype":"Float","reqd":1,"in_list_view":1},
+  {"fieldname":"uom","label":"单位","fieldtype":"Link","options":"UOM","read_only":1,"in_list_view":1},
+  {"fieldname":"rejection_reason","label":"不合格原因","fieldtype":"Small Text"},
+  {"fieldname":"purchase_order_item","label":"采购订单明细","fieldtype":"Data","read_only":1,"hidden":1},
+  {"fieldname":"quality_inspection_item","label":"质检明细","fieldtype":"Data","read_only":1,"hidden":1}
+ ]
+}

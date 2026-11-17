@@ -5,6 +5,8 @@ from client_akivision.client_akivision.api.operations_kpi import get_high_tech_p
 
 
 def execute(filters=None):
+	from client_akivision.utils.project_permissions import require_project_finance
+	require_project_finance()
 	data = get_high_tech_project_rows(normalise_filters(filters))
 	total = sum(flt(row.high_tech_revenue) for row in data)
 	for row in data:

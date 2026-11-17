@@ -1,0 +1,80 @@
+/* Unified high-contrast controls for Desk forms, lists, reports and dialogs. */
+.form-control,
+.input-with-feedback,
+.awesomplete > input,
+.page-form .form-control,
+.standard-filter-section .form-control,
+.filter-field .form-control,
+.modal .form-control,
+.form-layout .form-control,
+.grid-row-open .form-control {
+	background-color: #fff !important;
+	color: #111827 !important;
+	border: 1px solid #d9dee5 !important;
+	box-shadow: none !important;
+}
+
+.form-control::placeholder,
+.awesomplete > input::placeholder {
+	color: #6b7280 !important;
+	opacity: 1;
+}
+
+.form-control:focus,
+.input-with-feedback:focus,
+.awesomplete > input:focus,
+.page-form .form-control:focus,
+.standard-filter-section .form-control:focus,
+.filter-field .form-control:focus,
+.modal .form-control:focus,
+.form-layout .form-control:focus,
+.grid-row-open .form-control:focus {
+	background-color: #fff !important;
+	color: #111827 !important;
+	border-color: var(--blue-500) !important;
+	box-shadow: 0 0 0 1px var(--blue-500) !important;
+}
+
+.form-control:disabled,
+.form-control[readonly],
+.input-with-feedback:disabled,
+.input-with-feedback[readonly] {
+	background-color: #fff !important;
+	color: #111827 !important;
+	opacity: 1 !important;
+}
+
+select.form-control,
+input.form-control,
+textarea.form-control {
+	-webkit-text-fill-color: #111827 !important;
+}
+
+.control-value,
+.like-disabled-input {
+	background-color: #fff !important;
+	color: #111827 !important;
+	border: 1px solid #d9dee5 !important;
+}
+
+/* Soft blue surfaces for the compact controls in Desk page headers. */
+.page-head .page-actions .btn-secondary,
+.page-head .page-actions .btn-default,
+.page-head .page-actions .icon-btn,
+.page-head .page-actions .dropdown-toggle,
+.page-head .page-actions .btn-group > .btn:not(.btn-primary):not(.btn-danger),
+.page-head .page-actions .standard-actions > .btn:not(.btn-primary):not(.btn-danger) {
+	background-color: #eaf4ff !important;
+	border-color: #d3e8ff !important;
+	color: #174a78 !important;
+}
+
+.page-head .page-actions .btn-secondary:hover,
+.page-head .page-actions .btn-default:hover,
+.page-head .page-actions .icon-btn:hover,
+.page-head .page-actions .dropdown-toggle:hover,
+.page-head .page-actions .btn-group > .btn:not(.btn-primary):not(.btn-danger):hover,
+.page-head .page-actions .standard-actions > .btn:not(.btn-primary):not(.btn-danger):hover {
+	background-color: #dcedff !important;
+	border-color: #bfdcff !important;
+}

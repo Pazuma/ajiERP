@@ -1,0 +1,39 @@
+{
+ "doctype": "DocType",
+ "name": "Project Development Budget Detail",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "expense_category",
+   "fieldtype": "Select",
+   "label": "费用分类",
+   "options": "人员人工费\n直接投入费\n固定资产折旧与摊销\n无形资产摊销\n委外研发费用\n其他费用",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "金额",
+   "options": "Company:company:default_currency",
+   "non_negative": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "calculation_basis",
+   "fieldtype": "Small Text",
+   "label": "计算依据",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "备注",
+   "in_list_view": 1
+  }
+ ],
+ "permissions": []
+}

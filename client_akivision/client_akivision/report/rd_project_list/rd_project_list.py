@@ -80,6 +80,11 @@ def get_columns():
 
 def get_data(filters):
     conditions = get_conditions(filters)
+    from client_akivision.utils.project_permissions import project_permission_query
+
+    project_scope = project_permission_query()
+    if project_scope:
+        conditions += " AND " + project_scope.replace("`tabProject`", "p")
     rows = frappe.db.sql(
         f"""
         SELECT

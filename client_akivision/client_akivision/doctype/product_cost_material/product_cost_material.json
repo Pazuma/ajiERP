@@ -1,0 +1,191 @@
+{
+ "doctype": "DocType",
+ "name": "Product Cost Material",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "description",
+  "category",
+  "qty_per_unit",
+  "stock_uom",
+  "purchase_uom",
+  "conversion_factor",
+  "supplier",
+  "pricing_rule",
+  "price_basis",
+  "manual_rate",
+  "price_currency",
+  "price_exchange_rate",
+  "tax_basis",
+  "purchase_tax_rate",
+  "minimum_order_qty",
+  "pack_multiple",
+  "surplus_policy",
+  "loss_method",
+  "loss_rate",
+  "calculation_details_json",
+  "source_key",
+  "source_refs",
+  "manual_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "label": "物料",
+   "fieldtype": "Link",
+   "options": "Item",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "description",
+   "label": "名称/规格",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "category",
+   "label": "类别",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "qty_per_unit",
+   "label": "单台用量",
+   "fieldtype": "Float",
+   "precision": "6",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "stock_uom",
+   "label": "库存单位",
+   "fieldtype": "Link",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "purchase_uom",
+   "label": "采购单位",
+   "fieldtype": "Link",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "conversion_factor",
+   "label": "每采购单位库存量",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "1",
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier",
+   "label": "供应商",
+   "fieldtype": "Link",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "pricing_rule",
+   "label": "阶梯价格规则",
+   "fieldtype": "Link",
+   "options": "Item Supplier Pricing Rule"
+  },
+  {
+   "fieldname": "price_basis",
+   "label": "价格依据",
+   "fieldtype": "Select",
+   "options": "Supplier Rule\nManual",
+   "default": "Supplier Rule",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "manual_rate",
+   "label": "手工采购单价",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "price_currency",
+   "label": "价格币种",
+   "fieldtype": "Link",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "price_exchange_rate",
+   "label": "价格币种至报价币种汇率",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "1"
+  },
+  {
+   "fieldname": "tax_basis",
+   "label": "采购价税务口径",
+   "fieldtype": "Select",
+   "options": "\nExclusive\nInclusive",
+   "reqd": 0
+  },
+  {
+   "fieldname": "purchase_tax_rate",
+   "label": "采购税率(%)",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "minimum_order_qty",
+   "label": "采购MOQ",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "pack_multiple",
+   "label": "包装倍数",
+   "fieldtype": "Float",
+   "precision": "6",
+   "default": "1"
+  },
+  {
+   "fieldname": "surplus_policy",
+   "label": "采购余量承担",
+   "fieldtype": "Select",
+   "options": "Reusable\nCharge Batch",
+   "default": "Reusable"
+  },
+  {
+   "fieldname": "loss_method",
+   "label": "损耗方式",
+   "fieldtype": "Select",
+   "options": "None\nQuantity\nCost",
+   "default": "None"
+  },
+  {
+   "fieldname": "loss_rate",
+   "label": "损耗率(%)",
+   "fieldtype": "Float",
+   "precision": "6"
+  },
+  {
+   "fieldname": "calculation_details_json",
+   "label": "核算明细快照",
+   "fieldtype": "Long Text",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "source_key",
+   "label": "来源唯一键",
+   "fieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_refs",
+   "label": "来源记录",
+   "fieldtype": "Long Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "manual_reason",
+   "label": "手工依据",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": []
+}

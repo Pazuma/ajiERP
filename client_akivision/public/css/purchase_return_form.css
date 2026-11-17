@@ -1,0 +1,46 @@
+.akv-purchase-return-form,
+.akv-purchase-return-form .control-label,
+.akv-purchase-return-form .control-value,
+.akv-purchase-return-form .like-disabled-input,
+.akv-purchase-return-form .form-control,
+.akv-purchase-return-form .section-head,
+.akv-purchase-return-form .static-area,
+.akv-purchase-return-form .text-muted,
+.akv-purchase-return-form .text-extra-muted,
+.akv-purchase-return-form .small,
+.akv-purchase-return-form .help-box,
+.akv-purchase-return-form .field-description,
+.akv-purchase-return-form .description,
+.akv-purchase-return-form .checkbox label,
+.akv-purchase-return-form .grid-footer,
+.akv-purchase-return-form .form-clickable-section,
+.akv-purchase-return-form .layout-side-section,
+.akv-purchase-return-form .layout-side-section * {
+	color: #111827 !important;
+}
+
+.akv-purchase-return-form input,
+.akv-purchase-return-form select,
+.akv-purchase-return-form textarea,
+.akv-purchase-return-form .like-disabled-input,
+.akv-purchase-return-form .control-value,
+.akv-purchase-return-form .form-control {
+	color: #111827 !important;
+	-webkit-text-fill-color: #111827 !important;
+	opacity: 1 !important;
+}
+
+.akv-purchase-return-form .form-control,
+.akv-purchase-return-form .like-disabled-input,
+.akv-purchase-return-form .control-value {
+	background: #fff !important;
+	border: 1px solid #cbd0d6 !important;
+	border-radius: 5px !important;
+	box-shadow: none !important;
+}
+
+.akv-purchase-return-form input::placeholder,
+.akv-purchase-return-form textarea::placeholder {
+	color: #111827 !important;
+	opacity: 1 !important;
+}

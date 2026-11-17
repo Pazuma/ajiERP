@@ -1,5 +1,10 @@
 import frappe
 
+from client_akivision.utils.kpi_page_permissions import (
+    BUSINESS_FORM_OVERVIEW_VIEWER_ROLE,
+    PROJECT_TIMEOUT_VIEWER_ROLE,
+)
+
 
 ICON_NAME = "Operations Management"
 ICON_LABEL = "KPI Dashboard"
@@ -20,10 +25,16 @@ ICON_ROLES = (
     "Manufacturing Manager",
     "Manufacturing User",
 )
+RESTRICTED_PAGE_ROLES = (
+    PROJECT_TIMEOUT_VIEWER_ROLE,
+    BUSINESS_FORM_OVERVIEW_VIEWER_ROLE,
+)
 
 
 def sync_operations_management_desktop_icon():
     """Keep the management dashboard desktop icon in sync after every migrate."""
+    ensure_restricted_page_roles()
+    ensure_business_form_overview_page()
     ensure_operations_management_sidebar()
     values = {
         "app": "client_akivision",
@@ -36,6 +47,9 @@ def sync_operations_management_desktop_icon():
         "idx": get_operations_management_icon_idx(),
         # Follow the AI Assistant pattern: Desktop Icon -> Workspace Sidebar
         # -> Page. Frappe then opens the dashboard in the current Desk shell.
+        # The boot hook supplies a permission-filtered sidebar even when
+        # module filtering omitted it. Keep the module association so Desk
+        # switches the navigation as well as opening its first allowed page.
         "link": None,
         "link_to": DASHBOARD_SIDEBAR_NAME,
         "link_type": "Workspace Sidebar",
@@ -60,7 +74,8 @@ def sync_operations_management_desktop_icon():
         row.role: row.name
         for row in frappe.get_all("Has Role", filters={"parent": ICON_NAME}, fields=["name", "role"])
     }
-    for idx, role in enumerate(ICON_ROLES, start=1):
+    desktop_roles = (*ICON_ROLES, *RESTRICTED_PAGE_ROLES)
+    for idx, role in enumerate(desktop_roles, start=1):
         if name := existing_roles.pop(role, None):
             frappe.db.set_value(
                 "Has Role",
@@ -131,6 +146,8 @@ def ensure_operations_management_sidebar():
     sidebar.standard = 1
 
     page_link = ("Page", "operations-kpi-dashboard")
+    overview_page_link = ("Page", "business-form-overview")
+    timeout_page_link = ("Page", "project-progress-timeout")
     existing = {(row.link_type, row.link_to) for row in sidebar.items}
     if page_link not in existing:
         sidebar.append(
@@ -139,6 +156,30 @@ def ensure_operations_management_sidebar():
                 "icon": "chart",
                 "label": "运营指标看板",
                 "link_to": "operations-kpi-dashboard",
+                "link_type": "Page",
+                "type": "Link",
+            },
+        )
+
+    if overview_page_link not in existing:
+        sidebar.append(
+            "items",
+            {
+                "icon": "list",
+                "label": "业务表单总表",
+                "link_to": "business-form-overview",
+                "link_type": "Page",
+                "type": "Link",
+            },
+        )
+
+    if timeout_page_link not in existing:
+        sidebar.append(
+            "items",
+            {
+                "icon": "clock",
+                "label": "项目节点超时表",
+                "link_to": "project-progress-timeout",
                 "link_type": "Page",
                 "type": "Link",
             },
@@ -160,6 +201,7 @@ def ensure_operations_management_sidebar():
 
     for label, doctype in (
         ("运营指标目标值", "KPI Target"),
+        ("指标定义", "KPI Metric Definition"),
         ("账龄区间规则", "Aging Period Rule"),
         ("Purchase Delay Risk Rule", "Purchase Delay Risk Rule"),
     ):
@@ -181,7 +223,15 @@ def ensure_operations_management_sidebar():
         if not (row.link_type == "Workspace" and row.link_to == ICON_NAME)
     ]
     sidebar.items.sort(
-        key=lambda row: 0 if (row.link_type, row.link_to) == page_link else 1
+        key=lambda row: (
+            0
+            if (row.link_type, row.link_to) == page_link
+            else 1
+            if (row.link_type, row.link_to) == timeout_page_link
+            else 2
+            if (row.link_type, row.link_to) == overview_page_link
+            else 3
+        )
     )
     for idx, row in enumerate(sidebar.items, start=1):
         row.idx = idx
@@ -196,3 +246,63 @@ def ensure_operations_management_sidebar():
         {"app": "client_akivision", "module": "", "standard": 1},
         update_modified=False,
     )
+
+
+def ensure_business_form_overview_page():
+    """Register the standard page record required by Desk routing."""
+    name = "business-form-overview"
+    if frappe.db.exists("Page", name):
+        page = frappe.get_doc("Page", name)
+        expected_roles = {"System Manager", BUSINESS_FORM_OVERVIEW_VIEWER_ROLE}
+        if {row.role for row in page.roles} != expected_roles:
+            page.set("roles", [{"role": role} for role in sorted(expected_roles)])
+            page.flags.ignore_permissions = True
+            page.save(ignore_permissions=True)
+            frappe.db.commit()
+        return
+    page = frappe.get_doc(
+        {
+            "doctype": "Page",
+            "name": name,
+            "page_name": name,
+            "module": "Client Akivision",
+            "title": "业务表单总表",
+            "standard": "Yes",
+            "system_page": 0,
+            "content": None,
+            "roles": [
+                {"role": "System Manager"},
+                {"role": BUSINESS_FORM_OVERVIEW_VIEWER_ROLE},
+            ],
+        }
+    )
+    # Page.autoname truncates new names to 20 characters. This route is
+    # longer, so force the standard JSON name instead of deriving it.
+    page.insert(ignore_permissions=True, set_name=name)
+    # boot_session runs before the request transaction is committed. Persist
+    # the route immediately so Desk can resolve it on the very same session.
+    frappe.db.commit()
+
+
+def ensure_restricted_page_roles():
+    """Create the viewer roles and keep both standard Page records restricted."""
+    for role_name in RESTRICTED_PAGE_ROLES:
+        if not frappe.db.exists("Role", role_name):
+            frappe.get_doc({"doctype": "Role", "role_name": role_name}).insert(ignore_permissions=True)
+
+    page_roles = {
+        "project-progress-timeout": {"System Manager", PROJECT_TIMEOUT_VIEWER_ROLE},
+        "business-form-overview": {"System Manager", BUSINESS_FORM_OVERVIEW_VIEWER_ROLE},
+    }
+    for page_name, expected_roles in page_roles.items():
+        if not frappe.db.exists("Page", page_name):
+            continue
+        page = frappe.get_doc("Page", page_name)
+        if {row.role for row in page.roles} == expected_roles:
+            continue
+        page.set("roles", [{"role": role} for role in sorted(expected_roles)])
+        page.flags.ignore_permissions = True
+        page.save(ignore_permissions=True)
+
+    frappe.cache.delete_key("desktop_icons")
+    frappe.cache.delete_key("bootinfo")

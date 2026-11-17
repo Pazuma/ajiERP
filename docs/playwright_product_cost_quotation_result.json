@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "tested_at": "2026-10-21T04:40:51.641Z",
+  "results": [
+    {
+      "name": "Item真实页面入口",
+      "status": "passed"
+    },
+    {
+      "name": "Project真实页面入口",
+      "status": "passed"
+    },
+    {
+      "name": "Work Order真实页面入口",
+      "status": "passed"
+    },
+    {
+      "name": "直接新增、服务端核算、刷新预览",
+      "status": "passed",
+      "cost": 110
+    },
+    {
+      "name": "来源详情、内部与客户实际下载",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

@@ -6,6 +6,8 @@ import frappe
 SIDEBAR_LINKS = {
 	"Selling": {
 		"reports": (
+			("Report", "Finished Goods Inventory", "成品库存", "finished_goods_inventory"),
+			("Report", "Delivery Detail", "送货明细", "delivery_detail"),
 			("Report", "Delivery List", "送货清单", "delivery_list"),
 			("Report", "Sales Order List", "销售订单清单", "sales_order_list"),
 		),
@@ -19,6 +21,10 @@ SIDEBAR_LINKS = {
 	},
 	"Stock": {
 		"records": (
+			# Stock Ledger Entry is the single source of truth for posted inbound
+			# and outbound movements, including purchase receipts and deliveries.
+			("DocType", "Stock Ledger Entry", "出入库记录"),
+			("DocType", "Finished Goods Status", "成品状态"),
 			("DocType", "Sample Loan Out", "借出样品"),
 			("DocType", "Sample Loan Out Return", "借出归还"),
 			("DocType", "Sample Loan In", "借入样品"),
@@ -32,7 +38,6 @@ SIDEBAR_LINKS = {
 			("Report", "Safety Stock Status", "安全库存状态", "safety_stock_status"),
 			("Report", "Sample Loan Out List", "借出样品清单", "sample_loan_out_list"),
 			("Report", "Sample Loan In List", "借回样品清单", "sample_loan_in_list"),
-			("Report", "Finished Goods Status", "成品状态", "finished_goods_status"),
 			("Report", "Summary Calculation", "汇总计算", "summary_calculation"),
 		),
 	},
@@ -59,12 +64,16 @@ SIDEBAR_LINKS = {
 		"records": (
 			("DocType", "Engineering Drawing", "工程图纸"),
 		),
+		"reports": (
+			("Report", "Workshop Virtual Warehouse Inventory", "车间虚拟仓库存", "workshop_virtual_warehouse_inventory"),
+		),
 	},
 }
 
 HIDDEN_SIDEBAR_LINKS = {
 	"Selling": {("Report", "High-tech Revenue Analysis")},
 	"Buying": {("Report", "Purchase Recommendation")},
+	"Stock": {("Report", "Finished Goods Status")},
 }
 
 OBSOLETE_EMPTY_SECTIONS = {

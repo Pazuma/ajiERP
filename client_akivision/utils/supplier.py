@@ -2,6 +2,17 @@ import frappe
 from frappe.utils import cint
 
 
+def use_imported_supplier_code_as_name(doc, method=None):
+    """Use the imported supplier code as the document name for new imports."""
+    if not frappe.flags.in_import or not doc.is_new():
+        return
+
+    code = str(doc.get("custom_supplier_code") or "").strip()
+    if code:
+        doc.name = code
+        doc.flags.name_set = True
+
+
 @frappe.whitelist()
 def get_supplier_list_details(suppliers):
     """Return credit days from the default payment terms template for each supplier."""

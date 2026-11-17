@@ -1,0 +1,6 @@
+{
+ "doctype": "Report", "name": "China Cost Summary", "report_name": "China Cost Summary",
+ "module": "Client Akivision", "is_standard": "Yes", "report_type": "Script Report",
+ "ref_doctype": "Sales Invoice", "disabled": 0, "prepared_report": 0, "add_total_row": 0,
+ "roles": [{"role":"Accounts User"},{"role":"Accounts Manager"},{"role":"System Manager"}]
+}

@@ -1,0 +1,9 @@
+{
+ "doctype": "Report",
+ "name": "已折旧的物料表",
+ "ref_doctype": "Item",
+ "report_type": "Script Report",
+ "is_standard": "Yes",
+ "module": "Client Akivision",
+ "roles": [{"role":"Stock Manager"},{"role":"Accounts Manager"}]
+}

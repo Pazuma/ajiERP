@@ -1,0 +1,21 @@
+{
+  "tested_at": "2026-08-27T10:30:08.600Z",
+  "browser": "Chromium",
+  "results": [
+    {
+      "name": "订单编号首列与字段完整性",
+      "status": "passed",
+      "details": "订单编号位于首业务列，供应商、状态、日期、金额字段仍保留"
+    },
+    {
+      "name": "点击订单编号进入详情",
+      "status": "passed",
+      "details": "链接使用 Purchase Order.name，点击后进入对应采购订单路由"
+    },
+    {
+      "name": "移动端布局",
+      "status": "passed",
+      "details": "验证页面无视口级横向溢出，订单编号仍可操作"
+    }
+  ]
+}

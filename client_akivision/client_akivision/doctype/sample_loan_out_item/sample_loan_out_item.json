@@ -94,10 +94,9 @@
   },
   {
    "fieldname": "loaned_by",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "借出人",
-   "options": "User"
+   "label": "借出人"
   },
   {
    "fieldname": "contact_person",

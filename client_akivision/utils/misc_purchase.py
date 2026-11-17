@@ -3,6 +3,7 @@
 import frappe
 from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.utils import flt, getdate, today
 
 
@@ -30,7 +31,54 @@ def ensure_schema():
 	"""Create all custom fields and the generic non-stock item safely on every migration."""
 	create_custom_fields(
 		{
-			"Material Request": [
+		"Material Request": [
+			{
+				"fieldname": "custom_excel_category",
+				"label": "分类",
+				"fieldtype": "Data",
+				"insert_after": "company",
+			},
+			{
+					"fieldname": "custom_preferred_supplier",
+					"label": "预选供应商",
+					"fieldtype": "Link",
+					"options": "Supplier",
+					"allow_on_submit": 1,
+					"depends_on": "eval:doc.material_request_type=='Purchase' && doc.custom_purchase_scene!='零星采购'",
+					"insert_after": "company",
+				},
+				{
+					"fieldname": "custom_supplier_comparison_results",
+					"label": "供应商比价结果",
+					"fieldtype": "Table",
+					"options": "Purchase Comparison Row",
+					"read_only": 1,
+					"allow_on_submit": 1,
+					"depends_on": "eval:doc.material_request_type=='Purchase' && doc.custom_purchase_scene!='零星采购'",
+					"insert_after": "items",
+				},
+				{
+					"fieldname": "custom_comparison_status",
+					"label": "比价状态",
+					"fieldtype": "Select",
+					"options": "未执行\n已执行\n需重新比价",
+					"default": "未执行",
+					"read_only": 1,
+					"allow_on_submit": 1,
+					"depends_on": "eval:doc.material_request_type=='Purchase' && doc.custom_purchase_scene!='零星采购'",
+					"insert_after": "custom_preferred_supplier",
+				},
+				{
+					"fieldname": "custom_last_purchase_comparison",
+					"label": "最近采购比价单",
+					"fieldtype": "Link",
+					"options": "Purchase Comparison",
+					"read_only": 1,
+					"no_copy": 1,
+					"allow_on_submit": 1,
+					"depends_on": "eval:doc.material_request_type=='Purchase' && doc.custom_purchase_scene!='零星采购'",
+					"insert_after": "custom_comparison_status",
+				},
 				{
 					"fieldname": "custom_purchase_scene",
 					"label": "采购场景",
@@ -96,10 +144,39 @@ def ensure_schema():
 					"insert_after": "supplier",
 				},
 			],
+			"Purchase Comparison": [
+				{
+					"fieldname": "custom_preferred_supplier",
+					"label": "预选供应商",
+					"fieldtype": "Link",
+					"options": "Supplier",
+					"insert_after": "material_request",
+				},
+			],
+			"Purchase Order": [
+				{
+					"fieldname": "custom_preferred_supplier",
+					"label": "预选供应商",
+					"fieldtype": "Link",
+					"options": "Supplier",
+					"read_only": 1,
+					"insert_after": "supplier",
+				},
+				{
+					"fieldname": "custom_material_request",
+					"label": "来源采购申请",
+					"fieldtype": "Link",
+					"options": "Material Request",
+					"read_only": 1,
+					"no_copy": 1,
+					"insert_after": "custom_preferred_supplier",
+				},
+			],
 		},
 		update=True,
 	)
-	for doctype in ("Material Request", "Purchase Invoice"):
+	make_property_setter("Material Request", "stock_entry", "label", "库存出库单", "Data")
+	for doctype in ("Material Request", "Purchase Invoice", "Purchase Order", "Purchase Comparison"):
 		frappe.clear_cache(doctype=doctype)
 
 

@@ -1,0 +1,36 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Order Cost Quote Snapshot",
+ "module": "Client Akivision",
+ "autoname": "hash",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "title_field": "quotation",
+ "search_fields": "sales_order,item_code,quotation,project",
+ "field_order": [
+  "sales_order", "sales_order_item_key", "item_code", "quotation", "scenario_quantity",
+  "price_applied", "company", "currency", "project", "snapshot_json"
+ ],
+ "fields": [
+  {"fieldname": "sales_order", "label": "销售订单", "fieldtype": "Link", "options": "Sales Order", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "sales_order_item_key", "label": "销售订单行标识", "fieldtype": "Data", "reqd": 1},
+  {"fieldname": "item_code", "label": "产品", "fieldtype": "Link", "options": "Item", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "quotation", "label": "成本报价单", "fieldtype": "Link", "options": "Product Cost Quotation", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "scenario_quantity", "label": "报价批量", "fieldtype": "Float", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "price_applied", "label": "已应用报价建议价", "fieldtype": "Check", "in_list_view": 1},
+  {"fieldname": "company", "label": "公司", "fieldtype": "Link", "options": "Company", "reqd": 1},
+  {"fieldname": "currency", "label": "币种", "fieldtype": "Link", "options": "Currency", "reqd": 1},
+  {"fieldname": "project", "label": "研发项目", "fieldtype": "Link", "options": "Project"},
+  {"fieldname": "snapshot_json", "label": "核算快照", "fieldtype": "Long Text", "reqd": 1}
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "report": 1},
+  {"role": "Accounts Manager", "read": 1, "report": 1},
+  {"role": "Accounts User", "read": 1, "report": 1},
+  {"role": "China Finance Manager", "read": 1, "report": 1},
+  {"role": "China Finance User", "read": 1, "report": 1},
+  {"role": "China Finance Auditor", "read": 1, "report": 1},
+  {"role": "Sales Order Finance Reader", "read": 1, "report": 1},
+  {"role": "Sales Order Finance Editor", "read": 1, "report": 1}
+ ]
+}

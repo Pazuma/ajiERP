@@ -5,7 +5,7 @@ from frappe.utils import flt
 
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
-	return get_columns(), get_data(filters)
+	return get_columns(), get_data(filters) + get_delivery_outbound_data(filters)
 
 
 def get_columns():
@@ -58,6 +58,8 @@ def get_columns():
 			"options": "Stock Entry",
 			"width": 160,
 		},
+		{"label": _("来源单据"), "fieldname": "source_document", "fieldtype": "Data", "width": 160},
+		{"label": _("状态"), "fieldname": "document_status", "fieldtype": "Data", "width": 90},
 	]
 
 
@@ -97,10 +99,11 @@ def get_data(filters):
 			se.stock_entry_type,
 			se.purpose,
 			se.owner,
+			se.docstatus,
 			se.remarks
 		FROM `tabStock Entry Detail` sedi
 		INNER JOIN `tabStock Entry` se ON se.name = sedi.parent
-		WHERE se.docstatus = 1
+			WHERE se.docstatus != 2
 		  AND sedi.s_warehouse IS NOT NULL
 		  AND se.purpose != 'Material Receipt'
 		  -- A transfer is not inherently an outbound transaction. Only the
@@ -140,10 +143,11 @@ def get_data(filters):
 	se_fields = ["name"]
 	se_field_map = {}
 	for target, source in [
-		("issue_category", "custom_issue_category"),
-		("model", "custom_model"),
-		("explanation", "custom_explanation"),
-		("expected_qty", "custom_expected_qty"),
+		("issue_category", "custom_excel_issue_category"),
+		("model", "custom_excel_model"),
+		("explanation", "custom_excel_explanation"),
+		("expected_qty", "custom_excel_expected_qty"),
+		("outbound_no", "custom_excel_outbound_no"),
 	]:
 		if frappe.get_meta("Stock Entry").has_field(source):
 			se_fields.append(source)
@@ -164,8 +168,8 @@ def get_data(filters):
 	sed_fields = ["name"]
 	sed_field_map = {}
 	for target, source in [
-		("model", "custom_model"),
-		("expected_qty", "custom_expected_qty"),
+		("model", "custom_excel_model"),
+		("expected_qty", "custom_excel_expected_qty"),
 	]:
 		if frappe.get_meta("Stock Entry Detail").has_field(source):
 			sed_fields.append(source)
@@ -229,6 +233,8 @@ def get_data(filters):
 					"qty": agg["qty"],
 					"basic_amount": agg["basic_amount"],
 					"stock_entry": row.stock_entry,
+					"source_document": row.stock_entry,
+					"document_status": {0: _("草稿"), 1: _("已提交"), 2: _("已取消")}.get(row.docstatus, ""),
 					"issue_category": issue_category_label,
 					"explanation": se_extra.get(se_field_map.get("explanation")) or "",
 				}
@@ -261,6 +267,8 @@ def get_data(filters):
 				"expected_qty": flt(expected_qty) if expected_qty is not None else None,
 				"posting_date": row.posting_date,
 				"stock_entry": row.stock_entry,
+				"source_document": row.stock_entry,
+				"document_status": {0: _("草稿"), 1: _("已提交"), 2: _("已取消")}.get(row.docstatus, ""),
 				"stock_entry_type": stock_entry_type_label,
 				"warehouse": row.warehouse,
 				"basic_rate": flt(row.basic_rate),
@@ -291,3 +299,70 @@ def get_conditions(filters):
 	if filters.get("warehouse"):
 		conditions.append("AND sedi.s_warehouse = %(warehouse)s")
 	return " ".join(conditions)
+
+
+def get_delivery_outbound_data(filters):
+	"""Add submitted sales Delivery Notes as outbound ledger rows.
+
+	Delivery Note submission is the inventory transaction for sales. It is
+	therefore reported here directly instead of creating a duplicate Stock Entry.
+	"""
+	conditions = []
+	if filters.get("company"):
+		conditions.append("AND dn.company = %(company)s")
+	if filters.get("from_date"):
+		conditions.append("AND dn.posting_date >= %(from_date)s")
+	if filters.get("to_date"):
+		conditions.append("AND dn.posting_date <= %(to_date)s")
+	if filters.get("item_code"):
+		conditions.append("AND dni.item_code = %(item_code)s")
+	if filters.get("warehouse"):
+		conditions.append("AND dni.warehouse = %(warehouse)s")
+	rows = frappe.db.sql(
+		f"""
+		SELECT dn.name AS delivery_note, dn.posting_date, dn.owner, dn.customer,
+			dni.idx, dni.item_code, dni.item_name, dni.qty, dni.rate,
+			dni.amount, dni.warehouse, dni.description, dni.against_sales_order,
+			dn.docstatus, dn.custom_remarks
+		FROM `tabDelivery Note` dn
+		INNER JOIN `tabDelivery Note Item` dni ON dni.parent = dn.name
+		WHERE dn.docstatus = 1 {' '.join(conditions)}
+		ORDER BY dn.posting_date DESC, dn.name DESC, dni.idx
+		""",
+		filters,
+		as_dict=True,
+	)
+	if not rows:
+		return []
+	item_codes = list({row.item_code for row in rows})
+	item_fields = ["name", "item_group", "custom_internal_model"]
+	if frappe.get_meta("Item").has_field("custom_version"):
+		item_fields.append("custom_version")
+	items = {row.name: row for row in frappe.get_all("Item", filters={"name": ["in", item_codes]}, fields=item_fields)}
+	data = []
+	current = None
+	for row in rows:
+		key = row.delivery_note
+		item = items.get(row.item_code, {})
+		if key != current:
+			current = key
+			data.append({
+				"name": f"销售出库 {key}", "parent": None, "indent": 0, "is_group": 1,
+				"posting_date": row.posting_date, "stock_entry_type": _("销售出库"),
+				"owner": row.owner, "qty": 0, "basic_amount": 0, "remarks": row.custom_remarks or "",
+				"source_document": key, "document_status": _("已提交"), "stock_entry": None,
+			})
+			data[-1]["qty"] += flt(row.qty)
+			data[-1]["basic_amount"] += flt(row.amount)
+		data.append({
+			"name": f"{key}#{row.idx}", "parent": f"销售出库 {key}", "indent": 1,
+			"is_group": 0, "name_display": row.item_code, "item_code": row.item_code,
+			"item_name": row.item_name, "version": item.get("custom_version") or "",
+			"internal_model": item.get("custom_internal_model") or "", "item_group": item.get("item_group") or "",
+			"qty": flt(row.qty), "posting_date": row.posting_date, "stock_entry_type": _("销售出库"),
+			"warehouse": row.warehouse, "basic_rate": flt(row.rate), "basic_amount": flt(row.amount),
+			"owner": row.owner, "remarks": row.description or row.custom_remarks or "",
+			"source_document": row.delivery_note, "document_status": _("已提交"),
+			"sales_order": row.against_sales_order,
+		})
+	return data

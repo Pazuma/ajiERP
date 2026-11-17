@@ -70,7 +70,32 @@ def sync_buying_sidebar_entries():
 		icon="receipt-text",
 		child=0,
 	)
-	items = _move_after(items, purchase_receipt.name, "Purchase Order")
+	receiving_notice = _ensure_single_link(
+		items,
+		link_type="DocType",
+		link_to="Purchase Receiving Notice",
+		label="收料通知单",
+		icon="package-check",
+		child=0,
+	)
+	items = _move_after(items, receiving_notice.name, "Purchase Order")
+	items = _move_after(items, purchase_receipt.name, "Purchase Receiving Notice")
+	if frappe.db.exists("DocType", "Purchase Quality Return"):
+		purchase_return = _ensure_single_link(
+			items, link_type="DocType", link_to="Purchase Quality Return",
+			label="采购退货", icon="package", child=0,
+		)
+		items = _move_after(items, purchase_return.name, "Purchase Receipt")
+	if frappe.db.exists("DocType", "Purchase Follow Up"):
+		purchase_follow_up = _ensure_single_link(
+			items,
+			link_type="DocType",
+			link_to="Purchase Follow Up",
+			label="采购对账单",
+			icon="clipboard-check",
+			child=0,
+		)
+		items = _move_after(items, purchase_follow_up.name, "Purchase Receipt")
 
 	supplier_quote_import = _ensure_single_link(
 		items,
@@ -91,6 +116,19 @@ def sync_buying_sidebar_entries():
 		child=0,
 	)
 	items = _move_after(items, purchase_comparison.name, "Supplier Quote Import")
+	consolidation = _ensure_single_link(
+		items,
+		link_type="Page",
+		link_to="supplier-purchase-consolidation",
+		label="按供应商汇总待下单",
+		icon="layers",
+		child=0,
+	)
+	items = _move_after(items, consolidation.name, "Purchase Comparison")
+	purchase_items = _ensure_single_link(
+		items, link_type="Page", link_to="purchase-items", label="物料表", icon="package", child=0,
+	)
+	items = _move_after(items, purchase_items.name, "Purchase Comparison")
 
 	purchase_taxes_template = _ensure_single_link(
 		items,
@@ -143,7 +181,61 @@ def sync_buying_sidebar_entries():
 	# Purchase Receipt / Quote Import / Purchase Comparison at the sidebar end.
 	_reindex(items)
 
+	group_buying_sidebar_entries()
 	frappe.cache.delete_key("bootinfo")
+	frappe.clear_cache()
+
+
+def group_buying_sidebar_entries():
+	"""Group common purchasing links without changing their routes or filters."""
+	if not frappe.db.exists("Workspace Sidebar", SIDEBAR_NAME):
+		return
+	items = _get_items()
+	groups = [
+		("需求与询价", ["Material Request", "Request for Quotation"]),
+		("订购与收货", ["Purchase Order", "Purchase Receiving Notice", "Purchase Receipt", "Purchase Quality Return"]),
+		("对账与开票", ["Purchase Follow Up", "Purchase Invoice"]),
+	]
+	ordered = [item for item in items if item.type == "Link" and item.link_to == "Buying"]
+	used = {item.name for item in ordered}
+	for label, targets in groups:
+		section = next((item for item in items if item.type == "Section Break" and item.label == label), None)
+		if not section:
+			section = _create_item({"type": "Section Break", "label": label, "collapsible": 0})
+		frappe.db.set_value("Workspace Sidebar Item", section.name,
+			{"collapsible": 0, "keep_closed": 0, "child": 0}, update_modified=False)
+		ordered.append(section)
+		used.add(section.name)
+		for target in targets:
+			for item in items:
+				if item.type == "Link" and item.link_to == target and item.name not in used:
+					frappe.db.set_value("Workspace Sidebar Item", item.name, "child", 1, update_modified=False)
+					ordered.append(item)
+					used.add(item.name)
+	# Only the eight workflow forms stay expanded. Keep every other form/page
+	# accessible in one collapsed group, while reports retain their own group.
+	for label, is_report in (("报表", True), ("其他表单", False)):
+		links = [item for item in items if item.type == "Link" and item.name not in used
+			and (item.link_type == "Report") == is_report]
+		if not links:
+			continue
+		labels = {label, "Other Forms" if not is_report else "Reports"}
+		section = _find_section(items, labels)
+		if not section:
+			section = _create_item({"type": "Section Break", "label": label})
+		frappe.db.set_value("Workspace Sidebar Item", section.name,
+			{"collapsible": 1, "keep_closed": 1, "child": 0}, update_modified=False)
+		ordered.append(section)
+		used.add(section.name)
+		for item in links:
+			frappe.db.set_value("Workspace Sidebar Item", item.name, "child", 1, update_modified=False)
+			ordered.append(item)
+			used.add(item.name)
+	# Remove obsolete headings only; no form links or business records are deleted.
+	for item in items:
+		if item.type in {"Section Break", "Card Break", "Sidebar Item Group"} and item.name not in used:
+			frappe.db.delete("Workspace Sidebar Item", {"name": item.name})
+	_reindex(ordered)
 	frappe.clear_cache()
 
 

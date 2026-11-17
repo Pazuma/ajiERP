@@ -44,9 +44,9 @@
 		},
 		{
 			fieldname: "status",
-			label: __("Order Completion Status"),
+			label: __("Order Status"),
 			fieldtype: "Select",
-			options: "\n未交货\n交货中\n已交货",
+			options: "\n未交货\n交货中\n已交货\n未开票\n部分开票\n已开票\n未付款\n部分收款\n已付款\n待开票\n待收款\n已完成",
 		},
 		{
 			fieldname: "is_high_tech",
@@ -65,7 +65,7 @@
 		}
 
 		const formatted = default_formatter(value, row, column, data);
-		if (!value || !["completion_status", "completion_flag", "item_completed", "order_fully_completed", "is_high_tech"].includes(column.fieldname)) {
+		if (!value || !["completion_status", "invoice_status", "collection_status", "final_status", "completion_flag", "item_completed", "order_fully_completed", "is_high_tech"].includes(column.fieldname)) {
 			return formatted;
 		}
 
@@ -73,6 +73,15 @@
 			"已交货": "green",
 			"交货中": "orange",
 			"未交货": "red",
+			"已开票": "green",
+			"部分开票": "orange",
+			"未开票": "red",
+			"已付款": "green",
+			"部分收款": "orange",
+			"未付款": "red",
+			"未收款": "red",
+			"待开票": "orange",
+			"待收款": "orange",
 			"已完成": "green",
 			"未完成": "orange",
 			"是": "green",

@@ -18,7 +18,14 @@
   "returned",
   "return_date",
   "return_reference",
-  "disposition"
+  "disposition",
+  "custom_excel_source_row",
+  "custom_excel_source_status",
+  "custom_excel_is_loaned",
+  "custom_excel_latest_disposition",
+  "custom_excel_source_item_name",
+  "custom_excel_source_model",
+  "custom_excel_source_internal_model"
  ],
  "fields": [
   {
@@ -50,6 +57,13 @@
    "label": "Internal Model",
    "read_only": 1
   },
+  {"fieldname":"custom_excel_source_row","fieldtype":"Int","label":"Excel来源行"},
+  {"fieldname":"custom_excel_source_status","fieldtype":"Data","label":"Excel原始状态"},
+  {"fieldname":"custom_excel_is_loaned","fieldtype":"Data","label":"Excel是否借出"},
+  {"fieldname":"custom_excel_latest_disposition","fieldtype":"Data","label":"最新去向"},
+  {"fieldname":"custom_excel_source_item_name","fieldtype":"Data","label":"Excel品名"},
+  {"fieldname":"custom_excel_source_model","fieldtype":"Data","label":"Excel型号"},
+  {"fieldname":"custom_excel_source_internal_model","fieldtype":"Data","label":"Excel对应阿基型号"},
   {
    "fetch_from": "item_code.custom_external_model",
    "fetch_if_empty": 1,
@@ -115,7 +129,14 @@
    "label": "Disposition",
    "options": "\nReturned\nConverted\nScrapped",
    "read_only": 1
-  }
+  },
+  {"fieldname":"custom_excel_source_row","fieldtype":"Int","label":"Excel来源行"},
+  {"fieldname":"custom_excel_source_status","fieldtype":"Data","label":"Excel原始状态"},
+  {"fieldname":"custom_excel_is_loaned","fieldtype":"Data","label":"Excel是否借出"},
+  {"fieldname":"custom_excel_latest_disposition","fieldtype":"Data","label":"最新去向"},
+  {"fieldname":"custom_excel_source_item_name","fieldtype":"Data","label":"Excel品名"},
+  {"fieldname":"custom_excel_source_model","fieldtype":"Data","label":"Excel型号"},
+  {"fieldname":"custom_excel_source_internal_model","fieldtype":"Data","label":"Excel对应阿基型号"}
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,

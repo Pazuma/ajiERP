@@ -1,0 +1,46 @@
+{
+  "status": "passed",
+  "tested_at": "2026-08-27T10:15:59.295Z",
+  "browser": "Chromium",
+  "base_url": "http://aji_test.localhost:8200",
+  "viewport": {
+    "desktop": {
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    "mobile": {
+      "width": 390,
+      "scrollWidth": 390,
+      "horizontalOverflow": false
+    }
+  },
+  "assertions": [
+    "首屏核心字段完整：公司、方向、原因、单号、日期和时间",
+    "新建单据显示系统自动生成单号提示",
+    "出库方向仅显示出库原因，生产领料映射为组装领料",
+    "切换入库会清空不兼容原因，并将生产入库映射为生产制造",
+    "采购入库提示使用采购收货单，避免丢失供应商和采购关联",
+    "确认采购入库后进入采购收货单新建页",
+    "新建手工单据隐藏底层库存类型、编号模板和历史导入字段",
+    "移动端无横向溢出，字段可在窄屏正常排版"
+  ],
+  "runtime_issues": [
+    "requestfailed: http://aji_test.localhost:8200/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://aji_test.localhost:8200/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://aji_test.localhost:8200/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')"
+  ],
+  "known_site_issues": [
+    "requestfailed: http://aji_test.localhost:8200/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://aji_test.localhost:8200/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://aji_test.localhost:8200/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')"
+  ],
+  "observations": [
+    "页面首屏将方向、原因和系统单号集中在出入库信息区，历史字段不干扰新建流程。"
+  ]
+}

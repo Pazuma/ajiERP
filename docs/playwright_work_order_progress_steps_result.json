@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "project": "PROJ-0008",
+  "options": [
+    "STEP-001 - 11（进行中）",
+    "STEP-002 - 22（待开始）"
+  ],
+  "step": "STEP-001 - 11（进行中）",
+  "stepName": "11"
+}

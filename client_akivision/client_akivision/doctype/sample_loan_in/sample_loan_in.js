@@ -1,10 +1,21 @@
 frappe.ui.form.on("Sample Loan In", {
+    party_type(frm) {
+        frm.set_value(frm.doc.party_type === "Customer" ? "supplier" : "customer", "");
+    },
     refresh(frm) {
         set_item_query(frm);
+        if (frm.doc.docstatus === 1 && flt(frm.doc.returned_qty) < flt(frm.doc.total_qty)) {
+            frm.add_custom_button("归还样品", () => frappe.new_doc("Sample Loan In Return", {sample_loan_in: frm.doc.name, company: frm.doc.company}));
+        }
     },
 });
 
 frappe.ui.form.on("Sample Loan In Item", {
+    items_add(frm, cdt, cdn) {
+        frappe.db.get_single_value("Stock Settings", "custom_sample_in_warehouse").then(value => {
+            if (value && !locals[cdt][cdn].loan_warehouse) frappe.model.set_value(cdt, cdn, "loan_warehouse", value);
+        });
+    },
     item_code(frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         if (row.item_code) {

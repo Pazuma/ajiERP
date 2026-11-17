@@ -1,0 +1,4 @@
+[data-page-route="Form/Material Stocktake Summary"] [data-fieldname="posting_time"] .help-box,
+body[data-route^="Form/Material Stocktake Summary/"] [data-fieldname="posting_time"] .help-box {
+	display: none !important;
+}

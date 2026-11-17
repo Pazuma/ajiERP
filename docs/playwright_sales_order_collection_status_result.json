@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "tested_at": "2026-08-25T04:37:03.943Z",
+  "browser": "Chromium",
+  "results": [
+    {
+      "name": "订单状态筛选",
+      "status": "passed",
+      "details": "交付、开票、收款和最终完成状态均可筛选"
+    },
+    {
+      "name": "报表字段完整",
+      "status": "passed",
+      "details": "交付、开票、收款、最终状态、收款金额、未结金额和发票号字段均存在"
+    },
+    {
+      "name": "未付款与已付款展示",
+      "status": "passed",
+      "details": "未付款订单显示待收款，已付款订单显示已完成，并使用不同颜色标识"
+    },
+    {
+      "name": "移动端布局",
+      "status": "passed",
+      "details": "页面容器无横向溢出，宽表在独立区域内滚动"
+    }
+  ],
+  "limitations": [
+    "使用模拟报表行验证前端字段、状态和布局；未替代真实 Frappe 登录、权限和 MariaDB 数据关联验证",
+    "真实环境需用一笔未付款发票和一笔已付款发票复核后端 SQL 结果"
+  ]
+}

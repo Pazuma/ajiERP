@@ -1,0 +1,26 @@
+{
+ "content": null,
+ "creation": "2026-09-16 09:34:12.481547",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-09-18 12:26:19.697741",
+ "modified_by": "Administrator",
+ "module": "Client Akivision",
+ "name": "project-progress-timeout",
+ "owner": "Administrator",
+ "page_name": "project-progress-timeout",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "\u9879\u76ee\u8282\u70b9\u8d85\u65f6\u8868\u67e5\u770b\u8005"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "\u9879\u76ee\u8282\u70b9\u8d85\u65f6\u8868"
+}

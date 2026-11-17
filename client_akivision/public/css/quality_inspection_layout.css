@@ -1,0 +1,52 @@
+/* Scoped to quality inspection: no changes to other forms or print layouts. */
+.akv-quality-inspection-page .page-body,
+.akv-quality-inspection-layout .form-layout,
+.akv-quality-inspection-layout .form-page {
+	max-width: none;
+}
+.akv-quality-inspection-layout .form-section .section-body {
+	gap: 0;
+}
+.akv-quality-inspection-layout .form-section > .section-body,
+.akv-quality-inspection-layout .form-section > .section-head {
+	max-width: 1200px !important;
+}
+.akv-quality-inspection-layout .form-section .form-column {
+	min-width: 0;
+}
+.akv-quality-inspection-layout .form-section .section-head {
+	font-size: var(--text-base);
+	font-weight: 600;
+}
+.akv-quality-inspection-layout .frappe-control {
+	margin-bottom: 12px;
+}
+.akv-quality-inspection-layout textarea[data-fieldname="description"],
+.akv-quality-inspection-layout textarea[data-fieldname="custom_rejection_reason"],
+.akv-quality-inspection-layout textarea[data-fieldname="remarks"] {
+	min-height: 64px;
+	height: 64px;
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+	.akv-quality-inspection-layout .section-body {
+		flex-wrap: wrap;
+	}
+	.akv-quality-inspection-layout .section-body > .form-column {
+		flex: 0 0 50%;
+		max-width: 50%;
+	}
+	.akv-quality-inspection-layout .section-body > .form-column:only-child {
+		flex-basis: 100%;
+		max-width: 100%;
+	}
+}
+@media (max-width: 767px) {
+	.akv-quality-inspection-layout .section-body {
+		flex-direction: column;
+	}
+	.akv-quality-inspection-layout .section-body > .form-column {
+		flex: 0 0 100%;
+		max-width: 100%;
+		width: 100%;
+	}
+}

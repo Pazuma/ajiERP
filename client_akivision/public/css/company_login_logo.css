@@ -1,0 +1,17 @@
+/* Preserve the complete company wordmark instead of cropping it to an icon. */
+.page-card-head img.app-logo {
+	width: 200px !important;
+	height: auto !important;
+	max-width: 80vw !important;
+	max-height: none !important;
+	object-fit: contain !important;
+	border-radius: 0 !important;
+}
+.splash img {
+	width: 240px !important;
+	height: auto !important;
+	max-width: 80vw !important;
+	max-height: none !important;
+	object-fit: contain !important;
+	border-radius: 0 !important;
+}

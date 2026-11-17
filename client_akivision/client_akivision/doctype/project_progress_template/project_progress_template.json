@@ -1,0 +1,22 @@
+{
+ "doctype":"DocType",
+ "name":"Project Progress Template",
+ "module":"Client Akivision",
+ "autoname":"field:template_name",
+ "allow_rename":1,
+ "track_changes":1,
+ "field_order":["template_name","project_type","enabled","version","description","items"],
+ "fields":[
+  {"fieldname":"template_name","fieldtype":"Data","label":"模板名称","reqd":1,"unique":1,"in_list_view":1},
+  {"fieldname":"project_type","fieldtype":"Link","label":"项目类型","options":"Project Type","in_list_view":1},
+  {"default":"1","fieldname":"enabled","fieldtype":"Check","label":"启用","in_list_view":1},
+  {"default":"1","fieldname":"version","fieldtype":"Int","label":"版本","reqd":1},
+  {"fieldname":"description","fieldtype":"Small Text","label":"说明"},
+  {"fieldname":"items","fieldtype":"Table","label":"进度节点","options":"Project Progress Template Item","reqd":1}
+ ],
+ "permissions":[
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Projects Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Projects User","read":1,"report":1,"export":1,"print":1}
+ ]
+}

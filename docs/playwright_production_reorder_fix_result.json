@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "browser": "Chromium",
+  "tested_at": "2026-08-24T11:55:01.690Z",
+  "assertions": [
+    "生产 Stock Entry 提交后投递安全库存检查",
+    "实际 source warehouse 不同于原 Item Reorder 仓库时仍生成物料需求",
+    "重复检查不会重复生成物料需求"
+  ],
+  "calls": [
+    {
+      "url": "/favicon.ico",
+      "payload": {}
+    },
+    {
+      "url": "/api/method/frappe.desk.form.save.savedocs",
+      "payload": {
+        "doc": {
+          "name": "MAT-STE-TEST-00001",
+          "purpose": "Manufacture",
+          "work_order": "MFG-WO-TEST-00001",
+          "items": [
+            {
+              "item_code": "common item1",
+              "item_name": "螺丝",
+              "s_warehouse": "进行中 - T",
+              "qty": 30
+            }
+          ]
+        },
+        "action": "Submit"
+      }
+    },
+    {
+      "url": "/api/method/client_akivision.utils.production_reorder.check_reorder_for_stock_entry",
+      "payload": {
+        "stock_entry_name": "MAT-STE-TEST-00001"
+      }
+    },
+    {
+      "url": "/api/method/client_akivision.utils.production_reorder.check_reorder_for_stock_entry",
+      "payload": {
+        "stock_entry_name": "MAT-STE-TEST-00001"
+      }
+    }
+  ]
+}

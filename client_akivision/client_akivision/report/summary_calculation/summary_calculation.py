@@ -21,6 +21,8 @@ def execute(filters=None):
 	)
 	query = query.replace("COALESCE(fgs.sample_qty, 0)", "COALESCE(sample_stock.sample_qty, 0)")
 	query = query.replace("COALESCE(loan_out.loan_qty, 0)", "COALESCE(loan_stock.loan_qty, 0)")
+	query = query.replace("loan_out.item_code", "loan_stock.item_code")
+	query = query.replace("loan_out.loan_qty", "loan_stock.loan_qty")
 	query = query.replace(
 		"COALESCE(sample_stock.sample_qty, 0) + COALESCE(loan_stock.loan_qty, 0) +",
 		"COALESCE(sample_stock.sample_qty, 0) +",

@@ -1,0 +1,61 @@
+{
+  "tested_at": "2026-10-15T07:02:15.586Z",
+  "browser": "Chromium",
+  "base_url": "http://127.0.0.1:43405/",
+  "results": [
+    {
+      "name": "九个看板分区渲染",
+      "status": "passed",
+      "details": "销售、交付、应收、业务员、同比、对账、运营和高新合规区域均存在"
+    },
+    {
+      "name": "交付与收款语义区分",
+      "status": "passed",
+      "details": "最终完成 126、全部交货 180 与至少有交货 237 分开显示"
+    },
+    {
+      "name": "完整字段展示",
+      "status": "passed",
+      "details": "应收周转天数、账龄占比、生产计划/实际产量和高新趋势占比均可见"
+    },
+    {
+      "name": "紧凑桌面网格",
+      "status": "passed",
+      "details": "四张等宽指标卡同排，图表并排，页面无横向溢出"
+    },
+    {
+      "name": "下钻权限保护",
+      "status": "passed",
+      "details": "允许的销售卡可下钻，未授权的收款卡没有可点击样式"
+    },
+    {
+      "name": "Top10/全部切换",
+      "status": "passed",
+      "details": "切换后 API 发送 salesperson_limit=all（调用数 1 -> 2）"
+    },
+    {
+      "name": "看板分区切换",
+      "status": "passed",
+      "details": "选择销售整体指标后仅显示销售分区，API 不携带 sales_person"
+    },
+    {
+      "name": "Excel 导出入口",
+      "status": "passed",
+      "details": "导出命令携带当前筛选条件"
+    },
+    {
+      "name": "移动端布局",
+      "status": "passed",
+      "details": "390px 视口无横向溢出，图表 6 个，分区 12 个"
+    },
+    {
+      "name": "日期错误与重试",
+      "status": "passed",
+      "details": "开始日期晚于截止日期时显示明确错误和 Retry 操作"
+    }
+  ],
+  "limitations": [
+    "使用模拟 frappe.call 数据，未替代真实登录站点、权限矩阵和 MariaDB SQL 验证",
+    "真实环境需复测财务收入来源、应收周转天数口径和销售团队分摊"
+  ]
+}

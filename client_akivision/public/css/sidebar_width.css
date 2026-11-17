@@ -1,0 +1,163 @@
+/* Keep the application switcher wide enough for its existing labels. */
+:root {
+	--client-app-switcher-width: 160px;
+}
+
+.main-menu {
+	width: var(--client-app-switcher-width) !important;
+	min-width: var(--client-app-switcher-width) !important;
+}
+
+/* Support the legacy Desk application switcher. */
+.iconbar-wrapper,
+.iconbar-wrapper .iconbar {
+	width: var(--client-app-switcher-width) !important;
+	min-width: var(--client-app-switcher-width) !important;
+}
+
+.iconbar-wrapper .desktop-icon,
+.iconbar-wrapper .app-icon,
+.iconbar-wrapper a {
+	width: var(--client-app-switcher-width) !important;
+}
+
+.iconbar-wrapper .desktop-icon {
+	white-space: normal !important;
+	overflow: visible !important;
+}
+
+.main-menu .desk-sidebar-item,
+.main-menu .standard-sidebar-item {
+	width: var(--client-app-switcher-width) !important;
+}
+
+/* Make the selected application/sidebar item clearly enclosed on all sides. */
+.main-menu .active-sidebar,
+.body-sidebar .active-sidebar,
+.iconbar-wrapper .desktop-icon.active,
+.iconbar-wrapper .app-icon.active,
+.iconbar-wrapper .desktop-icon.selected,
+.iconbar-wrapper .app-icon.selected {
+	border: 2px solid #000 !important;
+	box-sizing: border-box;
+}
+
+/* Legacy application switcher marks the current app on the wrapper/link
+ * (class names vary by Desk version). Normalize every selected variant. */
+.iconbar-wrapper .iconbar > *[class*="active"],
+.iconbar-wrapper .iconbar > *[class*="selected"],
+.iconbar-wrapper .iconbar a[class*="active"],
+.iconbar-wrapper .iconbar a[class*="selected"],
+.main-menu [class*="active-sidebar"] {
+	border: 2px solid #000 !important;
+	box-sizing: border-box;
+}
+
+/* The compact app switcher uses state attributes/classes on different
+ * elements across Desk versions. An inset outline gives a four-sided black
+ * frame without changing item dimensions. */
+.main-menu a[aria-current="page"],
+.main-menu a[aria-selected="true"],
+.main-menu [data-active="true"],
+.main-menu .active,
+.main-menu .selected,
+.body-sidebar a[aria-current="page"],
+.body-sidebar a[aria-selected="true"],
+.body-sidebar [data-active="true"],
+.body-sidebar .active,
+.body-sidebar .selected {
+	outline: 2px solid #000 !important;
+	outline-offset: -2px;
+}
+
+/* App switcher items in the current Desk render as icon wrappers. The
+ * selected state may be placed on a child link/icon, so frame the wrapper
+ * itself as well. */
+.main-menu > *,
+.iconbar-wrapper .iconbar > *,
+.iconbar-wrapper .iconbar > a {
+	border: 2px solid transparent;
+	border-radius: 8px;
+	box-sizing: border-box;
+}
+.main-menu > *.active,
+.main-menu > *.selected,
+.main-menu > *:has(.active),
+.main-menu > *:has(.selected),
+.iconbar-wrapper .iconbar > *.active,
+.iconbar-wrapper .iconbar > *.selected,
+.iconbar-wrapper .iconbar > *:has(.active),
+.iconbar-wrapper .iconbar > *:has(.selected) {
+	border-color: #000 !important;
+}
+
+.main-menu .sidebar-item-label,
+.main-menu .desk-sidebar-item-label {
+	max-width: var(--client-app-switcher-width) !important;
+	white-space: normal !important;
+	word-break: break-all;
+	overflow: visible !important;
+	text-overflow: clip !important;
+}
+
+/* Current Desk uses a collapsed body sidebar for the application switcher. */
+.body-sidebar-container:not(.expanded) .body-sidebar,
+.body-sidebar-container:not(.expanded) .body-sidebar-placeholder {
+	width: var(--client-app-switcher-width) !important;
+	min-width: var(--client-app-switcher-width) !important;
+}
+
+.body-sidebar-container:not(.expanded) {
+	width: var(--client-app-switcher-width) !important;
+	min-width: var(--client-app-switcher-width) !important;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar-top,
+.body-sidebar-container:not(.expanded) .sidebar-items,
+.body-sidebar-container:not(.expanded) .standard-sidebar-item,
+.body-sidebar-container:not(.expanded) .standard-sidebar-item .item-anchor {
+	width: 100% !important;
+	min-width: 0 !important;
+}
+
+.body-sidebar-container:not(.expanded) .sidebar-header {
+	width: 100% !important;
+}
+
+.body-sidebar-container:not(.expanded) .sidebar-header .title-container,
+.body-sidebar-container:not(.expanded) .sidebar-header .header-title,
+.body-sidebar-container:not(.expanded) .sidebar-header .header-subtitle {
+	display: block !important;
+	max-width: none !important;
+	width: auto !important;
+	min-width: 0 !important;
+	white-space: normal !important;
+	overflow: visible !important;
+	text-overflow: clip !important;
+}
+
+.body-sidebar-container:not(.expanded) .sidebar-item-label,
+.body-sidebar-container:not(.expanded) .standard-sidebar-item .item-anchor {
+	white-space: normal !important;
+	overflow: visible !important;
+	text-overflow: clip !important;
+	word-break: break-word;
+}
+
+@media (max-width: 900px) {
+	:root {
+		--client-app-switcher-width: 140px;
+	}
+
+	.main-menu {
+		width: var(--client-app-switcher-width) !important;
+		min-width: var(--client-app-switcher-width) !important;
+	}
+	.main-menu .desk-sidebar-item,
+	.main-menu .standard-sidebar-item,
+	.main-menu .sidebar-item-label,
+	.main-menu .desk-sidebar-item-label {
+		width: var(--client-app-switcher-width) !important;
+		max-width: var(--client-app-switcher-width) !important;
+	}
+}

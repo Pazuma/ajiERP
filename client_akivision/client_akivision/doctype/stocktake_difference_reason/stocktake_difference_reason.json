@@ -1,0 +1,11 @@
+{
+ "doctype":"DocType", "module":"Client Akivision", "name":"Stocktake Difference Reason", "autoname":"field:reason_name", "title_field":"reason_name",
+ "field_order":["reason_name","enabled","is_other","description"],
+ "fields":[
+  {"fieldname":"reason_name","fieldtype":"Data","label":"原因名称","reqd":1,"in_list_view":1},
+  {"fieldname":"enabled","fieldtype":"Check","label":"启用","default":"1","in_list_view":1},
+  {"fieldname":"is_other","fieldtype":"Check","label":"其他原因"},
+  {"fieldname":"description","fieldtype":"Small Text","label":"说明"}
+ ],
+ "permissions":[{"role":"Stock Manager","read":1,"write":1,"create":1,"delete":1},{"role":"Stock User","read":1}]
+}

@@ -9,12 +9,20 @@ from frappe import _
 from frappe.desk.utils import provide_binary_file
 from frappe.utils import now_datetime
 
-from client_akivision.client_akivision.api.operations_kpi import get_kpi_dashboard_data
+from client_akivision.client_akivision.api.operations_kpi import (
+	check_dashboard_access,
+	get_kpi_dashboard_data,
+	get_project_progress_timeout_rows,
+	normalise_filters,
+)
+from client_akivision.utils.kpi_page_permissions import check_project_timeout_access
 
 
 @frappe.whitelist()
 def export_kpi_dashboard(filters=None):
 	"""Export the dashboard using the same filters, permissions and calculations as the page."""
+	filters = frappe.parse_json(filters) if isinstance(filters, str) else dict(filters or {})
+	filters["export_all_project_timeouts"] = 1
 	data = get_kpi_dashboard_data(filters)
 	content = build_kpi_workbook(data)
 	filter_values = data["filters"]
@@ -22,6 +30,22 @@ def export_kpi_dashboard(filters=None):
 		f"{_('Operations KPI Dashboard')}-{filter_values['company']}-{filter_values['from_date']}-{filter_values['to_date']}"
 	)
 	provide_binary_file(filename, "xlsx", content)
+
+
+@frappe.whitelist()
+def export_project_progress_timeouts(filters=None):
+	check_project_timeout_access()
+	filters = normalise_filters(filters)
+	data = {
+		"filters": {"company": filters.company, "from_date": str(filters.from_date), "to_date": str(filters.to_date)},
+		"project_progress_timeouts": get_project_progress_timeout_rows(filters, paginate=False),
+	}
+	output = BytesIO()
+	workbook = xlsxwriter.Workbook(output, {"in_memory": True})
+	formats = _make_formats(workbook, data)
+	_write_project_timeout_sheet(workbook, formats, data)
+	workbook.close()
+	provide_binary_file(_safe_filename(f"项目节点超时表-{filters.company}-{filters.from_date}-{filters.to_date}"), "xlsx", output.getvalue())
 
 
 def build_kpi_workbook(data):
@@ -70,13 +94,16 @@ def _setup_sheet(workbook, formats, data, name, column_widths):
 	worksheet.hide_gridlines(2)
 	worksheet.freeze_panes(5, 0)
 	worksheet.set_row(0, 30)
-	last_column = max(7, len(column_widths) - 1)
+	# Five filter pairs occupy columns A:J; keep the title merged across that
+	# area even on narrow detail sheets so the filter row remains aligned.
+	last_column = max(11, len(column_widths) - 1)
 	worksheet.merge_range(0, 0, 0, last_column, _("Operations KPI Dashboard"), formats["title"])
 	filters = data["filters"]
 	filter_items = [
 		(_("Company"), filters["company"]),
 		(_("From Date"), filters["from_date"]),
 		(_("To Date"), filters["to_date"]),
+		(_("Salesperson Rows"), filters.get("salesperson_limit", 10)),
 		(_("Generated At"), str(now_datetime())),
 	]
 	for column, (label, value) in enumerate(filter_items):
@@ -110,8 +137,9 @@ def _write_overview_sheet(workbook, formats, data):
 			("receivable_amount", _("Receivable Amount")),
 			("settled_documents", _("Settled Documents")),
 			("unsettled_documents", _("Unsettled Documents")),
+			("average_receivable_days", _("Average Receivable Days")),
+			("receivable_turnover_days", _("Receivable Turnover Days")),
 			("overdue_over_90", _("Over 90 Days Overdue")),
-			("monthly_collection_completion", _("Monthly Collection Target Completion")),
 		]),
 		(_("Year-over-year Indicators"), data.get("year_over_year"), [
 			("prior_sales_amount", _("Prior-period Sales Amount")),
@@ -127,6 +155,8 @@ def _write_overview_sheet(workbook, formats, data):
 			("aging_0_30", _("Due Within 30 Days")),
 			("aging_31_90", _("31-90 Days Overdue")),
 			("aging_over_90", _("Over 90 Days Overdue")),
+			("receivable_turnover_days", _("Receivable Turnover Days")),
+			("monthly_collection_completion", _("Monthly Collection Target Completion")),
 		]),
 		(_("Production and Purchasing Operations"), data.get("operations"), [
 			("production_completion_rate", _("Production Completion Rate")),
@@ -229,7 +259,7 @@ def _write_high_tech_sheet(workbook, formats, data):
 		row,
 		_("3-Year High-tech Trend"),
 		data.get("high_tech_trend") or [],
-		[(_("Year"), "year", "int"), (_("High-tech Revenue Amount"), "high_tech_revenue", "currency"), (_("Total Revenue"), "total_revenue", "currency")],
+		[(_("Year"), "year", "int"), (_("High-tech Revenue Amount"), "high_tech_revenue", "currency"), (_("Total Revenue"), "total_revenue", "currency"), (_("High-tech Revenue Ratio"), "high_tech_ratio", "percent")],
 	)
 	_write_table(
 		worksheet,
@@ -237,7 +267,26 @@ def _write_high_tech_sheet(workbook, formats, data):
 		row,
 		_("Top 10 RD Projects"),
 		data.get("high_tech_projects") or [],
-		[(_("Project"), "project_name", "text"), (_("High-tech Revenue Amount"), "high_tech_revenue", "currency")],
+		[(_("Project"), "project_name", "text"), (_("High-tech Revenue Amount"), "high_tech_revenue", "currency"), (_("Ratio"), "ratio", "percent")],
+	)
+
+
+def _write_project_timeout_sheet(workbook, formats, data):
+	worksheet, row = _setup_sheet(workbook, formats, data, _("项目节点超时"), [18, 26, 26, 16, 22, 40])
+	_write_table(
+		worksheet,
+		formats,
+		row,
+		_("项目节点超时"),
+		(data.get("project_progress_timeouts") or {}).get("rows") or [],
+		[
+			(_("项目编号"), "project", "text"),
+			(_("项目名称"), "project_name", "text"),
+			(_("节点名称"), "step_name", "text"),
+			(_("计划完成日期"), "expected_end_date", "text"),
+			(_("实际完成时间"), "actual_completed_on", "text"),
+			(_("备注"), "remarks", "text"),
+		],
 	)
 
 

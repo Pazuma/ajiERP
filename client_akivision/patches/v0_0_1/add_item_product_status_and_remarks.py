@@ -11,7 +11,11 @@ def execute():
                     "fieldname": "custom_product_status",
                     "label": "Product Status",
                     "fieldtype": "Select",
-                    "options": "\nDevelopment\nMass Produced\nSampled",
+                    # Keep the select values identical to the values used by
+                    # the 产品清单 worksheet.  Data Import validates Select
+                    # values literally, so English workflow labels here would
+                    # reject the source values 开发/已量产/已打样.
+                    "options": "\n开发\n已量产\n已打样",
                     "insert_after": "custom_applicable_model",
                     "in_list_view": 1,
                     "in_standard_filter": 1,

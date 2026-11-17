@@ -1,0 +1,155 @@
+{
+ "doctype": "DocType",
+ "name": "Product Cost Scenario",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "quantity",
+  "show_in_customer_quote",
+  "material_unit_cost",
+  "manufacturing_unit_cost",
+  "investment_unit_cost",
+  "full_unit_cost",
+  "suggested_price_with_rd",
+  "suggested_price_without_rd",
+  "final_tax_inclusive_price",
+  "price_override_reason",
+  "gross_margin",
+  "batch_gross_profit",
+  "payback_qty",
+  "procurement_total",
+  "surplus_total",
+  "completeness",
+  "warnings",
+  "detail_snapshot_json"
+ ],
+ "fields": [
+  {"fieldname": "show_in_customer_quote", "label": "客户报价展示", "fieldtype": "Check", "default": "1", "in_list_view": 1},
+  {
+   "fieldname": "quantity",
+   "label": "产品批量",
+   "fieldtype": "Float",
+   "precision": "6",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "material_unit_cost",
+   "label": "单台材料成本",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1,
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "manufacturing_unit_cost",
+   "label": "单台制造费用",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1,
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "investment_unit_cost",
+   "label": "单台研发分摊",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1,
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "full_unit_cost",
+   "label": "单台完整成本",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "suggested_price_with_rd",
+   "label": "建议含税价(含研发)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1,
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "suggested_price_without_rd",
+   "label": "建议含税价(不含研发)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1,
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "final_tax_inclusive_price",
+   "label": "最终含税报价",
+   "fieldtype": "Float",
+   "precision": "6",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "price_override_reason",
+   "label": "报价调整依据",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "gross_margin",
+   "label": "预计毛利率(%)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_gross_profit",
+   "label": "批次毛利",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payback_qty",
+   "label": "回本数量",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1
+  },
+  {
+   "fieldname": "procurement_total",
+   "label": "采购投入",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1
+  },
+  {
+   "fieldname": "surplus_total",
+   "label": "采购余量金额",
+   "fieldtype": "Float",
+   "precision": "6",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completeness",
+   "label": "数据状态",
+   "fieldtype": "Select",
+   "options": "Incomplete\nEstimated\nComplete",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warnings",
+   "label": "风险提示",
+   "fieldtype": "Small Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "detail_snapshot_json",
+   "label": "批量核算快照",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "read_only": 1
+  }
+ ],
+ "permissions": []
+}

@@ -1,0 +1,86 @@
+{
+ "doctype": "DocType",
+ "name": "Product Cost Operation",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "operation",
+  "workstation",
+  "charging_basis",
+  "standard_hours",
+  "hourly_rate",
+  "included_cost_scope",
+  "tier_overrides_json",
+  "source_key",
+  "source_refs",
+  "manual_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "operation",
+   "label": "工序",
+   "fieldtype": "Data",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "workstation",
+   "label": "工作站",
+   "fieldtype": "Link",
+   "options": "Workstation"
+  },
+  {
+   "fieldname": "charging_basis",
+   "label": "计费方式",
+   "fieldtype": "Select",
+   "options": "Per Unit\nPer Batch",
+   "default": "Per Unit",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "standard_hours",
+   "label": "标准工时(小时)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "hourly_rate",
+   "label": "小时费率(报价币种)",
+   "fieldtype": "Float",
+   "precision": "6",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "included_cost_scope",
+   "label": "费率包含范围",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "tier_overrides_json",
+   "label": "批量工时覆盖JSON",
+   "fieldtype": "Code",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "source_key",
+   "label": "来源唯一键",
+   "fieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_refs",
+   "label": "来源记录",
+   "fieldtype": "Long Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "manual_reason",
+   "label": "手工依据",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": []
+}

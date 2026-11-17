@@ -21,6 +21,9 @@ def add_item_to_supplier_po_draft(
 	material_request_item=None,
 	purchase_comparison=None,
 	warehouse=None,
+	supplier_quotation=None,
+	preferred_supplier=None,
+	material_request_source=None,
 ):
 	"""Add the recommended item to the supplier's open draft PO, or create one.
 
@@ -56,7 +59,11 @@ def add_item_to_supplier_po_draft(
 			frappe.throw(_("没有修改采购订单 {0} 的权限").format(draft_name), frappe.PermissionError)
 		if purchase_comparison and po.get("custom_purchase_comparison") != purchase_comparison:
 			po.custom_purchase_comparison = purchase_comparison
-		action = _append_item(po, item_code, qty, rate, material_request, material_request_item, warehouse)
+		if preferred_supplier and po.get("custom_preferred_supplier") != preferred_supplier:
+			po.custom_preferred_supplier = preferred_supplier
+		if material_request_source and po.get("custom_material_request") != material_request_source:
+			po.custom_material_request = material_request_source
+		action = _append_item(po, item_code, qty, rate, material_request, material_request_item, warehouse, supplier_quotation)
 		po.save()
 		return {"purchase_order": po.name, "action": action}
 
@@ -68,14 +75,16 @@ def add_item_to_supplier_po_draft(
 			"transaction_date": getdate(),
 			"payment_terms": payment_terms or None,
 			"custom_purchase_comparison": purchase_comparison,
-			"items": [_make_item(item_code, qty, rate, company, material_request, material_request_item, warehouse)],
+			"custom_preferred_supplier": preferred_supplier,
+			"custom_material_request": material_request_source or material_request,
+			"items": [_make_item(item_code, qty, rate, company, material_request, material_request_item, warehouse, supplier_quotation)],
 		}
 	)
 	po.insert()
 	return {"purchase_order": po.name, "action": "created"}
 
 
-def _append_item(po, item_code, qty, rate, material_request=None, material_request_item=None, warehouse=None):
+def _append_item(po, item_code, qty, rate, material_request=None, material_request_item=None, warehouse=None, supplier_quotation=None):
 	"""Merge the qty into an existing line for the same item, else append a line.
 
 	Lines linked to a different Material Request item are never merged, so
@@ -87,12 +96,14 @@ def _append_item(po, item_code, qty, rate, material_request=None, material_reque
 		):
 			row.qty = flt(row.qty) + qty
 			row.rate = rate
+			if supplier_quotation:
+				row.supplier_quotation = supplier_quotation
 			return "merged"
-	po.append("items", _make_item(item_code, qty, rate, po.company, material_request, material_request_item, warehouse))
+	po.append("items", _make_item(item_code, qty, rate, po.company, material_request, material_request_item, warehouse, supplier_quotation))
 	return "updated"
 
 
-def _make_item(item_code, qty, rate, company, material_request=None, material_request_item=None, warehouse=None):
+def _make_item(item_code, qty, rate, company, material_request=None, material_request_item=None, warehouse=None, supplier_quotation=None):
 	item = {
 		"item_code": item_code,
 		"qty": qty,
@@ -105,4 +116,6 @@ def _make_item(item_code, qty, rate, company, material_request=None, material_re
 		item["material_request"] = material_request
 	if material_request_item:
 		item["material_request_item"] = material_request_item
+	if supplier_quotation:
+		item["supplier_quotation"] = supplier_quotation
 	return item

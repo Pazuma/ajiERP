@@ -1,0 +1,6 @@
+/* Hide Frappe's technical field-name badges, including expanded grid rows.
+ * Keep labels, descriptions and ordinary help tooltips unchanged. */
+.frappe-control > .tooltip-content,
+.show-tooltip .frappe-control:hover > .tooltip-content {
+	display: none !important;
+}

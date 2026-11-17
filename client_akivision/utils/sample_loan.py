@@ -267,6 +267,8 @@ def create_sales_order_from_loan(loan_doc, serial_nos):
 
     grouped = {}
     for row in selected_items:
+        if row.get("party_type") == "Supplier" or row.get("supplier"):
+            frappe.throw("借给供应商的样品不能直接转客户销售订单，请先收回。")
         if not row.customer:
             frappe.throw(
                 _("Row {0}: Customer is required before converting to sales.").format(row.idx)

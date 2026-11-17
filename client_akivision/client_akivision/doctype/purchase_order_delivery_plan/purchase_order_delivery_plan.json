@@ -1,0 +1,16 @@
+{
+ "doctype": "DocType",
+ "istable": 1,
+ "module": "Client Akivision",
+ "name": "Purchase Order Delivery Plan",
+ "editable_grid": 1,
+ "fields": [
+  {"fieldname": "purchase_order_item", "fieldtype": "Link", "label": "采购订单明细", "options": "Purchase Order Item", "description": "请先保存采购订单，再选择属于本订单的物料明细。", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "item_code", "fieldtype": "Link", "label": "物料编码", "options": "Item", "read_only": 1, "in_list_view": 1},
+  {"fieldname": "sequence", "fieldtype": "Int", "label": "批次序号", "default": 1, "reqd": 1, "in_list_view": 1},
+  {"fieldname": "planned_qty", "fieldtype": "Float", "label": "计划数量", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "planned_date", "fieldtype": "Date", "label": "计划交货日期", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "remarks", "fieldtype": "Small Text", "label": "备注"}
+ ],
+ "field_order": ["purchase_order_item", "item_code", "sequence", "planned_qty", "planned_date", "remarks"]
+}

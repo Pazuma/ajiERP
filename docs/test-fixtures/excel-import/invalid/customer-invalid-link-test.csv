@@ -1,0 +1,2 @@
+custom_customer_code,customer_name,customer_group,territory,custom_excel_contact_name,custom_excel_contact_phone,custom_excel_address,custom_responsible_business_name
+CUST-TEST-INVALID-001,客户-test-invalid-001,不存在的客户组-test,All Territories,联系人-test-invalid,13800000002,测试地址-test-invalid,业务员-test-invalid

@@ -1,0 +1,26 @@
+{
+ "doctype":"DocType", "module":"Client Akivision", "name":"Material Stocktake Summary", "autoname":"naming_series:", "naming_rule":"By \"Naming Series\" field", "is_submittable":1, "track_changes":1, "force_re_route_to_default_view":1,
+ "field_order":["naming_series","posting_date","count_period_from","column_basic_middle","company","posting_time","count_period_to","column_basic_right","status","set_posting_time","counted_by","section_warehouses","warehouses","section_items","items","section_result","stock_reconciliation","import_file","remarks"],
+ "fields":[
+  {"fieldname":"column_basic_middle","fieldtype":"Column Break"},
+  {"fieldname":"column_basic_right","fieldtype":"Column Break"},
+  {"fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"STK-COUNT-.YY.-.#####","default":"STK-COUNT-.YY.-.#####","reqd":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"in_list_view":1},
+  {"fieldname":"posting_date","fieldtype":"Date","label":"盘点日期","default":"Today","reqd":1,"in_list_view":1},
+  {"fieldname":"posting_time","fieldtype":"Time","label":"盘点时间","default":"Now","reqd":1},
+  {"fieldname":"set_posting_time","fieldtype":"Check","label":"指定盘点日期和时间"},
+  {"fieldname":"count_period_from","fieldtype":"Date","label":"盘点期间开始"},
+  {"fieldname":"count_period_to","fieldtype":"Date","label":"盘点期间结束"},
+  {"fieldname":"counted_by","fieldtype":"Link","label":"盘点人","options":"User","read_only":1},
+  {"fieldname":"status","fieldtype":"Select","label":"状态","options":"\n草稿\n已调整\n调整失败\n已取消","default":"草稿","read_only":1,"in_list_view":1},
+  {"fieldname":"section_warehouses","fieldtype":"Section Break","label":"盘点仓库"},
+  {"fieldname":"warehouses","fieldtype":"Table","label":"仓库","options":"Material Stocktake Warehouse","reqd":1},
+  {"fieldname":"section_items","fieldtype":"Section Break","label":"盘点明细"},
+  {"fieldname":"items","fieldtype":"Table","label":"物料库存清点明细","options":"Material Stocktake Summary Item","reqd":1},
+  {"fieldname":"section_result","fieldtype":"Section Break","label":"关联与附件"},
+  {"fieldname":"stock_reconciliation","fieldtype":"Link","label":"库存调账单","options":"Stock Reconciliation","read_only":1},
+  {"fieldname":"import_file","fieldtype":"Attach","label":"盘点 Excel 文件"},
+  {"fieldname":"remarks","fieldtype":"Small Text","label":"备注"}
+ ],
+ "permissions":[{"role":"Stock Manager","read":1,"write":1,"create":1,"delete":1,"submit":1,"cancel":1,"print":1,"email":1,"export":1},{"role":"Stock User","read":1,"write":1,"create":1,"print":1,"email":1,"export":1}]
+}

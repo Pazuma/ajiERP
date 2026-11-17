@@ -2,6 +2,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate
 
+from client_akivision.utils.sales_order_completion import get_sales_order_invoice_payment_details
+
 
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
@@ -12,7 +14,8 @@ def execute(filters=None):
 def get_report_summary(data):
 	order_rows = [row for row in data if row.get("indent") == 0]
 	item_rows = [row for row in data if row.get("indent") == 1]
-	completed = sum(1 for row in item_rows if row.get("completion_status") == _("已交货"))
+	delivered = sum(1 for row in item_rows if row.get("completion_status") == _("已交货"))
+	final_completed = sum(1 for row in order_rows if row.get("final_status") == _("已完成"))
 	high_tech_total = sum(
 		flt(row.get("amount")) for row in order_rows if row.get("is_high_tech") == _("是")
 	)
@@ -21,7 +24,8 @@ def get_report_summary(data):
 		{"value": len(item_rows), "label": _("订单明细行"), "datatype": "Int", "indicator": "Blue"},
 		{"value": sum(flt(row.get("amount")) for row in order_rows), "label": _("订单金额"), "datatype": "Currency", "indicator": "Green"},
 		{"value": high_tech_total, "label": _("High-tech Revenue Amount"), "datatype": "Currency", "indicator": "Orange"},
-		{"value": completed, "label": _("已交货明细行"), "datatype": "Int", "indicator": "Green"},
+		{"value": delivered, "label": _("已交货明细行"), "datatype": "Int", "indicator": "Green"},
+		{"value": final_completed, "label": _("已收款完成订单"), "datatype": "Int", "indicator": "Green"},
 	]
 
 
@@ -52,7 +56,10 @@ def get_columns():
 		{"label": _("Qty"), "fieldname": "qty", "fieldtype": "Float", "width": 80},
 		{"label": _("Tax Inclusive Price"), "fieldname": "rate", "fieldtype": "Currency", "width": 120},
 		{"label": _("Order Amount"), "fieldname": "amount", "fieldtype": "Currency", "width": 120},
-		{"label": _("Order Completion Status"), "fieldname": "completion_status", "fieldtype": "Data", "width": 120},
+		{"label": _("Delivery Status"), "fieldname": "completion_status", "fieldtype": "Data", "width": 120},
+		{"label": _("Invoice Status"), "fieldname": "invoice_status", "fieldtype": "Data", "width": 120},
+		{"label": _("Collection Status"), "fieldname": "collection_status", "fieldtype": "Data", "width": 120},
+		{"label": _("Final Order Status"), "fieldname": "final_status", "fieldtype": "Data", "width": 130},
 		{"label": _("Completion Flag"), "fieldname": "completion_flag", "fieldtype": "Data", "width": 100},
 		{"label": _("High-tech Revenue"), "fieldname": "is_high_tech", "fieldtype": "Data", "width": 110},
 		{"label": _("Sales Person"), "fieldname": "sales_person", "fieldtype": "Data", "width": 100},
@@ -87,6 +94,7 @@ def get_data(filters):
 			so.payment_terms_template,
 			so.delivery_date,
 			so.grand_total,
+			so.per_billed,
 			so.custom_is_high_tech_revenue,
 			so.custom_remarks,
 			soi.item_code,
@@ -125,11 +133,8 @@ def get_data(filters):
 	# Delivery Note quantities per Sales Order Item
 	delivery_qty = get_delivered_qty_map(sales_order_names)
 
-	# Invoice details per Sales Order
-	invoice_details = get_invoice_details(sales_order_names)
-
-	# Payment details per Sales Order
-	payment_details = get_payment_details(sales_order_names)
+	# Invoice and allocated payment details per Sales Order
+	invoice_payment_details = get_sales_order_invoice_payment_details(sales_order_names)
 
 	# SO-level totals for full completion flag
 	so_totals = get_so_totals(sales_order_names)
@@ -145,8 +150,16 @@ def get_data(filters):
 
 		completion_status = get_completion_status(delivered, row.qty)
 
-		inv = invoice_details.get(row.sales_order, {})
-		pay = payment_details.get(row.sales_order, {})
+		invoice_payment = invoice_payment_details.get(row.sales_order, {})
+		invoice_status = get_invoice_status(row.per_billed, invoice_payment.get("has_invoice"))
+		collection_status = invoice_payment.get("collection_status", "未收款")
+		final_status = get_final_status(
+			completion_status,
+			bool(order_fully_completed),
+			invoice_status,
+			invoice_payment.get("all_paid", False),
+			collection_status,
+		)
 
 		item_data.append(
 			frappe._dict(
@@ -166,16 +179,19 @@ def get_data(filters):
 				"rate": flt(row.rate),
 				"amount": flt(row.amount),
 				"completion_status": completion_status,
+				"invoice_status": invoice_status,
+				"collection_status": collection_status,
+				"final_status": final_status,
 				"completion_flag": "已完成" if item_completed else "未完成",
 				"is_high_tech": "是" if row.custom_is_high_tech_revenue else "否",
 				"sales_person": row.sales_person or "",
 				"payment_terms_template": row.payment_terms_template or "",
 				"credit_days": get_credit_days(row.payment_terms_template),
-				"invoice_no": inv.get("invoice_no") or "",
-				"invoice_date": inv.get("invoice_date"),
+				"invoice_no": invoice_payment.get("invoice_no") or "",
+				"invoice_date": invoice_payment.get("invoice_date"),
 				"remarks": row.custom_remarks or "",
-				"received_amount": flt(pay.get("received", 0)),
-				"outstanding_amount": flt(pay.get("outstanding", flt(row.amount))),
+				"received_amount": flt(invoice_payment.get("received_amount", 0)),
+				"outstanding_amount": flt(invoice_payment.get("outstanding_amount", flt(row.amount))),
 				"reconciliation_period": "",
 				"due_date": row.delivery_date,
 				"item_name": row.item_name,
@@ -194,7 +210,12 @@ def get_data(filters):
 			row.name
 			for row in data
 			if row.indent == 0
-			and (not filters.status or row.completion_status == filters.status)
+			and (not filters.status or filters.status in {
+				row.completion_status,
+				row.invoice_status,
+				row.collection_status,
+				row.final_status,
+			})
 			and (not filters.is_high_tech or row.is_high_tech == filters.is_high_tech)
 		}
 		return [row for row in data if row.get("sales_order") in matching_orders]
@@ -225,7 +246,10 @@ def make_tree_data(item_data):
 				"po_no": item_row.po_no,
 				"amount": flt(item_row.grand_total),
 				"completion_status": order_status,
-				"completion_flag": "已完成" if item_row.order_fully_completed == "是" else "未完成",
+				"invoice_status": item_row.invoice_status,
+				"collection_status": item_row.collection_status,
+				"final_status": item_row.final_status,
+				"completion_flag": "已完成" if item_row.final_status == _("已完成") else "未完成",
 				"is_high_tech": item_row.is_high_tech,
 				"sales_person": item_row.sales_person,
 				"payment_terms_template": item_row.payment_terms_template,
@@ -269,6 +293,9 @@ def make_tree_data(item_data):
 		item_row.reconciliation_period = None
 		item_row.due_date = None
 		item_row.order_fully_completed = None
+		item_row.invoice_status = None
+		item_row.collection_status = None
+		item_row.final_status = None
 		data.append(item_row)
 
 	return data
@@ -309,73 +336,6 @@ def get_delivered_qty_map(sales_order_names):
 	}
 
 
-def get_invoice_details(sales_order_names):
-	if not sales_order_names:
-		return {}
-
-	rows = frappe.db.sql(
-		"""
-		SELECT
-			sii.sales_order,
-			GROUP_CONCAT(DISTINCT si.name SEPARATOR ', ') AS invoice_no,
-			MIN(si.posting_date) AS invoice_date
-		FROM `tabSales Invoice Item` sii
-		INNER JOIN `tabSales Invoice` si ON si.name = sii.parent
-		WHERE si.docstatus = 1
-		  AND sii.sales_order IN %s
-		GROUP BY sii.sales_order
-		""",
-		(tuple(sales_order_names),),
-		as_dict=True,
-	)
-
-	return {row.sales_order: row for row in rows}
-
-
-def get_payment_details(sales_order_names):
-	if not sales_order_names:
-		return {}
-
-	# Outstanding from Sales Order
-	so_outstanding = {
-		row.name: flt(row.grand_total) - flt(row.advance_paid)
-		for row in frappe.get_all(
-			"Sales Order",
-			filters={"name": ["in", sales_order_names]},
-			fields=["name", "grand_total", "advance_paid"],
-		)
-	}
-
-	# Payments via Payment Entry
-	rows = frappe.db.sql(
-		"""
-		SELECT
-			per.reference_name AS sales_order,
-			SUM(per.allocated_amount) AS received
-		FROM `tabPayment Entry Reference` per
-		INNER JOIN `tabPayment Entry` pe ON pe.name = per.parent
-		WHERE pe.docstatus = 1
-		  AND per.reference_doctype = 'Sales Order'
-		  AND per.reference_name IN %s
-		GROUP BY per.reference_name
-		""",
-		(tuple(sales_order_names),),
-		as_dict=True,
-	)
-
-	result = {}
-	for so in sales_order_names:
-		result[so] = {"received": 0.0, "outstanding": so_outstanding.get(so, 0.0)}
-
-	for row in rows:
-		result[row.sales_order]["received"] = flt(row.received)
-		result[row.sales_order]["outstanding"] = max(
-			0, result[row.sales_order]["outstanding"] - flt(row.received)
-		)
-
-	return result
-
-
 def get_so_totals(sales_order_names):
 	if not sales_order_names:
 		return {}
@@ -409,6 +369,24 @@ def get_completion_status(delivered_qty, order_qty):
 	return _("未交货")
 
 
+def get_invoice_status(per_billed, has_invoice):
+	if not has_invoice:
+		return _("未开票")
+	return _("已开票") if flt(per_billed) >= 100 else _("部分开票")
+
+
+def get_final_status(delivery_status, all_delivered, invoice_status, all_paid, collection_status):
+	if not all_delivered:
+		return delivery_status
+	if invoice_status != _("已开票"):
+		return _("待开票")
+	if all_paid:
+		return _("已完成")
+	if collection_status == _("部分收款"):
+		return _("部分收款")
+	return _("待收款")
+
+
 def get_credit_days(payment_terms_template):
 	if not payment_terms_template:
 		return 0
@@ -419,6 +397,10 @@ def get_credit_days(payment_terms_template):
 
 def get_conditions(filters):
 	conditions = []
+	from client_akivision.utils.order_record_permissions import get_order_scope_condition, is_scoped_user
+
+	if is_scoped_user("Sales Order"):
+		conditions.append(f"AND ({get_order_scope_condition('Sales Order', alias='so')})")
 	if filters.get("company"):
 		conditions.append("AND so.company = %(company)s")
 	if filters.get("customer"):

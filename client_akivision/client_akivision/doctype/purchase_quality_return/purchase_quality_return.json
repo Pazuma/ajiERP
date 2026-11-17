@@ -1,0 +1,36 @@
+{
+ "doctype":"DocType", "name":"Purchase Quality Return", "module":"Client Akivision", "autoname":"naming_series:", "engine":"InnoDB", "is_submittable":1, "track_changes":1, "title_field":"supplier_name",
+ "field_order":["return_details_section","naming_series","return_source_rows","company","supplier_column","supplier","supplier_name","return_details_column","posting_date","status_column","status","source_section","quality_inspection","purchase_receipt","source_column","purchase_order","receiving_notice","stock_return","reason_column","return_reason","items_section","items","remarks_section","remarks"],
+ "fields":[
+  {"fieldname":"return_source_rows","fieldtype":"Small Text","hidden":1,"read_only":1,"no_copy":0},
+  {"fieldname":"return_details_section","label":"退货信息","fieldtype":"Section Break"},
+  {"fieldname":"naming_series","label":"编号规则","fieldtype":"Select","options":"MAT-PQR-.YYYY.-","default":"MAT-PQR-.YYYY.-","reqd":1,"hidden":1},
+  {"fieldname":"company","label":"公司","fieldtype":"Link","options":"Company","reqd":1,"read_only":1},
+  {"fieldname":"supplier_column","fieldtype":"Column Break"},
+  {"fieldname":"supplier","label":"供应商","fieldtype":"Link","options":"Supplier","reqd":1,"read_only":1,"in_list_view":1,"in_standard_filter":1},
+  {"fieldname":"supplier_name","label":"供应商名称","fieldtype":"Data","read_only":1,"hidden":1,"fetch_from":"supplier.supplier_name"},
+  {"fieldname":"return_details_column","fieldtype":"Column Break"},
+  {"fieldname":"posting_date","label":"退货日期","fieldtype":"Date","default":"Today","reqd":1},
+  {"fieldname":"status_column","fieldtype":"Column Break"},
+  {"fieldname":"status","label":"状态","fieldtype":"Select","options":"待退货\n已退货\n已取消","default":"待退货","read_only":1,"in_list_view":1,"in_standard_filter":1},
+  {"fieldname":"source_section","label":"来源单据","fieldtype":"Section Break"},
+  {"fieldname":"quality_inspection","label":"质检单","fieldtype":"Link","options":"Quality Inspection","reqd":1,"read_only":1,"in_list_view":1,"in_standard_filter":1},
+  {"fieldname":"purchase_order","label":"采购订单","fieldtype":"Link","options":"Purchase Order","reqd":1,"read_only":1},
+  {"fieldname":"source_column","fieldtype":"Column Break"},
+  {"fieldname":"purchase_receipt","label":"原采购送货单","fieldtype":"Link","options":"Purchase Receipt","reqd":1,"read_only":1},
+  {"fieldname":"receiving_notice","label":"收料通知单","fieldtype":"Link","options":"Purchase Receiving Notice","read_only":1},
+  {"fieldname":"stock_return","label":"关联库存退货单","fieldtype":"Link","options":"Purchase Receipt","read_only":1,"no_copy":1},
+  {"fieldname":"reason_column","fieldtype":"Column Break"},
+  {"fieldname":"return_reason","label":"退货原因","fieldtype":"Small Text"},
+  {"fieldname":"items_section","label":"退货明细","fieldtype":"Section Break"},
+  {"fieldname":"items","label":"退货明细","fieldtype":"Table","options":"Purchase Quality Return Item","reqd":1},
+  {"fieldname":"remarks_section","label":"退货说明","fieldtype":"Section Break","collapsible":1},
+  {"fieldname":"remarks","label":"退货说明","fieldtype":"Small Text"}
+ ],
+ "permissions":[
+  {"role":"Purchase User","read":1,"create":1,"write":1,"submit":1,"cancel":1,"print":1},
+  {"role":"Purchase Manager","read":1,"create":1,"write":1,"submit":1,"cancel":1,"delete":1,"print":1},
+  {"role":"Stock Manager","read":1,"create":1,"write":1,"submit":1,"cancel":1,"print":1},
+  {"role":"System Manager","read":1,"create":1,"write":1,"submit":1,"cancel":1,"delete":1,"print":1}
+ ]
+}

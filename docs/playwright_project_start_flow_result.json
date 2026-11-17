@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "project": "PROJ-0008",
+  "beforeStage": "进行中",
+  "afterStage": "进行中",
+  "pageIndicatorText": "进行中",
+  "beforeGridText": "custom_project_progress_items\n进度节点\n节点名称\n权重\n计划完成日期\n关联单据\n状态\n实际完成时间\n备注\n11\n50.00%\n2026-09-16\n进行中\n22\n50.00%\n2026-09-17\n待开始\n添加行",
+  "afterGridText": "custom_project_progress_items\n进度节点\n节点名称\n权重\n计划完成日期\n关联单据\n状态\n实际完成时间\n备注\n11\n50.00%\n2026-09-16\n进行中\n22\n50.00%\n2026-09-17\n待开始\n添加行",
+  "alertText": []
+}

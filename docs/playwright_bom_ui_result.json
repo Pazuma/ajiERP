@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "browser": "Chromium",
+  "tested_at": "2026-08-25T09:18:48.873Z",
+  "results": [
+    {
+      "name": "BOM 详情字段与展开结构",
+      "status": "passed",
+      "details": "明细列和层级 0/1 展开表均渲染"
+    },
+    {
+      "name": "BOM 移动端布局",
+      "status": "passed",
+      "details": "展开表在容器内横向滚动，字段不相互遮挡"
+    },
+    {
+      "name": "BOM 模板字段配置",
+      "status": "passed",
+      "details": "头信息与明细模板字段和展示注册表一致"
+    }
+  ]
+}

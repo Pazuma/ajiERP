@@ -1,6 +1,9 @@
 frappe.ui.form.on("Sample Loan Out", {
     refresh(frm) {
         set_filters(frm);
+        if (frm.doc.docstatus === 1 && ["Loaned", "Partially Returned"].includes(frm.doc.status)) {
+            frm.add_custom_button("收回样品", () => frappe.new_doc("Sample Loan Out Return", {sample_loan_out: frm.doc.name, company: frm.doc.company}));
+        }
 
         if (frm.doc.docstatus === 1 && ["Loaned", "Partially Returned"].includes(frm.doc.status)) {
             frm.add_custom_button(__("Convert to Sales"), () => {
@@ -20,6 +23,15 @@ frappe.ui.form.on("Sample Loan Out", {
 });
 
 frappe.ui.form.on("Sample Loan Out Item", {
+    items_add(frm, cdt, cdn) {
+        frappe.db.get_single_value("Stock Settings", "custom_customer_loan_warehouse").then(value => {
+            if (value && !locals[cdt][cdn].loan_warehouse) frappe.model.set_value(cdt, cdn, "loan_warehouse", value);
+        });
+    },
+    party_type(frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+        frappe.model.set_value(cdt, cdn, row.party_type === "Supplier" ? "customer" : "supplier", "");
+    },
     customer(frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         if (!row.customer) {

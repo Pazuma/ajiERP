@@ -1,0 +1,13 @@
+{
+ "doctype": "Report",
+ "name": "Quality Nonconforming Items",
+ "report_name": "Quality Nonconforming Items",
+ "module": "Client Akivision",
+ "ref_doctype": "Quality Inspection",
+ "report_type": "Script Report",
+ "is_standard": "Yes",
+ "disabled": 0,
+ "prepared_report": 0,
+ "add_total_row": 0,
+ "roles": [{"role": "Quality Manager"}, {"role": "System Manager"}]
+}

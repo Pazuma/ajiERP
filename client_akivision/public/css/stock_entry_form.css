@@ -1,0 +1,159 @@
+.akv-stock-entry-page .layout-main-section,
+.akv-stock-entry-page .layout-side-section,
+.akv-stock-entry-page .layout-side-section .form-sidebar,
+.akv-stock-entry-page .layout-side-section .form-sidebar a,
+.akv-stock-entry-page .layout-side-section .form-sidebar span,
+.akv-stock-entry-page .layout-side-section .form-sidebar div,
+.akv-stock-entry-page .layout-side-section .text-muted,
+.akv-stock-entry-page .layout-side-section .modified-by,
+.akv-stock-entry-page .layout-side-section .creation,
+.akv-stock-entry-form,
+.akv-stock-entry-form .control-label,
+.akv-stock-entry-form .control-value,
+.akv-stock-entry-form .like-disabled-input,
+.akv-stock-entry-form .form-control,
+.akv-stock-entry-form .section-head,
+.akv-stock-entry-form .static-area,
+.akv-stock-entry-form .text-muted,
+.akv-stock-entry-form .small,
+.akv-stock-entry-form .help-box,
+.akv-stock-entry-form .field-description,
+.akv-stock-entry-form .description,
+.akv-stock-entry-form .checkbox label,
+.akv-stock-entry-form .grid-footer,
+.akv-stock-entry-form .form-clickable-section {
+	color: #111827 !important;
+}
+
+.akv-stock-entry-page .layout-main-section input,
+.akv-stock-entry-page .layout-main-section select,
+.akv-stock-entry-page .layout-main-section textarea,
+.akv-stock-entry-page .layout-main-section button,
+.akv-stock-entry-page .layout-main-section .like-disabled-input,
+.akv-stock-entry-page .layout-main-section .control-value,
+.akv-stock-entry-page .layout-main-section .static-area {
+	color: #111827 !important;
+	-webkit-text-fill-color: #111827 !important;
+	opacity: 1 !important;
+}
+
+.akv-stock-entry-page .layout-main-section input::placeholder,
+.akv-stock-entry-page .layout-main-section textarea::placeholder {
+	color: #111827 !important;
+	opacity: 1 !important;
+}
+
+.akv-stock-entry-form [data-fieldname="posting_time"] .time-zone,
+.akv-stock-entry-form [data-fieldname="posting_time"] .timezone,
+.akv-stock-entry-form [data-fieldname="posting_time"] .text-muted,
+.akv-stock-entry-form [data-fieldname="posting_time"] .text-extra-muted,
+.akv-stock-entry-form [data-fieldname="posting_time"] .help-box {
+	display: none !important;
+}
+
+.akv-stock-entry-header-section .section-body {
+	display: block !important;
+}
+
+.akv-stock-entry-header-layout {
+	width: 100%;
+	padding: 4px 15px 14px;
+}
+
+.akv-stock-entry-header-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 18px 28px;
+	width: 100%;
+}
+
+.akv-stock-entry-header-field {
+	min-width: 0;
+	margin: 0 !important;
+}
+
+.akv-stock-entry-header-field .control-label {
+	display: block;
+	margin-bottom: 6px;
+	font-weight: 500;
+}
+
+.akv-stock-entry-header-field .form-control,
+.akv-stock-entry-header-field .like-disabled-input,
+.akv-stock-entry-header-field .control-value {
+	width: 100%;
+	min-height: 34px;
+	border: 1px solid #d1d5db !important;
+	border-radius: 5px !important;
+	background: #fff !important;
+	box-shadow: none !important;
+}
+
+.akv-stock-entry-header-field[data-fieldname="custom_stock_entry_number"] > .form-group,
+.akv-stock-entry-header-field[data-fieldname="custom_stock_entry_number"] .form-group {
+	margin: 0;
+}
+
+.akv-stock-entry-option-title {
+	margin-top: 20px;
+	padding-top: 14px;
+	border-top: 1px solid #e5e7eb;
+	color: #111827;
+	font-weight: 700;
+}
+
+.akv-stock-entry-check-grid {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px 32px;
+	padding-top: 10px;
+}
+
+.akv-stock-entry-header-check {
+	margin: 0 !important;
+}
+
+.akv-stock-entry-header-check .checkbox {
+	margin: 0;
+	padding: 0;
+}
+
+.akv-stock-entry-header-check .checkbox label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-weight: 500;
+}
+
+.akv-stock-entry-empty-layout {
+	display: none !important;
+}
+
+.akv-stock-entry-source-section > .section-body {
+	display: block;
+}
+
+.akv-stock-entry-source-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 18px 28px;
+	width: 100%;
+	padding: 4px 15px 14px;
+}
+
+.akv-stock-entry-source-grid > .frappe-control {
+	min-width: 0;
+	max-width: none;
+	margin-bottom: 0;
+}
+
+@media (max-width: 1199px) {
+	.akv-stock-entry-header-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+	.akv-stock-entry-header-grid { grid-template-columns: minmax(0, 1fr); }
+	.akv-stock-entry-source-grid { grid-template-columns: minmax(0, 1fr); }
+}

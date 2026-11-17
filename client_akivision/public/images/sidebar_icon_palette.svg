@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="slate" color-interpolation-filters="sRGB">
+    <!-- Map blue tiles to slate and white artwork to silver; preserve alpha. -->
+    <feColorMatrix type="matrix" values="0.6784 0 0 0 0.2196  0.6118 0 0 0 0.3176  0.5412 0 0 0 0.4196  0 0 0 1 0"/>
+  </filter>
+</svg>

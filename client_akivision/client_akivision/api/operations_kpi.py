@@ -4,7 +4,10 @@ from collections import defaultdict
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, date_diff, flt, get_first_day, getdate, nowdate
+from frappe.utils import add_days, add_months, cint, date_diff, flt, get_first_day, getdate, nowdate
+
+from client_akivision.utils.sales_order_completion import get_sales_order_invoice_payment_details
+from client_akivision.utils.kpi_page_permissions import check_project_timeout_access
 
 
 KPI_ROLES = {
@@ -34,8 +37,11 @@ DEFAULT_PURCHASE_DELAY_RISK_RULES = [
 ]
 DRILLDOWN_REPORTS = {
 	"sales_order_list": "Sales Order List",
+	"delivery_list": "Delivery List",
+	"receipt_record": "Receipt Record",
 	"receivable_aging_analysis": "Receivable Aging Analysis",
 	"purchase_delay_analysis": "Purchase Delay Analysis",
+	"high_tech_revenue_analysis": "High-tech Revenue Analysis",
 }
 OPERATION_DRILLDOWNS = {
 	"production_completion_rate": {"route": ["List", "Work Order"], "doctype": "Work Order", "date_field": "planned_start_date"},
@@ -56,9 +62,76 @@ def normalise_filters(filters=None):
 		frappe.throw(_("请先选择公司。"))
 	filters.from_date = getdate(filters.get("from_date") or get_first_day(nowdate()))
 	filters.to_date = getdate(filters.get("to_date") or nowdate())
+	requested_sales_person = filters.get("sales_person") or ""
+	from client_akivision.utils.order_record_permissions import get_current_sales_person, is_scoped_user
+	if is_scoped_user("Sales Order"):
+		filters.sales_person = get_current_sales_person() or "__NO_MAPPED_SALES_PERSON__"
+	else:
+		filters.sales_person = requested_sales_person
+	filters.project_timeout_page = max(1, cint(filters.get("project_timeout_page") or 1))
+	filters.project_timeout_page_length = min(2500, max(1, cint(filters.get("project_timeout_page_length") or 20)))
 	if filters.from_date > filters.to_date:
 		frappe.throw(_("开始日期不能晚于截止日期。"))
 	return filters
+
+
+def sales_person_exists_clause(parent_alias, filters, team_alias="kpi_sales_team"):
+	"""Limit a sales document to one Sales Person when the dashboard filter is set."""
+	from client_akivision.utils.order_record_permissions import get_order_scope_condition, is_scoped_user
+
+	if is_scoped_user("Sales Order") and parent_alias == "so":
+		return f" AND ({get_order_scope_condition('Sales Order', alias=parent_alias)})"
+	if not filters.get("sales_person"):
+		return ""
+	return f" AND EXISTS (SELECT 1 FROM `tabSales Team` {team_alias} WHERE {team_alias}.parent = {parent_alias}.name AND {team_alias}.sales_person = %(sales_person)s)"
+
+
+def _order_comparison_periods(filters):
+	"""Return the previous equal-length range and the matching prior-year range."""
+	span = date_diff(filters.to_date, filters.from_date) + 1
+	previous_to = add_days(filters.from_date, -1)
+	previous_from = add_days(previous_to, -(span - 1))
+	return {
+		"current": (filters.from_date, filters.to_date),
+		"previous": (previous_from, previous_to),
+		"year_ago": (add_months(filters.from_date, -12), add_months(filters.to_date, -12)),
+	}
+
+
+def _sales_order_count(filters, date_range):
+	from_date, to_date = date_range
+	person_clause = sales_person_exists_clause("so", filters, "comparison_sales_team")
+	row = frappe.db.sql(
+		f"""SELECT COUNT(*) AS order_count FROM `tabSales Order` so
+		WHERE so.docstatus = 1 AND so.company = %(company)s
+		AND so.transaction_date BETWEEN %(comparison_from)s AND %(comparison_to)s{person_clause}""",
+		{**filters, "comparison_from": from_date, "comparison_to": to_date},
+		as_dict=True,
+	)[0]
+	return cint(row.order_count)
+
+
+def _comparison_rate(current, baseline):
+	if not baseline:
+		return None
+	return flt(current - baseline) / flt(baseline)
+
+
+def get_sales_order_comparison(filters):
+	periods = _order_comparison_periods(filters)
+	current = _sales_order_count(filters, periods["current"])
+	previous = _sales_order_count(filters, periods["previous"])
+	year_ago = _sales_order_count(filters, periods["year_ago"])
+	return {
+		"current_count": current,
+		"previous_count": previous,
+		"year_ago_count": year_ago,
+		"mom_rate": _comparison_rate(current, previous),
+		"yoy_rate": _comparison_rate(current, year_ago),
+		"period": {"from_date": str(periods["current"][0]), "to_date": str(periods["current"][1])},
+		"previous_period": {"from_date": str(periods["previous"][0]), "to_date": str(periods["previous"][1])},
+		"year_ago_period": {"from_date": str(periods["year_ago"][0]), "to_date": str(periods["year_ago"][1])},
+	}
 
 
 def check_dashboard_access():
@@ -72,14 +145,22 @@ def get_kpi_dashboard_data(filters=None):
 	filters = normalise_filters(filters)
 	aging_rows = get_receivable_aging_rows(filters)
 	purchase_delay_rows = get_purchase_delay_rows(filters)
+	salesperson_limit = None if str(filters.get("salesperson_limit") or "top10").lower() in {"all", "全部"} else 10
 	return {
-		"filters": {"company": filters.company, "from_date": str(filters.from_date), "to_date": str(filters.to_date)},
+		"filters": {
+			"company": filters.company,
+			"from_date": str(filters.from_date),
+			"to_date": str(filters.to_date),
+			"salesperson_limit": "all" if salesperson_limit is None else salesperson_limit,
+			"sales_person": filters.sales_person,
+		},
 		"drilldown_permissions": get_drilldown_permissions(),
 		"operations_drilldowns": get_operations_drilldowns(filters),
 		"sales": get_sales_kpis(filters),
 		"delivery": get_delivery_kpis(filters),
 		"receivable": get_receivable_kpis(filters, aging_rows),
-		"salesperson": get_salesperson_kpis(filters),
+		"salesperson": get_salesperson_kpis(filters, limit=salesperson_limit),
+		"salesperson_limit": "all" if salesperson_limit is None else salesperson_limit,
 		"year_over_year": get_year_over_year_kpis(filters),
 		"reconciliation": get_reconciliation_kpis(filters),
 		"aging": {"distribution": get_aging_distribution(aging_rows), "top_customers": get_overdue_customers(aging_rows)},
@@ -92,13 +173,68 @@ def get_kpi_dashboard_data(filters=None):
 	}
 
 
-def _workspace_card(metric_data, route, filters):
+@frappe.whitelist()
+def get_project_progress_timeout_data(filters=None):
+	check_project_timeout_access()
+	filters = normalise_filters(filters)
+	return get_project_progress_timeout_rows(filters)
+
+
+def get_project_progress_timeout_rows(filters, paginate=True):
+	"""Return completed project steps whose completion date exceeded the planned date."""
+	projects = frappe.get_list(
+		"Project",
+		filters={"company": filters.company},
+		fields=["name", "project_name"],
+		limit_page_length=0,
+	)
+	if not projects:
+		return {"rows": [], "total": 0, "page": filters.project_timeout_page, "page_length": filters.project_timeout_page_length}
+
+	project_names = [project.name for project in projects]
+	project_titles = {project.name: project.project_name for project in projects}
+	rows = frappe.get_all(
+		"Project Progress Item",
+		filters={
+			"parenttype": "Project",
+			"parent": ["in", project_names],
+			"status": "已完成",
+			"actual_completed_on": ["between", [str(filters.from_date), str(add_days(filters.to_date, 1))]],
+		},
+		fields=["parent as project", "subject as step_name", "expected_end_date", "actual_completed_on", "remarks", "idx"],
+		order_by="actual_completed_on desc, parent asc, idx asc",
+		limit_page_length=0,
+	)
+	rows = [
+		row for row in rows
+		if row.expected_end_date and row.actual_completed_on
+		and filters.from_date <= getdate(row.actual_completed_on) <= filters.to_date
+		and getdate(row.actual_completed_on) > getdate(row.expected_end_date)
+	]
+	for row in rows:
+		row.project_name = project_titles.get(row.project) or row.project
+
+	total = len(rows)
+	if paginate:
+		start = (filters.project_timeout_page - 1) * filters.project_timeout_page_length
+		rows = rows[start:start + filters.project_timeout_page_length]
+	return {
+		"rows": rows,
+		"total": total,
+		"page": filters.project_timeout_page,
+		"page_length": filters.project_timeout_page_length,
+	}
+
+
+def _workspace_card(metric_data, route, filters, route_options=None):
 	"""Adapt one KPI metric to Frappe's native Number Card response format."""
+	options = {"company": filters.company, "from_date": str(filters.from_date), "to_date": str(filters.to_date)}
+	options.update(route_options or {})
 	return {
 		"value": metric_data.get("value"),
 		"fieldtype": metric_data.get("datatype", "Float"),
 		"route": route,
-		"route_options": {"company": filters.company, "from_date": str(filters.from_date), "to_date": str(filters.to_date)},
+		"route_options": options,
 	}
 
 
@@ -128,7 +264,14 @@ def workspace_sales_orders(filters=None):
 
 @frappe.whitelist()
 def workspace_delivery_completed(filters=None):
-	return _get_workspace_metric("delivery", "completed_orders", ["query-report", "Delivery List"], filters)
+	check_dashboard_access()
+	filters = normalise_filters(filters)
+	return _workspace_card(
+		get_delivery_kpis(filters)["completed_orders"],
+		["query-report", "Sales Order List"],
+		filters,
+		{"status": "已完成"},
+	)
 
 
 @frappe.whitelist()
@@ -157,60 +300,95 @@ def workspace_high_tech_revenue(filters=None):
 
 
 def get_sales_kpis(filters):
+	person_clause = sales_person_exists_clause("so", filters)
 	row = frappe.db.sql(
-		"""
-		SELECT COUNT(*) AS total_orders, COALESCE(SUM(grand_total), 0) AS total_sales_amount,
-			COALESCE(SUM(CASE WHEN custom_is_high_tech_revenue = 1 THEN grand_total ELSE 0 END), 0) AS high_tech_revenue
-		FROM `tabSales Order`
+		f"""
+		SELECT COUNT(*) AS total_orders, COALESCE(SUM(base_grand_total), 0) AS total_sales_amount,
+			COALESCE(SUM(CASE WHEN custom_is_high_tech_revenue = 1 THEN base_grand_total ELSE 0 END), 0) AS high_tech_revenue
+		FROM `tabSales Order` so
 		WHERE docstatus = 1 AND company = %(company)s
-			AND transaction_date BETWEEN %(from_date)s AND %(to_date)s
+			AND transaction_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 		""",
 		filters,
 		as_dict=True,
 	)[0]
 	total = flt(row.total_sales_amount)
+	status_rows = frappe.db.sql(
+		f"""
+		SELECT status, COUNT(*) AS order_count, COALESCE(SUM(base_grand_total), 0) AS order_amount,
+			COALESCE(SUM(CASE WHEN per_delivered >= 100 AND per_billed >= 100 THEN 1 ELSE 0 END), 0) AS fully_completed
+		FROM `tabSales Order` so
+		WHERE so.docstatus = 1 AND so.company = %(company)s
+			AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
+		GROUP BY status
+		""", filters, as_dict=True,
+	)
+	status_summary = {row.status or "未指定": {"count": cint(row.order_count), "amount": flt(row.order_amount)} for row in status_rows}
+	fully_completed = frappe.db.sql(
+		f"""SELECT COUNT(*) AS count, COALESCE(SUM(base_grand_total), 0) AS amount
+		FROM `tabSales Order` so WHERE so.docstatus = 1 AND so.company = %(company)s
+		AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s
+		AND so.per_delivered >= 100 AND so.per_billed >= 100{person_clause}""", filters, as_dict=True,
+	)[0]
 	return {
-		"total_orders": metric(row.total_orders, "Int"),
-		"total_sales_amount": metric(total, "Currency"),
-		"high_tech_revenue": metric(row.high_tech_revenue, "Currency"),
-		"high_tech_ratio": metric(percent(row.high_tech_revenue, total), "Percent"),
+		"total_orders": metric(row.total_orders, "Int", get_target("total_orders", filters)),
+		"total_sales_amount": metric(total, "Currency", get_target("total_sales_amount", filters)),
+		"high_tech_revenue": metric(row.high_tech_revenue, "Currency", get_target("high_tech_revenue", filters)),
+		"high_tech_ratio": metric(percent(row.high_tech_revenue, total), "Percent", get_target("high_tech_ratio", filters)),
+		"fully_completed_orders": metric(fully_completed.count, "Int"),
+		"fully_completed_amount": metric(flt(fully_completed.amount), "Currency"),
+		"order_status": metric(" / ".join(f"{status}: {value['count']}" for status, value in status_summary.items()) or "无数据", "Data"),
+		"order_comparison": get_sales_order_comparison(filters),
 	}
 
 
 def get_delivery_kpis(filters):
+	person_clause = sales_person_exists_clause("so", filters)
 	rows = frappe.db.sql(
-		"""
-		SELECT so.name, MIN(CASE WHEN soi.delivered_qty >= soi.qty THEN 1 ELSE 0 END) AS fully_delivered,
+		f"""
+		SELECT so.name, so.per_billed,
+			MIN(CASE WHEN soi.delivered_qty >= soi.qty THEN 1 ELSE 0 END) AS fully_delivered,
 			MAX(CASE WHEN soi.delivered_qty > 0 THEN 1 ELSE 0 END) AS any_delivered
 		FROM `tabSales Order` so
 		INNER JOIN `tabSales Order Item` soi ON soi.parent = so.name
 		WHERE so.docstatus = 1 AND so.company = %(company)s
-			AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s
-		GROUP BY so.name
+			AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
+		GROUP BY so.name, so.per_billed
 		""",
 		filters,
 		as_dict=True,
 	)
-	completed = sum(flt(row.fully_delivered) == 1 for row in rows)
+	invoices = get_sales_order_invoice_payment_details([row.name for row in rows])
+	fully_delivered = sum(flt(row.fully_delivered) == 1 for row in rows)
+	final_completed = sum(
+		flt(row.fully_delivered) == 1
+		and flt(row.per_billed) >= 100
+		and invoices.get(row.name, {}).get("has_invoice")
+		and invoices.get(row.name, {}).get("all_paid")
+		for row in rows
+	)
 	in_progress = sum(flt(row.fully_delivered) != 1 and flt(row.any_delivered) == 1 for row in rows)
-	undelivered = len(rows) - completed - in_progress
+	undelivered = len(rows) - fully_delivered - in_progress
 	return {
-		"completed_orders": metric(completed, "Int"),
-		"pending_orders": metric(len(rows) - completed, "Int"),
-		"delivered_orders": metric(completed, "Int"),
-		"delivering_orders": metric(in_progress, "Int"),
-		"undelivered_orders": metric(undelivered, "Int"),
+		"completed_orders": metric(final_completed, "Int", get_target("completed_orders", filters)),
+		"pending_orders": metric(len(rows) - final_completed, "Int", get_target("pending_orders", filters)),
+		"fully_delivered_orders": metric(fully_delivered, "Int"),
+		# Delivered means at least one item has shipped; fully delivered means all items shipped.
+		"delivered_orders": metric(sum(flt(row.any_delivered) == 1 for row in rows), "Int", get_target("delivered_orders", filters)),
+		"delivering_orders": metric(in_progress, "Int", get_target("delivering_orders", filters)),
+		"undelivered_orders": metric(undelivered, "Int", get_target("undelivered_orders", filters)),
 	}
 
 
 def get_receivable_aging_rows(filters):
+	person_clause = sales_person_exists_clause("si", filters)
 	rows = frappe.db.sql(
-		"""
+		f"""
 		SELECT si.name AS sales_invoice, si.customer, si.customer_name, si.posting_date,
 			si.due_date, si.grand_total, si.outstanding_amount
 		FROM `tabSales Invoice` si
 		WHERE si.docstatus = 1 AND si.company = %(company)s
-			AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s
+			AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 		""",
 		filters,
 		as_dict=True,
@@ -225,15 +403,16 @@ def get_receivable_aging_rows(filters):
 
 
 def get_receivable_kpis(filters, aging_rows):
+	person_clause = sales_person_exists_clause("si", filters, "kpi_collection_sales_team")
 	collections = frappe.db.sql(
-		"""
+		f"""
 		SELECT COALESCE(SUM(per.allocated_amount), 0) AS received_amount
 		FROM `tabPayment Entry` pe
 		INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
 		INNER JOIN `tabSales Invoice` si ON si.name = per.reference_name
 		WHERE pe.docstatus = 1 AND pe.payment_type = 'Receive'
 			AND per.reference_doctype = 'Sales Invoice' AND pe.company = %(company)s
-			AND pe.posting_date BETWEEN %(from_date)s AND %(to_date)s
+			AND pe.posting_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 		""",
 		filters,
 		as_dict=True,
@@ -246,24 +425,25 @@ def get_receivable_kpis(filters, aging_rows):
 	month_filters.from_date = get_first_day(filters.to_date)
 	target = get_target("collection_amount_monthly", month_filters)
 	month_received = frappe.db.sql(
-		"""SELECT COALESCE(SUM(per.allocated_amount), 0)
-		FROM `tabPayment Entry` pe INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
-		WHERE pe.docstatus = 1 AND pe.payment_type = 'Receive' AND per.reference_doctype = 'Sales Invoice'
-			AND pe.company = %(company)s AND pe.posting_date BETWEEN %(from_date)s AND %(to_date)s""",
+		f"""SELECT COALESCE(SUM(per.allocated_amount), 0)
+			FROM `tabPayment Entry` pe INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
+			INNER JOIN `tabSales Invoice` si ON si.name = per.reference_name
+			WHERE pe.docstatus = 1 AND pe.payment_type = 'Receive' AND per.reference_doctype = 'Sales Invoice'
+				AND pe.company = %(company)s AND pe.posting_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}""",
 		month_filters,
 	)[0][0]
 	return {
-		"received_amount": metric(collections.received_amount, "Currency"),
-		"receivable_amount": metric(open_balance, "Currency"),
-		"settled_documents": metric(sum(row.status == "已结清" for row in aging_rows), "Int"),
-		"unsettled_documents": metric(len(open_rows), "Int"),
-		"average_receivable_days": metric(percent(weighted_days, open_balance), "Float"),
-		"overdue_over_90": metric(overdue_90, "Currency"),
-		"receivable_turnover_days": metric(percent(weighted_days, open_balance), "Float"),
-		"total_receivable_balance": metric(open_balance, "Currency"),
+		"received_amount": metric(collections.received_amount, "Currency", get_target("received_amount", filters)),
+		"receivable_amount": metric(open_balance, "Currency", get_target("receivable_amount", filters)),
+		"settled_documents": metric(sum(row.status == "已结清" for row in aging_rows), "Int", get_target("settled_documents", filters)),
+		"unsettled_documents": metric(len(open_rows), "Int", get_target("unsettled_documents", filters)),
+		"average_receivable_days": metric(percent(weighted_days, open_balance), "Float", get_target("average_receivable_days", filters)),
+		"overdue_over_90": metric(overdue_90, "Currency", get_target("overdue_over_90", filters)),
+		"receivable_turnover_days": metric(percent(weighted_days, open_balance), "Float", get_target("receivable_turnover_days", filters)),
+		"total_receivable_balance": metric(open_balance, "Currency", get_target("receivable_amount", filters)),
 		"aging_0_30": metric(sum(r.outstanding_amount for r in open_rows if r.receivable_days <= 30), "Currency"),
 		"aging_31_90": metric(sum(r.outstanding_amount for r in open_rows if 31 <= r.receivable_days <= 90), "Currency"),
-		"aging_over_90": metric(overdue_90, "Currency"),
+		"aging_over_90": metric(overdue_90, "Currency", get_target("overdue_over_90", filters)),
 		"monthly_collection_completion": get_monthly_collection_completion(month_received, target),
 	}
 
@@ -303,16 +483,20 @@ def get_operations_drilldowns(filters):
 	return result
 
 
-def get_salesperson_kpis(filters):
+def get_salesperson_kpis(filters, limit=10):
+	person_clause = " AND st.sales_person = %(sales_person)s" if filters.get("sales_person") else ""
+	from client_akivision.utils.order_record_permissions import is_scoped_user
+	if is_scoped_user("Sales Order"):
+		person_clause = " AND st.sales_person = %(sales_person)s"
 	delivery_rows = frappe.db.sql(
-		"""
+		f"""
 		SELECT st.sales_person, COUNT(DISTINCT dn.name) AS delivery_count,
 			COALESCE(SUM(dni.amount * COALESCE(st.allocated_percentage, 0) / 100), 0) AS delivery_amount
 		FROM `tabDelivery Note` dn
 		INNER JOIN `tabDelivery Note Item` dni ON dni.parent = dn.name
 		LEFT JOIN `tabSales Team` st ON st.parent = dni.against_sales_order
 		WHERE dn.docstatus = 1 AND dn.company = %(company)s
-			AND dn.posting_date BETWEEN %(from_date)s AND %(to_date)s
+			AND dn.posting_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 		GROUP BY st.sales_person ORDER BY delivery_amount DESC
 		""",
 		filters,
@@ -326,16 +510,16 @@ def get_salesperson_kpis(filters):
 		if row.sales_person
 	}
 	order_rows = frappe.db.sql(
-		"""SELECT st.sales_person,
+		f"""SELECT st.sales_person,
 			COALESCE(SUM(so.grand_total * COALESCE(st.allocated_percentage, 0) / 100), 0) AS order_amount
 		FROM `tabSales Order` so INNER JOIN `tabSales Team` st ON st.parent = so.name
-		WHERE so.docstatus = 1 AND so.company = %(company)s AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s
+		WHERE so.docstatus = 1 AND so.company = %(company)s AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 		GROUP BY st.sales_person""",
 		filters,
 		as_dict=True,
 	)
 	financial_rows = frappe.db.sql(
-		"""SELECT st.sales_person,
+		f"""SELECT st.sales_person,
 			COALESCE(SUM(si.outstanding_amount * COALESCE(st.allocated_percentage, 0) / 100), 0) AS personal_receivable,
 			COALESCE(SUM(COALESCE(receipts.received_amount, 0) * COALESCE(st.allocated_percentage, 0) / 100), 0) AS personal_received
 		FROM `tabSales Invoice` si INNER JOIN `tabSales Team` st ON st.parent = si.name
@@ -346,7 +530,7 @@ def get_salesperson_kpis(filters):
 				AND pe.company = %(company)s AND pe.posting_date BETWEEN %(from_date)s AND %(to_date)s
 			GROUP BY per.reference_name
 		) receipts ON receipts.sales_invoice = si.name
-		WHERE si.docstatus = 1 AND si.company = %(company)s AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s
+		WHERE si.docstatus = 1 AND si.company = %(company)s AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 		GROUP BY st.sales_person""",
 		filters,
 		as_dict=True,
@@ -361,36 +545,50 @@ def get_salesperson_kpis(filters):
 	for row in data.values():
 		row.delivery_rate = percent(row.delivery_amount, row.order_amount)
 		row.collection_rate = percent(row.personal_received, row.personal_received + row.personal_receivable)
-	return sorted(data.values(), key=lambda row: row.delivery_amount, reverse=True)[:10]
+	rows = sorted(data.values(), key=lambda row: row.delivery_amount, reverse=True)
+	return rows if limit is None else rows[: max(1, min(int(limit), 500))]
 
 
 def get_year_over_year_kpis(filters):
 	previous = frappe._dict(filters.copy())
-	previous.from_date = add_days(filters.from_date, -365)
-	previous.to_date = add_days(filters.to_date, -365)
+	# Compare the same calendar period instead of subtracting 365 days, which
+	# shifts leap-year and month boundaries.
+	previous.from_date = add_months(filters.from_date, -12)
+	previous.to_date = add_months(filters.to_date, -12)
 	current_sales = get_sales_kpis(filters)["total_sales_amount"]["value"]
 	previous_sales = get_sales_kpis(previous)["total_sales_amount"]["value"]
 	current_ar = sum(row.outstanding_amount for row in get_receivable_aging_rows(filters))
 	previous_ar = sum(row.outstanding_amount for row in get_receivable_aging_rows(previous))
 	return {
-		"prior_sales_amount": metric(previous_sales, "Currency"),
-		"sales_growth_rate": metric(percent(current_sales - previous_sales, previous_sales), "Percent"),
-		"receivable_growth_rate": metric(percent(current_ar - previous_ar, previous_ar), "Percent"),
+		"prior_sales_amount": metric(previous_sales, "Currency", get_target("prior_sales_amount", filters)),
+		"sales_growth_rate": metric(percent(current_sales - previous_sales, previous_sales), "Percent", get_target("sales_growth_rate", filters)),
+		"receivable_growth_rate": metric(percent(current_ar - previous_ar, previous_ar), "Percent", get_target("receivable_growth_rate", filters)),
 	}
 
 
 def get_reconciliation_kpis(filters):
 	delivery = get_delivery_kpis(filters)
+	person_clause = sales_person_exists_clause("so", filters)
 	mismatches = frappe.db.sql(
-		"""SELECT COUNT(*) FROM (
-			SELECT so.name FROM `tabSales Order` so INNER JOIN `tabSales Order Item` soi ON soi.parent = so.name
-			WHERE so.docstatus = 1 AND so.company = %(company)s AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s
+		f"""SELECT COUNT(*) FROM (
+			SELECT so.name, so.status,
+				MIN(CASE WHEN soi.delivered_qty >= soi.qty THEN 1 ELSE 0 END) AS fully_delivered,
+				MAX(CASE WHEN soi.delivered_qty > 0 THEN 1 ELSE 0 END) AS any_delivered
+			FROM `tabSales Order` so INNER JOIN `tabSales Order Item` soi ON soi.parent = so.name
+			WHERE so.docstatus = 1 AND so.company = %(company)s AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s{person_clause}
 			GROUP BY so.name, so.status
-			HAVING (so.status = 'Completed' AND MIN(CASE WHEN soi.delivered_qty >= soi.qty THEN 1 ELSE 0 END) = 0)
+			HAVING (
+				(so.status IN ('Completed', 'Closed') AND fully_delivered = 0)
+				OR (so.status IN ('To Deliver', 'To Deliver and Bill') AND any_delivered = 1)
+				OR (so.status = 'Partially Delivered' AND any_delivered = 0)
+			)
 		) AS mismatched_orders""",
 		filters,
 	)[0][0]
-	return {"unfinished_orders": delivery["pending_orders"], "status_mismatch_count": metric(mismatches, "Int")}
+	return {
+		"unfinished_orders": metric(delivery["pending_orders"]["value"], "Int", get_target("unfinished_orders", filters)),
+		"status_mismatch_count": metric(mismatches, "Int", get_target("status_mismatch_count", filters)),
+	}
 
 
 def get_aging_distribution(rows):
@@ -418,6 +616,8 @@ def get_overdue_customers(rows):
 
 
 def get_operations_kpis(filters, po_rows=None):
+	from client_akivision.utils.order_record_permissions import get_order_scope_condition, is_scoped_user
+
 	work_orders = frappe.db.sql(
 		"""SELECT COALESCE(SUM(qty), 0) AS planned, COALESCE(SUM(produced_qty), 0) AS produced
 		FROM `tabWork Order` WHERE docstatus = 1 AND company = %(company)s
@@ -431,12 +631,15 @@ def get_operations_kpis(filters, po_rows=None):
 	# late and must not dilute the on-time rate.
 	total_po = sum(row["evaluated_order_count"] for row in po_rows)
 	on_time = sum(row["on_time_order_count"] for row in po_rows)
+	po_owner_condition = ""
+	if is_scoped_user("Purchase Order"):
+		po_owner_condition = f" AND ({get_order_scope_condition('Purchase Order', alias='po')})"
 	in_transit = frappe.db.sql(
-		"""SELECT COALESCE(SUM(GREATEST(poi.qty - COALESCE(poi.received_qty, 0), 0) * poi.rate), 0)
+		f"""SELECT COALESCE(SUM(GREATEST(poi.qty - COALESCE(poi.received_qty, 0), 0) * poi.rate), 0)
 		FROM `tabPurchase Order` po INNER JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
 		WHERE po.docstatus = 1 AND po.company = %(company)s AND po.transaction_date BETWEEN %(from_date)s AND %(to_date)s
 			AND IFNULL(poi.qty, 0) > IFNULL(poi.received_qty, 0)
-			AND COALESCE(po.status, '') NOT IN ('Closed', 'Cancelled')""",
+			AND COALESCE(po.status, '') NOT IN ('Closed', 'Cancelled'){po_owner_condition}""",
 		filters,
 	)[0][0]
 	excluded_warehouses = get_inventory_excluded_warehouses()
@@ -515,8 +718,13 @@ def get_production_trend(filters):
 
 def get_purchase_delay_item_rows(filters):
 	"""Raw PO item rows with receipt aggregates, shared by delay reports and the rating engine."""
+	from client_akivision.utils.order_record_permissions import get_order_scope_condition, is_scoped_user
+
+	owner_condition = ""
+	if is_scoped_user("Purchase Order"):
+		owner_condition = f" AND ({get_order_scope_condition('Purchase Order', alias='po')})"
 	return frappe.db.sql(
-		"""
+		f"""
 		SELECT po.supplier, po.supplier_name, po.name AS purchase_order,
 			po.transaction_date AS order_date,
 			poi.name AS purchase_order_item, poi.qty, poi.schedule_date AS expected_date,
@@ -527,7 +735,7 @@ def get_purchase_delay_item_rows(filters):
 		LEFT JOIN `tabPurchase Receipt Item` pri ON pri.purchase_order_item = poi.name
 		LEFT JOIN `tabPurchase Receipt` pr ON pr.name = pri.parent
 			AND pr.docstatus = 1 AND pr.posting_date <= %(to_date)s
-		WHERE po.docstatus = 1 AND po.company = %(company)s AND po.transaction_date BETWEEN %(from_date)s AND %(to_date)s
+		WHERE po.docstatus = 1 AND po.company = %(company)s AND po.transaction_date BETWEEN %(from_date)s AND %(to_date)s{owner_condition}
 		GROUP BY po.supplier, po.supplier_name, po.name, po.transaction_date, poi.name, poi.qty, poi.schedule_date
 		""",
 		filters,
@@ -731,11 +939,12 @@ def high_tech_compliance_metric(value, datatype, kpi_code, filters):
 
 
 def get_high_tech_trend(filters):
+	person_clause = sales_person_exists_clause("so", filters)
 	rows = frappe.db.sql(
-		"""SELECT YEAR(transaction_date) AS year, COALESCE(SUM(grand_total), 0) AS total_revenue,
+		f"""SELECT YEAR(transaction_date) AS year, COALESCE(SUM(grand_total), 0) AS total_revenue,
 			COALESCE(SUM(CASE WHEN custom_is_high_tech_revenue = 1 THEN grand_total ELSE 0 END), 0) AS high_tech_revenue
-		FROM `tabSales Order` WHERE docstatus = 1 AND company = %(company)s
-			AND transaction_date BETWEEN DATE_SUB(DATE_FORMAT(%(to_date)s, '%%Y-01-01'), INTERVAL 2 YEAR) AND %(to_date)s
+		FROM `tabSales Order` so WHERE docstatus = 1 AND company = %(company)s
+			AND transaction_date BETWEEN DATE_SUB(DATE_FORMAT(%(to_date)s, '%%Y-01-01'), INTERVAL 2 YEAR) AND %(to_date)s{person_clause}
 		GROUP BY YEAR(transaction_date) ORDER BY year""",
 		filters,
 		as_dict=True,
@@ -746,16 +955,24 @@ def get_high_tech_trend(filters):
 
 
 def get_high_tech_project_rows(filters):
-	return frappe.db.sql(
-		"""SELECT so.project, COALESCE(p.project_name, so.project) AS project_name,
+	from client_akivision.utils.project_permissions import require_project_finance
+	require_project_finance()
+	person_clause = sales_person_exists_clause("so", filters)
+	rows = frappe.db.sql(
+		f"""SELECT so.project, COALESCE(p.project_name, so.project) AS project_name,
 			COALESCE(SUM(so.grand_total), 0) AS high_tech_revenue
 		FROM `tabSales Order` so LEFT JOIN `tabProject` p ON p.name = so.project
 		WHERE so.docstatus = 1 AND so.company = %(company)s AND so.custom_is_high_tech_revenue = 1
 			AND so.project IS NOT NULL AND so.project != '' AND so.transaction_date BETWEEN %(from_date)s AND %(to_date)s
+			{person_clause}
 		GROUP BY so.project, p.project_name ORDER BY high_tech_revenue DESC""",
 		filters,
 		as_dict=True,
 	)
+	total = sum(flt(row.high_tech_revenue) for row in rows)
+	for row in rows:
+		row.ratio = percent(row.high_tech_revenue, total)
+	return rows
 
 
 def get_aging_rules():

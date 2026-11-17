@@ -1,0 +1,295 @@
+.page-head .page-actions .standard-actions .btn-primary[data-label="创建"],
+.page-head .page-actions .standard-actions .btn-primary,
+.page-head .page-actions .standard-actions .btn-group:has(.btn-primary) > .btn,
+.page-head .page-actions .standard-actions .btn-group:has(.btn-primary) > .dropdown-toggle {
+	background-color: #1683e8 !important;
+	border-color: #1683e8 !important;
+	color: #fff !important;
+}
+
+.page-head .page-actions .standard-actions .btn-primary:hover,
+.page-head .page-actions .standard-actions .btn-primary:focus,
+.page-head .page-actions .standard-actions .btn-primary:active,
+.page-head .page-actions .standard-actions .btn-group:has(.btn-primary) > .btn:hover,
+.page-head .page-actions .standard-actions .btn-group:has(.btn-primary) > .dropdown-toggle:hover {
+	background-color: #0969c3 !important;
+	border-color: #0969c3 !important;
+	color: #fff !important;
+}
+
+.akivision-purchase-order-form,
+.akivision-purchase-order-form .control-label,
+.akivision-purchase-order-form .control-value,
+.akivision-purchase-order-form .like-disabled-input,
+.akivision-purchase-order-form .form-control,
+.akivision-purchase-order-form .section-head,
+.akivision-purchase-order-form .static-area,
+.akivision-purchase-order-form .text-muted,
+.akivision-purchase-order-form .small,
+.akivision-purchase-order-form .grid-footer,
+.akivision-purchase-order-form .help-box,
+.akivision-purchase-order-form .field-description,
+.akivision-purchase-order-form .description {
+	color: #111827 !important;
+}
+
+.po-items-collapsible .po-items-title {
+	display: flex !important;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 8px;
+	color: #111827 !important;
+	font-weight: 700 !important;
+}
+
+.po-items-collapse {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 0 !important;
+	background: transparent !important;
+	color: #111827 !important;
+	box-shadow: none !important;
+}
+
+.po-items-collapse .icon { width: 14px; height: 14px; }
+
+.po-items-collapsible .mes-po-standard-grid-collapse:not(.po-items-collapse) {
+	display: none !important;
+}
+
+.po-header-section .section-body > .form-column {
+	padding-right: 18px;
+}
+
+.po-header-section .po-header-field:not(.po-header-check) .form-control,
+.po-header-section .po-header-field:not(.po-header-check) .like-disabled-input,
+.po-header-section .po-header-field:not(.po-header-check) .control-value {
+	width: 100%;
+	min-height: 34px;
+	border: 1px solid #d1d5db !important;
+	border-radius: 5px !important;
+	background-color: #fff !important;
+	box-shadow: none !important;
+}
+
+.po-header-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px 24px;
+	width: 100%;
+}
+
+.po-header-grid > .frappe-control {
+	min-width: 0;
+	margin: 0;
+}
+
+.po-header-empty-column { display: none !important; }
+
+.po-shipping-address-left .section-body > .form-column:first-child {
+	width: 50%;
+}
+
+.po-shipping-address-left .section-body > .form-column:nth-child(2) {
+	display: none;
+}
+
+.form-section[data-fieldname="totals_section"] .po-totals-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px 24px;
+	width: 100%;
+	padding: 4px 15px 18px;
+}
+
+.form-section[data-fieldname="totals_section"] .po-totals-grid > .frappe-control {
+	min-width: 0;
+	margin: 0;
+}
+
+.form-section[data-fieldname="totals_section"] .po-totals-grid .form-control,
+.form-section[data-fieldname="totals_section"] .po-totals-grid .like-disabled-input {
+	width: 100%;
+}
+
+.form-section[data-fieldname="totals_section"] .po-totals-grid > [data-fieldname="disable_rounded_total"] {
+	grid-column: 1 / -1;
+	padding-top: 12px;
+	border-top: 1px solid var(--border-color, #d1d8dd);
+}
+
+.form-section[data-fieldname="totals_section"] .section-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.form-section[data-fieldname="totals_section"] .po-totals-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+}
+
+.form-section[data-fieldname="totals_section"] .po-totals-toggle .icon {
+	width: 14px;
+	height: 14px;
+}
+
+@media (max-width: 1100px) {
+	.form-section[data-fieldname="totals_section"] .po-totals-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 767px) {
+	.po-header-grid { grid-template-columns: minmax(0, 1fr) !important; }
+	.po-shipping-address-left .section-body > .form-column:first-child { width: 100%; }
+	.form-section[data-fieldname="totals_section"] .po-totals-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.form-section[data-fieldname="supplier_section"] .po-header-field .form-control:focus,
+.form-section[data-fieldname="supplier_section"] .po-header-field .input-with-feedback:focus {
+	border-color: var(--primary, #2490ef) !important;
+	background-color: #fff !important;
+	box-shadow: 0 0 0 2px rgb(36 144 239 / 12%) !important;
+}
+
+.form-section[data-fieldname="supplier_section"] .po-header-check {
+	margin-top: 8px;
+}
+
+.form-section[data-fieldname="supplier_section"] .po-header-check .checkbox {
+	margin: 0;
+	padding: 8px 0;
+	border: 0;
+	background: transparent;
+}
+
+.form-section[data-fieldname="supplier_section"] .po-header-check .checkbox label {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 0;
+	font-weight: 600;
+	color: var(--text-color, #1f272e);
+}
+
+.form-section[data-fieldname="supplier_section"] .po-header-check input[type="checkbox"],
+.form-section[data-fieldname="supplier_section"] .po-header-check .input-with-feedback {
+	flex: 0 0 auto;
+	width: 18px !important;
+	height: 18px !important;
+	min-height: 18px !important;
+	margin: 1px 0 0 !important;
+	padding: 0 !important;
+	border-radius: 4px !important;
+	box-shadow: none !important;
+}
+
+.form-section[data-fieldname="supplier_section"] .po-header-check .help-box,
+.form-section[data-fieldname="supplier_section"] .po-header-check .field-description,
+.form-section[data-fieldname="supplier_section"] .po-header-check .description {
+	margin: 4px 0 0 28px;
+	color: #111827;
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	row-gap: 18px;
+	width: 100%;
+	padding: 4px 15px 18px;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-field-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	column-gap: 24px;
+	row-gap: 14px;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-field-grid > .frappe-control {
+	min-width: 0;
+	margin: 0;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-table,
+.form-section[data-fieldname="taxes_section"] .po-tax-table .grid-field,
+.form-section[data-fieldname="taxes_section"] .po-tax-table .form-grid-container,
+.form-section[data-fieldname="taxes_section"] .po-tax-table .form-grid {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-table .control-label {
+	display: block !important;
+	margin-bottom: 8px;
+	font-weight: 600;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 42px;
+	padding-top: 10px;
+	border-top: 1px solid var(--border-color, #d1d8dd);
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-summary-title {
+	font-weight: 600;
+}
+
+.form-section[data-fieldname="taxes_section"] .po-tax-summary-note {
+	color: #111827;
+	font-size: 12px;
+	font-weight: 400;
+}
+
+.po-order-table .form-grid {
+	border: 1px solid var(--table-border-color, #e2e2e2);
+	border-radius: var(--border-radius-md, 8px);
+	background-color: #fff;
+}
+
+.po-order-table .grid-heading-row,
+.po-order-table .grid-heading-row .grid-row {
+	background-color: var(--subtle-fg, #f3f3f3);
+}
+
+.po-order-table .grid-heading-row,
+.po-order-table .grid-heading-row .grid-static-col,
+.po-order-table .grid-heading-row .row-index,
+.po-order-table .grid-heading-row .static-area {
+	font-weight: 600 !important;
+}
+
+.po-order-table .grid-body,
+.po-order-table .grid-empty {
+	background-color: #fff;
+}
+
+@media (max-width: 767px) {
+	.form-section[data-fieldname="supplier_section"] .section-body > .form-column {
+		padding-right: 0;
+	}
+
+	.form-section[data-fieldname="taxes_section"] .po-tax-field-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

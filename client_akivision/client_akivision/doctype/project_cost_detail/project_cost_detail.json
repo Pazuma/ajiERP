@@ -1,0 +1,55 @@
+{
+ "doctype": "DocType",
+ "name": "Project Cost Detail",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "cost_type",
+   "fieldtype": "Select",
+   "label": "成本类型",
+   "options": "物料消耗\n测试费\n其他费用",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "物料编码",
+   "options": "Item",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "expense_description",
+   "fieldtype": "Data",
+   "label": "费用说明（物料名称）",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "金额",
+   "non_negative": 1,
+   "options": "Company:company:default_currency",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "cost_date",
+   "fieldtype": "Date",
+   "label": "日期",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "label": "版本",
+   "in_list_view": 1
+  }
+ ],
+ "permissions": []
+}

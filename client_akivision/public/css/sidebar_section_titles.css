@@ -1,0 +1,6 @@
+/* Keep sidebar section headings readable and consistent across workspaces. */
+.desk-sidebar .sidebar-item-label,
+.body-sidebar .sidebar-item-label,
+.body-sidebar-container .standard-sidebar-item.section-break .item-anchor {
+	color: #111827 !important;
+}

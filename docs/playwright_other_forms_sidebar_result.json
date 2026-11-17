@@ -1,0 +1,26 @@
+{
+  "tested_at": "2026-08-24T05:04:58.518Z",
+  "browser": "Chromium",
+  "base_url": "http://127.0.0.1:46883/",
+  "results": [
+    {
+      "name": "模块分组与保留入口",
+      "status": "passed",
+      "details": "Selling/Buying/Stock/KPI Dashboard 均只有一个其他表单分组，主流程和报表仍可见"
+    },
+    {
+      "name": "收纳入口完整",
+      "status": "passed",
+      "details": "配置声明的代表性低频表单均出现在其他表单分组"
+    },
+    {
+      "name": "移动端导航体验",
+      "status": "passed",
+      "details": "390px 视口无横向溢出，其他表单分组仍可识别"
+    }
+  ],
+  "limitations": [
+    "使用模拟 Workspace Sidebar 数据，未替代真实站点 after_migrate、角色过滤和 Frappe Desk 渲染",
+    "配置中不存在的模块/DocType 需在真实迁移日志中确认并按警告处理"
+  ]
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+@page { size: A4 landscape; margin: 8mm; }
+body { color: #17212b; font: 10px "WenQuanYi Zen Hei", "Microsoft YaHei", sans-serif; }
+.header { background: #283b56; color: white; padding: 20px 150px; position: relative; text-align: center; }
+.company { font-size: 19px; font-weight: bold; }
+.logo { position: absolute; right: 12px; top: 6px; width: 125px; height: 52px; object-fit: contain; }
+.title { font-size: 15px; text-align: center; margin: 12px 0; }
+.meta { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
+.meta td { padding: 5px 0; }
+.meta .customer { vertical-align: top; }
+.meta .amount-label { width: 75px; text-align: left; }
+.meta .amount-value { width: 100px; text-align: right; }
+.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.grid th, .grid td { border: 1px solid #98a5b0; padding: 7px 4px; overflow-wrap: anywhere; word-wrap: break-word; vertical-align: middle; }
+.grid th { background: #087cb9; color: white; text-align: center; font-weight: normal; }
+.num { text-align: right; }
+.center { text-align: center; }
+thead { display: table-header-group; }
+tr { page-break-inside: avoid; }
+.confirmation { margin: 14px 0; }
+.footer { width: 100%; border-collapse: collapse; page-break-inside: avoid; }
+.footer td { vertical-align: top; width: 50%; line-height: 2.5; }
+.footer .sign { padding-left: 60px; }
+</style></head><body>
+<div class="header">
+{% if statement_logo_data_uri %}<img class="logo" src="{{ statement_logo_data_uri }}">{% endif %}
+<div class="company">{{ company_name | e }}</div>
+</div>
+<div class="title">对账单（对账期：{{ start_date }} 至 {{ end_date }}）</div>
+<table class="meta">
+<tr><td class="customer" rowspan="3">客户名称：{{ customer | e }}</td><td class="amount-label">总金额</td><td class="amount-value">{{ "%.2f"|format(order_amount) }}</td></tr>
+<tr><td class="amount-label">已付款</td><td class="amount-value">{{ "%.2f"|format(paid_amount) }}</td></tr>
+<tr><td class="amount-label">未付款</td><td class="amount-value">{{ "%.2f"|format(outstanding_amount) }}</td></tr>
+</table>
+<table class="grid">
+<colgroup><col style="width:3%"><col style="width:7%"><col style="width:11%"><col style="width:15%"><col style="width:4%"><col style="width:6%"><col style="width:8%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:12%"><col style="width:9%"></colgroup>
+<thead><tr><th>序号</th><th>日期</th><th>订单号</th><th>产品名称</th><th>单位</th><th>数量</th><th>单价（含税）</th><th>总金额（含税）</th><th>已付款金额</th><th>未付金额</th><th>送货单号</th><th>备注</th></tr></thead>
+<tbody>{% for row in order_rows %}<tr>
+<td class="center">{{ loop.index }}</td><td class="center">{{ row.date }}</td><td>{{ row.document_no | e }}</td><td>{{ row.item_name | e }}</td><td class="center">{{ row.uom | e }}</td><td class="num">{{ row.ordered_qty }}</td><td class="num">{{ "%.2f"|format(row.rate) }}</td><td class="num">{{ "%.2f"|format(row.order_amount) }}</td><td class="num">{{ "%.2f"|format(row.paid_amount) }}</td><td class="num">{{ "%.2f"|format(row.outstanding_amount) }}</td><td>{{ row.delivery_notes | e }}</td><td>{{ row.remarks | e }}</td>
+</tr>{% endfor %}
+<tr><td colspan="7" class="num">合计（{{ "人民币" if currency == "CNY" else currency | e }}）</td><td class="num">{{ "%.2f"|format(order_amount) }}</td><td class="num">{{ "%.2f"|format(paid_amount) }}</td><td class="num">{{ "%.2f"|format(outstanding_amount) }}</td><td></td><td></td></tr>
+</tbody></table>
+<div class="confirmation">以上对账明细确认无误后，请签字盖章回传。</div>
+<table class="footer"><tr><td>
+收款账户信息：<br>
+单位名称：{{ company_name | e }}<br>
+开户行：{{ bank_name | e }}<br>
+账号：{{ bank_account_no | e }}
+</td><td class="sign">付款方确认<br>签字：________________________<br>盖章：<br>日期：________________________</td></tr></table>
+</body></html>

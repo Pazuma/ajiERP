@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "options": [
+    "",
+    "STEP-001 - 11（进行中）",
+    "STEP-002 - 22（待开始）"
+  ],
+  "values": {
+    "doctype": "Work Order",
+    "project": "PROJ-0008",
+    "step": "STEP-001",
+    "stepName": "11"
+  },
+  "beforeSaveValues": {
+    "project": "PROJ-0008",
+    "step": "STEP-001",
+    "stepName": "11"
+  }
+}

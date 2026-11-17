@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-08-25T12:00:00+08:00",
+  "execution": "Playwright 真实列表导入入口",
+  "results": [
+    {"doctype": "Customer", "filename": "客户清单.xlsx", "import_type": "Update Existing Records", "status": "提交成功", "success": 14, "total": 14, "failed": 0},
+    {"doctype": "Supplier", "filename": "供应商清单.xlsx", "import_type": "Insert New Records", "status": "提交成功", "success": 10, "total": 10, "failed": 0},
+    {"doctype": "Payment Terms Template", "filename": "收款模式清单.xlsx", "import_type": "Insert New Records", "status": "提交成功", "success": 5, "total": 5, "failed": 0},
+    {"doctype": "Item", "filename": "ERP表格模板(2)(1)_产品清单.xlsx", "import_type": "Insert New Records", "status": "提交成功", "success": 12, "total": 12, "failed": 0},
+    {"doctype": "Project", "filename": "研发项目清单.xlsx", "import_type": "Insert New Records", "status": "提交成功", "success": 1, "total": 1, "failed": 0},
+    {"doctype": "Delivery Note", "filename": "ERP表格模板(2)(1)_送货清单.xlsx", "import_type": "Insert New Records", "status": "提交失败", "success": 0, "total": 10, "failed": 10, "reason": "客户列缺失/订单价格等核心单据校验未满足"},
+    {"doctype": "Payment Entry 收款", "filename": "ERP表格模板(2)(1)_回款记录.xlsx", "import_type": "Insert New Records", "status": "部分成功", "success": 12, "total": 18, "failed": 6, "reason": "6 行金额为 0，保留核心金额校验"},
+    {"doctype": "Stock Entry", "filename": "ERP表格模板(2)(1)_出库清单.xlsx", "import_type": "Insert New Records", "status": "提交失败", "success": 0, "total": 85, "failed": 85, "reason": "物料/库存方向等核心库存条件未满足"}
+  ],
+  "skipped": ["实时库存.xlsx", "ERP表格模板(2)(1)_供应商回顾.xlsx", "ERP表格模板(2)(1)_成品状态.xlsx", "ERP表格模板(2)(1)_汇总计算.xlsx", "ERP表格模板(2)(1)_各项指标汇总或看板数据.xlsx", "ERP表格模板(2)(1).xlsx"]
+}

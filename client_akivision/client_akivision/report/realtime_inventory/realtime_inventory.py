@@ -34,7 +34,8 @@ def execute(filters=None):
     )
 
     in_transit = get_purchase_in_transit(company, to_date, warehouse, item_group)
-    return get_columns(), summarize_by_item(stock_rows, to_date, in_transit)
+    historical_locations = get_historical_locations(from_date, item_group)
+    return get_columns(), summarize_by_item(stock_rows, from_date, to_date, in_transit, historical_locations)
 
 
 def get_columns():
@@ -49,8 +50,10 @@ def get_columns():
         {"label": "总出库", "fieldname": "out_qty", "fieldtype": "Float", "width": 90},
         {"label": "期末库存", "fieldname": "actual_qty", "fieldtype": "Float", "width": 100},
         {"label": "采购在途数量", "fieldname": "in_transit_qty", "fieldtype": "Float", "width": 110},
+        {"label": "新库位", "fieldname": "new_location", "fieldtype": "Data", "width": 180},
+        {"label": "历史库位", "fieldname": "historical_location", "fieldtype": "Data", "width": 180},
         {"label": "仓库", "fieldname": "warehouses", "fieldtype": "Data", "width": 180},
-        {"label": "截止日期", "fieldname": "count_date", "fieldtype": "Date", "width": 100},
+        {"label": "盘点日期", "fieldname": "count_date", "fieldtype": "Date", "width": 100},
         {"label": "单位成本", "fieldname": "valuation_rate", "fieldtype": "Currency", "width": 100},
         {"label": "库存金额", "fieldname": "stock_value", "fieldtype": "Currency", "width": 110},
         {"label": "理论余数", "fieldname": "theoretical_qty", "fieldtype": "Float", "width": 100},
@@ -87,8 +90,32 @@ def get_purchase_in_transit(company, to_date, warehouse=None, item_group=None):
     return {row.item_code: flt(row.in_transit_qty) for row in rows}
 
 
-def summarize_by_item(stock_rows, to_date, in_transit=None):
+def get_historical_locations(from_date, item_group=None):
+    conditions = ["sle.posting_date < %(from_date)s", "sle.is_cancelled = 0"]
+    params = {"from_date": from_date}
+    if item_group:
+        conditions.append("i.item_group = %(item_group)s")
+        params["item_group"] = item_group
+
+    rows = frappe.db.sql(
+        f"""SELECT sle.item_code, sle.warehouse
+        FROM `tabStock Ledger Entry` sle
+        INNER JOIN `tabItem` i ON i.name = sle.item_code
+        WHERE {' AND '.join(conditions)}
+          AND sle.warehouse IS NOT NULL AND sle.warehouse != ''
+        GROUP BY sle.item_code, sle.warehouse""",
+        params,
+        as_dict=True,
+    )
+    locations = {}
+    for row in rows:
+        locations.setdefault(row.item_code, []).append(row.warehouse)
+    return {item_code: ", ".join(sorted(set(warehouses))) for item_code, warehouses in locations.items()}
+
+
+def summarize_by_item(stock_rows, from_date, to_date, in_transit=None, historical_locations=None):
     in_transit = in_transit or {}
+    historical_locations = historical_locations or {}
     item_codes = list({row.item_code for row in stock_rows} | set(in_transit))
     if not item_codes:
         return []
@@ -126,6 +153,8 @@ def summarize_by_item(stock_rows, to_date, in_transit=None):
                     "actual_qty": 0.0,
                     "stock_value": 0.0,
                     "warehouses": [],
+                    "new_location": "",
+                    "historical_location": historical_locations.get(row.item_code, ""),
                     "count_date": to_date,
                     "in_transit_qty": flt(in_transit.get(row.item_code, 0)),
                 },
@@ -142,6 +171,7 @@ def summarize_by_item(stock_rows, to_date, in_transit=None):
     result = []
     for row in summary.values():
         row.warehouses = ", ".join(sorted(set(row.warehouses)))
+        row.new_location = row.warehouses
         row.valuation_rate = flt(row.stock_value / row.actual_qty) if row.actual_qty else 0.0
         row.theoretical_qty = flt(row.opening_qty + row.in_qty - row.out_qty)
         row.difference_qty = flt(row.actual_qty - row.theoretical_qty)
@@ -166,6 +196,8 @@ def summarize_by_item(stock_rows, to_date, in_transit=None):
                     "actual_qty": 0.0,
                     "stock_value": 0.0,
                     "warehouses": "",
+                    "new_location": "",
+                    "historical_location": historical_locations.get(item_code, ""),
                     "count_date": to_date,
                     "valuation_rate": 0.0,
                     "theoretical_qty": 0.0,

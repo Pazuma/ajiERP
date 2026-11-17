@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
  "creation": "2026-07-09 00:00:00.000000",
@@ -86,10 +87,9 @@
   },
   {
    "fieldname": "loaned_by",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "hidden": 1,
-   "label": "借出人",
-   "options": "User"
+   "label": "借出人"
   },
   {
    "fetch_from": "customer.mobile_no",

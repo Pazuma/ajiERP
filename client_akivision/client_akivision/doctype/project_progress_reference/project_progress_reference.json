@@ -1,0 +1,26 @@
+{
+ "doctype": "DocType",
+ "name": "Project Progress Reference",
+ "module": "Client Akivision",
+ "track_changes": 1,
+ "field_order": [
+  "project", "progress_item", "milestone_code", "step_name", "reference_doctype",
+  "reference_name", "status", "actual_completed_on", "completed_by"
+ ],
+ "fields": [
+  {"fieldname":"project","fieldtype":"Link","label":"项目","options":"Project","reqd":1,"in_list_view":1},
+  {"fieldname":"progress_item","fieldtype":"Data","label":"进度节点行","reqd":1,"read_only":1,"hidden":1},
+  {"fieldname":"milestone_code","fieldtype":"Data","label":"节点编码","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"step_name","fieldtype":"Data","label":"节点名称","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"reference_doctype","fieldtype":"Link","label":"关联表单","options":"DocType","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"reference_name","fieldtype":"Dynamic Link","label":"关联单据","options":"reference_doctype","reqd":1,"read_only":1,"in_list_view":1},
+  {"default":"Draft","fieldname":"status","fieldtype":"Select","label":"状态","options":"Draft\nCompleted\nCancelled","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"actual_completed_on","fieldtype":"Datetime","label":"实际完成时间","read_only":1,"in_list_view":1},
+  {"fieldname":"completed_by","fieldtype":"Link","label":"完成人","options":"User","read_only":1}
+ ],
+ "permissions": [
+  {"role":"System Manager","read":1,"report":1,"export":1},
+  {"role":"Projects Manager","read":1,"report":1,"export":1},
+  {"role":"Projects User","read":1,"report":1}
+ ]
+}

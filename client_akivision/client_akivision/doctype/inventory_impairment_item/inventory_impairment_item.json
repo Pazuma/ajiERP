@@ -1,0 +1,29 @@
+{
+ "doctype": "DocType",
+ "name": "Inventory Impairment Item",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "fields": [
+  {"fieldname":"period_months","fieldtype":"Int","label":"周期数量","default":"1","in_list_view":1,"columns":2},
+  {"fieldname":"period_unit","fieldtype":"Select","label":"周期单位","options":"年\n月\n日","default":"月","in_list_view":1,"columns":1},
+  {"fieldname":"period_ratio","fieldtype":"Percent","label":"每周期减少（%）","description":"按原始单价的百分比逐周期累加，不复利。","in_list_view":1,"columns":2},
+  {"fieldname":"basis_rate","fieldtype":"Currency","label":"原始单价","description":"按库存单位和公司本位币填写；不修改库存估值或购销价格。","in_list_view":1,"columns":2},
+  {"fieldname":"last_usage_time","fieldtype":"Datetime","label":"最后使用时间","read_only":1,"is_virtual":1,"in_list_view":1,"columns":3},
+  {"fieldname":"more_settings","fieldtype":"Section Break","label":"更多设置","collapsible":1},
+  {"fieldname":"auto_assess","fieldtype":"Check","label":"启用自动评估","default":"0"},
+  {"fieldname":"warehouse","fieldtype":"Link","label":"仓库","options":"Warehouse"},
+  {"fieldname":"start_date","fieldtype":"Date","label":"减值起算日期"},
+  {"fieldname":"grace_months","fieldtype":"Int","label":"免减值月数","default":"0"},
+  {"fieldname":"max_ratio","fieldtype":"Percent","label":"累计减值上限","default":"100"},
+  {"fieldname":"stock_qty","fieldtype":"Float","label":"当前库存数量","read_only":1},
+  {"fieldname":"reference_rate","fieldtype":"Currency","label":"减值后参考单价","read_only":1},
+  {"fieldname":"last_activity_date","fieldtype":"Date","label":"历史使用日期（旧记录）","read_only":1},
+  {"fieldname":"assessment_date","fieldtype":"Date","label":"评估日期","read_only":1},
+  {"fieldname":"impairment_ratio","fieldtype":"Percent","label":"累计减值比例","read_only":1},
+  {"fieldname":"impairment_amount","fieldtype":"Currency","label":"跌价准备建议金额","read_only":1},
+  {"fieldname":"status","fieldtype":"Select","label":"状态","options":"待评估\n已评估（未计提）\n已计提\n建议转回\n已转回\n异常"},
+  {"fieldname":"remarks","fieldtype":"Small Text","label":"备注"}
+ ],
+ "permissions": []
+}

@@ -1,0 +1,22 @@
+{
+ "add_total_row": 1,
+ "creation": "2026-08-19 00:00:00.000000",
+ "doctype": "Report",
+ "filters": [
+  {"fieldname": "from_date", "fieldtype": "Date", "label": "起始日期", "mandatory": 1, "default": "Today"},
+  {"fieldname": "to_date", "fieldtype": "Date", "label": "截止日期", "mandatory": 1, "default": "Today"},
+  {"fieldname": "customer", "fieldtype": "Link", "label": "客户", "options": "Customer"},
+  {"fieldname": "item_code", "fieldtype": "Link", "label": "产品代码", "options": "Item"},
+  {"fieldname": "sales_order", "fieldtype": "Link", "label": "客户订单号", "options": "Sales Order"},
+  {"fieldname": "company", "fieldtype": "Link", "label": "公司", "options": "Company"}
+ ],
+ "is_standard": "Yes",
+ "module": "Client Akivision",
+ "name": "Delivery Detail",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Delivery Note",
+ "report_name": "Delivery Detail",
+ "report_type": "Script Report",
+ "roles": [{"role": "Sales User"}, {"role": "Sales Manager"}, {"role": "Stock User"}, {"role": "Stock Manager"}, {"role": "System Manager"}]
+}

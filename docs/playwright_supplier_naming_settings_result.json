@@ -1,0 +1,12 @@
+{
+  "document_naming_settings": {
+    "url": "http://127.0.0.1:8300/desk/document-naming-settings#naming_series_tab",
+    "title": "单据编号模板设置",
+    "text": "搜索\nCtrl+K\n通知\n用户\n构建\n欢迎工作区\n已删除单据(垃圾桶)\n评论\n错误日志\n报表\n用户被授权单据\n单据分享报表\n数据库表空间使用量报表\n用户文档类型权限\n预制报表分析\nPages\n角色权限管理\n数据面板\n\nA\nAdministrator\nadmin@example.com\n单据编号模板设置 Document Naming Settings\n单据编号模板设置\n设置事务序列 \n设置事务的命名序列选项\n更新序列计数器 \n更改现有序列的起始/当前序列号。\n警告：错误更新计数器可能导致无法创建文档。\n修订文档 \n配置修改后的文档如何命名。\n默认行为是遵循修正计数器，该计数器会在原始名称末尾添加一个数字，表示修正后的版本。\n默认命名会使修正后的文档与新文档表现相同。\nDLP Framework\n中国财务\n指标看板\n组织\n会计\n资产\n采购\n生产\n项目\n质量\n销售\n库存\n委外\nDeeplinkerp Settings\n基础资料"
+  },
+  "buying_settings": {
+    "url": "http://127.0.0.1:8300/desk/buying-settings#supplier_and_price_defaults_section",
+    "title": "采购设置",
+    "text": "搜索\nCtrl+K\n通知\n主页\n数据面板\n其他表单\n报表\n需求与询价\n采购申请\n询价单\n订购与收货\n采购订单\n收料通知单\n采购收货\n采购退货\n对账与开票\n采购对账单\n采购发票\n\nA\nAdministrator\nadmin@example.com\n采购设置 Buying Settings\n采购\n采购设置\n保存\n默认值\n定价\n业务交易设置\n委外设置\n询价\n单据命名\n供应商评级\n供应商默认值\n供应商号字段\n供应商名称\n单据编号\n自动命名\n编号规则选项\nAS\n配置编号规则\n默认供应商组\nBegin typing for results.\n供应商报价默认仓库\nBegin typing for results.\n零星采购物料\nBegin typing for results.\n零星采购发票使用的通用物料载体。\n评论\nA\n\n\n\n\n活动\n发邮件\n你创建了本单据 ·\n你更改了 供应商号字段 从 自动命名 变更为 单据编号 · 2个月前\n你最新修订了本单据 · 2个月前\n你更改了 供应商号字段 从 供应商名称 变更为 自动命名 · 2个月前\n你更改了 允许超量订购(%) 从 0 变更为 100 · 3个月前\n你更改了 供应商报价默认仓库 从 \"\" 变更为 仓库 - T · 3个月前\n你更改了 默认采购价格表 从 \"\" 变更为 Standard Buying · 3个月前\n你更改了 整个采购周期保持相同价格 从 0 变更为 1, 创建采购应付单和收货单时是否必须有采购订单？ 从 null 变更为 否, 创建采购应付单时是否必须有采购收货单？ 从 null 变更为 否 · 3个月前\nBuying Settings\n分配\n附件\n共享\nLast Edited By You\n\n2个月前\nCreated By You\n\nDLP Framework\n中国财务\n指标看板\n组织\n会计\n资产\n采购\n生产\n项目\n质量\n销售\n库存\n委外\nDeeplinkerp Settings\n基础资料"
+  }
+}

@@ -1,0 +1,24 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-23 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["user", "reference_doctype", "reference_name", "first_read_at", "last_read_at"],
+ "fields": [
+  {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "reqd": 1},
+  {"fieldname": "reference_doctype", "fieldtype": "Link", "label": "Reference DocType", "options": "DocType", "reqd": 1},
+  {"fieldname": "reference_name", "fieldtype": "Data", "label": "Reference Name", "reqd": 1},
+  {"fieldname": "first_read_at", "fieldtype": "Datetime", "label": "First Read At", "reqd": 1},
+  {"fieldname": "last_read_at", "fieldtype": "Datetime", "label": "Last Read At", "reqd": 1}
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 0,
+ "module": "Client Akivision",
+ "name": "Auto Draft Read Record",
+ "permissions": [{"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

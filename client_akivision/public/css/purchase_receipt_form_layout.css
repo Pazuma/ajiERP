@@ -1,0 +1,86 @@
+.akv-receipt-scan-entry .control-input {
+	display: flex;
+	align-items: center;
+}
+
+.akv-receipt-scan-entry .control-input .link-btn {
+	position: static;
+	flex: 0 0 auto;
+	margin-left: 8px;
+}
+
+.akv-receipt-scan-entry .link-btn a {
+	white-space: nowrap;
+}
+
+.akv-receipt-scan-entry input {
+	min-width: 0;
+}
+
+.form-section.akv-purchase-receipt-header > .section-body,
+.form-section.akv-purchase-receipt-operations > .section-body {
+	width: 100%;
+	max-width: 100%;
+}
+
+.form-section.akv-purchase-receipt-header > .section-body > .row,
+.form-section.akv-purchase-receipt-operations > .section-body > .row,
+.form-section.akv-purchase-receipt-header > .section-body,
+.form-section.akv-purchase-receipt-operations > .section-body {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px 24px;
+	align-items: start;
+}
+
+.form-section.akv-purchase-receipt-header .form-column,
+.form-section.akv-purchase-receipt-header .form-column > form,
+.form-section.akv-purchase-receipt-operations .form-column,
+.form-section.akv-purchase-receipt-operations .form-column > form {
+	display: contents;
+}
+
+.form-section.akv-purchase-receipt-header .form-column,
+.form-section.akv-purchase-receipt-operations .form-column {
+	width: auto;
+	max-width: none;
+	min-width: 0;
+	flex: initial;
+}
+
+.form-section.akv-purchase-receipt-header > .section-body > .form-column > form,
+.form-section.akv-purchase-receipt-operations > .section-body > .form-column > form {
+	min-width: 0;
+}
+
+.form-section.akv-purchase-receipt-items > .section-body,
+.form-section.akv-purchase-receipt-items > .section-body > .row,
+.form-section.akv-purchase-receipt-items .form-column,
+.form-section.akv-purchase-receipt-items .form-column > form,
+.form-section.akv-purchase-receipt-items .grid-field[data-fieldname="items"] {
+	width: 100%;
+	max-width: 100%;
+}
+
+.form-section.akv-purchase-receipt-items .form-column {
+	flex: 0 0 100%;
+}
+
+@media (max-width: 900px) {
+	.form-section.akv-purchase-receipt-header > .section-body,
+	.form-section.akv-purchase-receipt-operations > .section-body,
+	.form-section.akv-purchase-receipt-header > .section-body > .row,
+	.form-section.akv-purchase-receipt-operations > .section-body > .row {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px 16px;
+	}
+}
+
+@media (max-width: 600px) {
+	.form-section.akv-purchase-receipt-header > .section-body,
+	.form-section.akv-purchase-receipt-operations > .section-body,
+	.form-section.akv-purchase-receipt-header > .section-body > .row,
+	.form-section.akv-purchase-receipt-operations > .section-body > .row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

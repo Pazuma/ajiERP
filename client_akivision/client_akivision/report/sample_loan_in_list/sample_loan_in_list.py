@@ -10,6 +10,7 @@ def execute(filters=None):
 
 def get_columns():
     return [
+        {"label": _("客户"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 150},
         {"label": _("借回单号 / 供应商型号"), "fieldname": "name", "fieldtype": "Data", "width": 200},
         {"label": _("供应商"), "fieldname": "supplier", "fieldtype": "Link", "options": "Supplier", "width": 150},
         {"label": _("对应阿基型号"), "fieldname": "external_model", "fieldtype": "Data", "width": 150},
@@ -32,7 +33,7 @@ def get_data(filters):
     conditions = get_conditions(filters)
     loans = frappe.db.sql(
         f"""
-        SELECT name, supplier, company, loan_date, contract_no, loaned_by,
+        SELECT name, supplier, customer, company, loan_date, contract_no, loaned_by,
             contact_person, phone, loan_form, status, remarks, total_qty, returned_qty
         FROM `tabSample Loan In`
         WHERE docstatus = 1 {conditions}
@@ -100,6 +101,7 @@ def get_data(filters):
                 "is_group": 1,
                 "name_display": loan.contract_no or loan.name,
                 "supplier": loan.supplier,
+                "customer": loan.customer,
                 "qty": flt(loan.total_qty),
                 "returned_qty": flt(loan.returned_qty),
                 "status": _(loan.status) if loan.status else "",
@@ -124,6 +126,7 @@ def get_data(filters):
                     # number so the hierarchy matches the loan-in document.
                     "name_display": item.supplier_model or item.supplier_part_no or item.item_name or item.item_code,
                     "supplier": loan.supplier,
+                    "customer": loan.customer,
                     "item_name": item.supplier_part_no or item.item_name,
                     "supplier_model": item.supplier_model,
                     "external_model": item.external_model,

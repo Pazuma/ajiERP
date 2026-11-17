@@ -1,0 +1,24 @@
+@page { size: A4 portrait; margin: 8mm; }
+* { box-sizing: border-box; }
+body { font-family: "WenQuanYi Zen Hei", "Noto Sans CJK SC", sans-serif; color: #111; font-size: 10px; line-height: 1.45; }
+h1 { text-align: center; font-size: 21px; margin: 0 0 10px; letter-spacing: 1px; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th, td { border: 0.6px solid #222; padding: 4px 5px; vertical-align: top; overflow-wrap: anywhere; word-break: break-all; }
+th { font-weight: 600; }
+.section th { background: #dce8e1; text-align: left; font-size: 11px; }
+.label { background: #eef3ef; width: 16%; }
+.value { width: 34%; min-height: 20px; }
+.checks { white-space: nowrap; }
+.check { display: inline-block; margin-right: 15px; }
+.description { min-height: 58px; white-space: pre-wrap; }
+.budget th { background: #dce8e1; text-align: center; }
+.budget td { height: 25px; }
+.number { text-align: right; }
+.signatures { margin-top: 42px; page-break-inside: avoid; }
+.signature-cell { border: 0; padding: 18px 12px 0 0; height: 70px; }
+.line { display: inline-block; min-width: 125px; border-bottom: 0.6px solid #222; height: 18px; vertical-align: bottom; }
+.title-row { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.title-row td { border: 0; padding: 0; vertical-align: middle; }
+.title-spacer, .title-logo-cell { width: 22%; }
+.title-logo-cell { text-align: right; }
+.project-logo { display: inline-block; width: 32mm; height: auto; max-height: 17mm; object-fit: contain; }

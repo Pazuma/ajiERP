@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "values": {
+    "doctype": "Purchase Order",
+    "project": "PROJ-0008",
+    "step": "STEP-001",
+    "stepName": "11"
+  }
+}

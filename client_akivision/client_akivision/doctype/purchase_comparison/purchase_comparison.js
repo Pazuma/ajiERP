@@ -162,6 +162,15 @@ function open_rfq_dialog(frm) {
 frappe.ui.form.on("Purchase Comparison Row", {
 	order_qty(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
+		if (row.item_supplier_pricing_rule && !frm.is_new()) {
+			frappe.call({
+				method: "client_akivision.utils.purchase_comparison.recalculate_comparison_row",
+				args: { comparison_name: frm.doc.name, row_name: row.name, order_qty: row.order_qty },
+				freeze: true,
+				callback() { frm.reload_doc(); },
+			});
+			return;
+		}
 		frappe.model.set_value(
 			cdt,
 			cdn,

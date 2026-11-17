@@ -1,0 +1,57 @@
+{
+ "doctype": "DocType",
+ "name": "Project File Item",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "field_order": [
+  "file_name",
+  "pdf_file",
+  "remarks",
+  "uploaded_by",
+  "uploaded_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "file_name",
+   "fieldtype": "Data",
+   "label": "文件名称",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "pdf_file",
+   "fieldtype": "Attach",
+   "label": "PDF 文件",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "备注",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "uploaded_by",
+   "fieldtype": "Link",
+   "label": "上传人",
+   "options": "User",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "uploaded_on",
+   "fieldtype": "Datetime",
+   "label": "上传时间",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  }
+ ],
+ "permissions": []
+}

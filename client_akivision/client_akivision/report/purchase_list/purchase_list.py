@@ -28,6 +28,9 @@ def get_columns():
         {"label": _("对账金额"), "fieldname": "reconciled_amount", "fieldtype": "Currency", "width": 120},
         {"label": _("是否已对账"), "fieldname": "reconciled_status", "fieldtype": "Data", "width": 110},
         {"label": _("最新交期"), "fieldname": "schedule_date", "fieldtype": "Date", "width": 120},
+        {"label": _("计划交货"), "fieldname": "delivery_plan", "fieldtype": "Data", "width": 220},
+        {"label": _("计划数量"), "fieldname": "planned_qty", "fieldtype": "Float", "width": 90},
+        {"label": _("计划日期"), "fieldname": "planned_date", "fieldtype": "Date", "width": 120},
         {"label": _("机种"), "fieldname": "internal_model", "fieldtype": "Data", "width": 100},
         {"label": _("已交"), "fieldname": "received_qty", "fieldtype": "Float", "width": 90},
         {"label": _("未交"), "fieldname": "pending_qty", "fieldtype": "Float", "width": 90},
@@ -124,6 +127,21 @@ def get_data(filters):
         as_dict=True,
     ):
         pr_items_by_poi.setdefault(pr_item.purchase_order_item, []).append(pr_item)
+
+    # Fetch planned deliveries by PO item. Plans are never used as actual receipt data.
+    plans_by_poi = {}
+    if poi_names and frappe.db.table_exists("Purchase Order Delivery Plan"):
+        for plan in frappe.db.sql(
+            """
+            SELECT purchase_order_item, item_code, sequence, planned_qty, planned_date, remarks
+            FROM `tabPurchase Order Delivery Plan`
+            WHERE purchase_order_item IN %(poi_names)s
+            ORDER BY purchase_order_item, sequence, name
+            """,
+            {"poi_names": poi_names},
+            as_dict=True,
+        ):
+            plans_by_poi.setdefault(plan.purchase_order_item, []).append(plan)
 
     # Fetch item internal model
     internal_models = {}
@@ -248,6 +266,16 @@ def get_data(filters):
         for item in po_items:
             item_node = f"{po.name}#{item.idx}"
             pr_items = pr_items_by_poi.get(item.poi_name, [])
+            plans = plans_by_poi.get(item.poi_name, [])
+            planned_qty = sum(flt(plan.planned_qty) for plan in plans)
+            plan_summary = "；".join(
+                f"{plan.sequence}: {flt(plan.planned_qty):g} @ {plan.planned_date or '-'}"
+                for plan in plans
+            )
+            latest_planned_date = max(
+                (plan.planned_date for plan in plans if plan.planned_date),
+                default=None,
+            )
 
             # Level 1: PO Item row
             data.append(
@@ -264,6 +292,9 @@ def get_data(filters):
                     "amount": _taxed(item.amount, grand_total, po_total),
                     "tax_rate": po_tax_rate,
                     "schedule_date": item.schedule_date,
+                    "delivery_plan": plan_summary,
+                    "planned_qty": planned_qty,
+                    "planned_date": latest_planned_date,
                     "internal_model": internal_models.get(item.item_code),
                     "received_qty": flt(item.received_qty),
                     "pending_qty": flt(item.pending_qty),
@@ -297,6 +328,9 @@ def get_data(filters):
                         "reconciled_amount": pr_paid.get(pr_item.parent, 0.0),
                         "tax_rate": po_tax_rate,
                         "schedule_date": item.schedule_date,
+                        "delivery_plan": plan_summary,
+                        "planned_qty": planned_qty,
+                        "planned_date": latest_planned_date,
                         "received_qty": cumulative,
                         "pending_qty": flt(item.qty) - cumulative,
                         "delivery_sequence": f"交货{sequence}",
@@ -341,6 +375,10 @@ def _taxed(net_amount, grand_total, po_total):
 
 def get_conditions(filters):
     conditions = []
+    from client_akivision.utils.order_record_permissions import get_order_scope_condition, is_scoped_user
+
+    if is_scoped_user("Purchase Order"):
+        conditions.append(f"AND ({get_order_scope_condition('Purchase Order', alias='po')})")
     if filters.get("company"):
         conditions.append("AND po.company = %(company)s")
     if filters.get("supplier"):

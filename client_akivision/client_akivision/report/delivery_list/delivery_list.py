@@ -51,9 +51,16 @@ def get_columns():
 
 def get_data(filters):
     conditions = get_conditions(filters)
+    from client_akivision.utils.order_record_permissions import get_order_scope_condition, is_scoped_user
+
+    if is_scoped_user("Sales Order"):
+        conditions += f" AND EXISTS (SELECT 1 FROM `tabDelivery Note Item` scoped_dni INNER JOIN `tabSales Order` so ON so.name = scoped_dni.against_sales_order WHERE scoped_dni.parent = dn.name AND ({get_order_scope_condition('Sales Order', alias='so')}))"
     delivery_notes = frappe.db.sql(
         f"""
-        SELECT dn.name, dn.posting_date, dn.customer, dn.customer_name, dn.po_no, dn.status, dn.custom_remarks
+        SELECT dn.name, dn.posting_date, dn.customer, dn.customer_name, dn.po_no, dn.status, dn.custom_remarks,
+            dn.custom_excel_year, dn.custom_excel_month, dn.custom_excel_customer_name,
+            dn.custom_excel_sales_person, dn.custom_excel_delivery_no, dn.custom_excel_invoice_no,
+            dn.custom_excel_invoice_date, dn.custom_excel_order_status
         FROM `tabDelivery Note` dn
         WHERE dn.docstatus = 1 {conditions}
         ORDER BY dn.posting_date DESC, dn.name DESC
@@ -72,7 +79,8 @@ def get_data(filters):
     for row in frappe.db.sql(
         """
         SELECT name, parent, idx, item_code, stock_uom AS uom, qty, rate, amount,
-            against_sales_order, description
+            against_sales_order, description, custom_excel_model, custom_excel_unit,
+            custom_excel_order_amount
         FROM `tabDelivery Note Item`
         WHERE parent IN %(dn_names)s
         ORDER BY parent, idx
@@ -154,11 +162,13 @@ def get_data(filters):
                         date=dn.posting_date,
                         customer=dn.customer,
                         customer_code=dn.customer,
-                        sales_person=sales_people.get(dn.name),
+                        sales_person=dn.custom_excel_sales_person or sales_people.get(dn.name),
                         customer_po_no=dn.po_no,
-                        delivery_note=dn.name,
-                        order_status=translate_status(dn.status),
+                        delivery_note=dn.custom_excel_delivery_no or dn.name,
+                        order_status=dn.custom_excel_order_status or translate_status(dn.status),
                         remarks=dn.custom_remarks,
+                        year=dn.custom_excel_year,
+                        month=dn.custom_excel_month,
                     )
                 )
 
@@ -173,17 +183,19 @@ def get_data(filters):
                         date=dn.posting_date,
                         customer=dn.customer,
                         customer_code=dn.customer,
-                        sales_person=sales_people.get(dn.name),
+                        sales_person=dn.custom_excel_sales_person or sales_people.get(dn.name),
                         customer_po_no=dn.po_no,
                         product_code=item.item_code,
-                        model=models.get(item.item_code),
-                        uom=item.uom,
+                        model=item.custom_excel_model or models.get(item.item_code),
+                        uom=item.custom_excel_unit or item.uom,
                         qty=flt(item.qty),
                         rate=flt(item.rate),
-                        amount=flt(item.amount),
-                        delivery_note=dn.name,
-                        invoice_no=invoice.get("invoice_no"),
-                        invoice_date=invoice.get("invoice_date"),
+                        amount=flt(item.custom_excel_order_amount if item.custom_excel_order_amount is not None else item.amount),
+                        delivery_note=dn.custom_excel_delivery_no or dn.name,
+                        invoice_no=dn.custom_excel_invoice_no or invoice.get("invoice_no"),
+                        invoice_date=dn.custom_excel_invoice_date or invoice.get("invoice_date"),
+                        year=dn.custom_excel_year,
+                        month=dn.custom_excel_month,
                     )
                 )
     return data
@@ -209,9 +221,10 @@ def translate_status(status):
 
 def make_row(**values):
     date = values.get("date")
-    if date:
+    if values.get("year") is None and date:
         date = getdate(date)
         values["year"] = date.year
+    if values.get("month") is None and date:
         values["month"] = date.month
     return values
 

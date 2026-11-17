@@ -1,0 +1,132 @@
+.form-section[data-fieldname="custom_project_application_section"],
+.form-section[data-fieldname="custom_optical_parameters_section"] {
+	display: none !important;
+}
+
+.client-project-details-layout {
+	width: 100%;
+	max-width: 1120px;
+	margin: 0 auto;
+	color: #000;
+}
+
+.client-project-details-layout .frappe-control,
+.client-project-details-layout .control-label,
+.client-project-details-layout .form-check-label,
+.client-project-details-layout input,
+.client-project-details-layout textarea,
+.client-project-details-layout select {
+	color: #000 !important;
+}
+
+.client-project-details-layout .control-label {
+	font-weight: 500;
+}
+
+.client-project-layout-group {
+	border-bottom: 1px solid var(--border-color);
+	padding: 12px 0 16px;
+}
+
+.client-project-layout-group:last-child {
+	border-bottom: 0;
+}
+
+.client-project-layout-group h6 {
+	font-size: var(--text-base);
+	font-weight: 600;
+	margin: 0 0 10px;
+	color: var(--text-color);
+}
+
+.client-project-layout-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	column-gap: 20px;
+	row-gap: 4px;
+}
+
+.client-project-layout-grid > .frappe-control {
+	min-width: 0;
+}
+
+.client-project-layout-grid > [data-fieldname="custom_product_attr_proofing"],
+.client-project-layout-grid > [data-fieldname="custom_product_attr_refurbished"],
+.client-project-layout-grid > [data-fieldname="custom_product_attr_new"],
+.client-project-layout-grid > [data-fieldname="custom_product_attr_other"] {
+	grid-row: 2;
+}
+
+.client-project-layout-grid > .client-project-full-width {
+	grid-column: 1 / -1;
+}
+
+.client-project-layout-grid > .client-project-short-width {
+	grid-column: span 1;
+}
+
+.client-project-layout-grid[data-project-group="application"] > .client-project-half-width {
+	grid-row: 3;
+}
+
+.client-project-layout-grid[data-project-group="parameters"] > .client-project-half-width {
+	grid-row: 3;
+}
+
+.client-project-layout-grid > [data-fieldname="custom_replaced_customer_product"] textarea,
+.client-project-layout-grid > [data-fieldname="custom_business_impact"] textarea {
+	height: 38px;
+	min-height: 38px;
+	max-height: 38px;
+	resize: none;
+}
+
+.client-project-layout-grid > [data-fieldname="custom_replaced_customer_product"],
+.client-project-layout-grid > [data-fieldname="custom_business_impact"] {
+	margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+	.client-project-layout-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.client-project-layout-grid > [data-fieldname="custom_product_attr_proofing"],
+	.client-project-layout-grid > [data-fieldname="custom_product_attr_refurbished"],
+	.client-project-layout-grid > [data-fieldname="custom_product_attr_new"],
+	.client-project-layout-grid > [data-fieldname="custom_product_attr_other"] {
+		grid-row: auto;
+	}
+}
+
+@media (max-width: 600px) {
+	.client-project-layout-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+.client-progress-reference-summary .client-project-progress-overview {
+	width: 100%;
+	min-width: 1635px;
+	table-layout: fixed;
+}
+.client-progress-reference-summary table.client-project-progress-overview th {
+	width: auto;
+	white-space: nowrap;
+	text-align: left;
+}
+.client-progress-reference-summary table.client-project-progress-overview td {
+	white-space: normal;
+	vertical-align: middle;
+	text-align: left;
+	overflow-wrap: anywhere;
+}
+.client-progress-reference-summary .client-project-progress-overview .client-progress-long-text {
+	white-space: pre-wrap;
+}
+.client-project-progress-overview .client-progress-category {
+	background: var(--subtle-fg, #f8f9fa);
+}
+.client-project-progress-overview .client-progress-reference-item {
+	width: auto;
+	display: block;
+}

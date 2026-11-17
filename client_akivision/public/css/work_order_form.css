@@ -1,0 +1,101 @@
+/* Rows contain the original controls, preserving input events and permissions. */
+.akv-work-order-single-row .akv-work-order-field-row {
+	display: grid;
+	grid-template-columns: repeat(var(--akv-columns), minmax(0, 1fr));
+	gap: 12px 24px;
+	width: 100%;
+	flex: 0 0 100%;
+}
+.akv-work-order-field-row > .frappe-control {
+	min-width: 0;
+	width: 100%;
+	max-width: none !important;
+}
+.akv-work-order-single-row [data-akv-row="warehouse"] .help-box,
+.akv-work-order-single-row [data-akv-row="warehouse"] .field-description {
+	display: none !important;
+}
+@media (max-width: 900px) {
+	.akv-work-order-single-row .akv-work-order-field-row {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (max-width: 600px) {
+	.akv-work-order-single-row .akv-work-order-field-row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+/* Previous section classes are retained for compatibility only. */
+.akv-work-order-single-row .akv-work-order-basic-section .section-body,
+.akv-work-order-single-row .akv-work-order-quantity-section .section-body,
+.akv-work-order-single-row .akv-work-order-warehouse-section .section-body {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px 24px;
+}
+
+.akv-work-order-single-row .akv-work-order-warehouse-section .section-body {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.akv-work-order-single-row .akv-work-order-row-field {
+	min-width: 0;
+}
+
+.akv-work-order-single-row .akv-work-order-more-material-section .section-body {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px 24px;
+}
+
+.akv-work-order-single-row .akv-work-order-more-loss-section .section-body {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px 24px;
+}
+
+.akv-work-order-single-row .akv-work-order-more-row-field {
+	min-width: 0;
+}
+
+.akv-work-order-single-row .akv-work-order-more-material-section > .section-body > .form-column,
+.akv-work-order-single-row .akv-work-order-more-material-section > .section-body > .form-column > form,
+.akv-work-order-single-row .akv-work-order-more-loss-section > .section-body > .form-column,
+.akv-work-order-single-row .akv-work-order-more-loss-section > .section-body > .form-column > form {
+	display: contents;
+}
+
+.akv-work-order-single-row .akv-work-order-more-row-field {
+	order: 0;
+	width: 100%;
+	max-width: none !important;
+}
+
+.akv-work-order-single-row .akv-work-order-loss-table {
+	order: 1;
+	grid-column: 1 / -1;
+	min-width: 0;
+}
+
+@media (max-width: 900px) {
+	.akv-work-order-single-row .akv-work-order-basic-section .section-body,
+	.akv-work-order-single-row .akv-work-order-quantity-section .section-body,
+	.akv-work-order-single-row .akv-work-order-warehouse-section .section-body {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.akv-work-order-single-row .akv-work-order-more-loss-section .section-body {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 600px) {
+	.akv-work-order-single-row .akv-work-order-basic-section .section-body,
+	.akv-work-order-single-row .akv-work-order-quantity-section .section-body,
+	.akv-work-order-single-row .akv-work-order-warehouse-section .section-body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.akv-work-order-single-row .akv-work-order-more-material-section .section-body,
+	.akv-work-order-single-row .akv-work-order-more-loss-section .section-body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

@@ -1,4 +1,80 @@
 Status,状态
+Abampere,绝对安培
+Acre,英亩
+Acre (US),美制英亩
+Ampere,安培
+Ampere-Hour,安培小时
+Ampere-Minute,安培分钟
+Ampere-Second,安培秒
+Are,公亩
+Area,面积
+Arshin,俄尺
+Atmosphere,标准大气压
+Bar,巴
+Barrel (Oil),桶（石油）
+Barrel(Beer),桶（啤酒）
+Box,箱
+Centimeter,厘米
+Centimetre,厘米
+Centimeter/Litre,厘米/升
+Centilitre,厘升
+Cubic Centimeter,立方厘米
+Cubic Decimeter,立方分米
+Cubic Meter,立方米
+Cubic Millimeter,立方毫米
+Day,天
+Decimeter,分米
+Dozen,打
+Each,个
+Electric Current,电流
+Electrical Charge,电荷
+Energy,能量
+Force,力
+Frequency and Wavelength,频率和波长
+Gram,克
+Hour,小时
+Kilogram,千克
+Kilometer,千米
+Length,长度
+Litre,升
+Liter,升
+Mass,质量
+Meter,米
+Metre,米
+Milligram,毫克
+Millilitre,毫升
+Milliliter,毫升
+Millimeter,毫米
+Minute,分钟
+Nos,个
+Number,个
+Pair,对
+Pieces,件
+Pressure,压力
+Second,秒
+Set,套
+Square Centimeter,平方厘米
+Square Meter,平方米
+Temperature,温度
+Time,时间
+Tonne,吨
+Unit,单位
+Volume,体积
+Week,周
+Agriculture,农业
+Density,密度
+Magnetic Induction,磁感应强度
+Power,功率
+Speed,速度
+Kilogram-Force,千克力
+Kilowatt,千瓦
+Kilowatt-Hour,千瓦时
+Mile,英里
+Ounce,盎司
+Pound,磅
+Roll,卷
+BOM,BOM汇总
+Quality Nonconforming Items,质量不合格
 Status is based on the configured evaluation direction and thresholds.,状态依据配置的评估方向和预警阈值。
 Status is based on the KPI calculation rules.,状态依据指标计算规则。
 Target Progress,目标完成度
@@ -238,6 +314,17 @@ Purchase Receipt,采购送货单
 Delivery Note,销售送货单
 Material Request,物料需求
 Material Planning,物料计划
+Sales Order is required.,销售订单必填。
+Only submitted Sales Orders can create a Delivery Note.,只有已提交的销售订单才能创建销售送货单。
+Sales Order {0} is {1} and cannot create a Delivery Note.,销售订单 {0} 的状态为“{1}”，无法创建销售送货单。
+This Sales Order has no remaining quantity to deliver. Check submitted or draft Delivery Notes.,此销售订单没有剩余可交货数量，请检查已提交或草稿状态的销售送货单。
+Already Delivered,已完成交货
+No deliverable items remain on this Sales Order.,此销售订单没有剩余可交货明细。
+Nothing to Deliver,无可交货内容
+All remaining quantities are already included in draft Delivery Notes.,剩余数量已全部包含在草稿销售送货单中。
+Delivery Note Already Drafted,销售送货单已创建草稿
+Existing draft Delivery Notes were deducted for: {0}.,已扣除现有草稿销售送货单中的数量：{0}。
+Draft Quantity Deducted,已扣除草稿数量
 Pick List,拣货单
 Serial and Batch Bundle,序列号和批次包
 Stock Reconciliation,库存调整
@@ -607,6 +694,20 @@ Actual Quantity,实际数量
 Opening Entry,期初凭证
 Temporary Opening,期初过渡
 Supplier Quote Import,供应商报价导入
+Material Stocktake Summary,物料库存汇总清点单
+Material Stocktake Summary Item,物料库存汇总清点明细
+Material Stocktake Warehouse,物料库存清点仓库
+Stocktake Difference Reason,库存盘点差异原因
+Add Material Stocktake Summary,新增物料库存汇总清点单
+New Material Stocktake Summary,新建物料库存汇总清点单
+No Data,暂无数据
+Generate Items,生成盘点行
+Download Stocktake Template,下载盘点模板
+Preview Excel Import,预览 Excel 导入
+Confirm Import,确认导入
+Update Stock,更新库存
+Operation,操作
+Please save the stocktake first.,请先保存盘点单。
 Quote File,报价文件
 Header Row,表头行
 Column Mapping,列映射
@@ -843,3 +944,87 @@ Price Check Skipped,价格检查已跳过
 The price check failed and was skipped. Submission continues.,"价格检查失败,已跳过检查,提交将继续。"
 The drawing proxy has no signing secret configured.,图纸代理未配置签名密钥。
 No finalized and registered drawing file was found.,未找到已定稿且已登记的图纸文件。
+Missing Fields,必填字段信息缺失
+Please fill the following mandatory fields before saving:,保存前请填写以下必填字段：
+"In {0}, {1} is required in every row.","在“{0}”中,每一行都必须填写“{1}”。"
+"In {0}, {1} is required in row {2}.","在“{0}”中,第 {2} 行必须填写“{1}”。"
+"In {0}, {1} is required in rows {2}.","在“{0}”中,第 {2} 行必须填写“{1}”。"
+"In {0}, {1} is required in {2} rows.","在“{0}”中,共有 {2} 行必须填写“{1}”。"
+Project Progress Template,项目进度模板
+Project Progress Template Item,项目进度模板节点
+Project Progress Item,项目进度节点
+Project Progress Reference,项目进度关联单据
+Bulk Transaction,批量事务
+Client Akivision,客户定制功能
+Core,核心功能
+Custom Filters,自定义筛选与价格规则
+Deeplinkerp Branding,系统品牌与界面
+EDI,电子数据交换
+ERPNext Integrations,ERPNext 集成
+Geo,地理位置
+Mes Integration,MES 集成
+Printing,打印
+Telephony,电话集成
+Utilities,实用工具
+Automation,自动化
+Technician,技术员
+Annual Sales,年度销售额
+Active Customers,活跃客户
+Top Customers,重点客户
+Purchase Follow Up,采购对账单
+Purchase Follow Up Item,采购对账明细
+Purchase Quality Return,采购退货单
+Purchase Quality Return Item,采购退货明细
+Purchase Receiving Notice,收料通知单
+Purchase Receiving Notice Item,收料通知明细
+Purchase Quality Inspection Item,采购质检明细
+Quality Nonconforming Items,质量不合格
+Item-wise Annual Sales,按物料统计的年度销售额
+Delivery Trends,销售出库趋势
+Warehouse wise Stock Value,各仓库库存金额
+Oldest Items,库龄最长物料
+Item Shortage Summary,物料短缺汇总
+Getting Started,开始使用
+Selling Setup,销售设置
+Create Customer,创建客户
+Create Item,创建物料
+Create Sales Order,创建销售订单
+Create Sales Invoice,创建销售发票
+View Sales Order Analysis,查看销售订单分析
+Review Selling Settings,检查销售设置
+Skip All,全部跳过
+{0} steps completed,{0} 个步骤已完成
+{0}% completed,已完成 {0}%
+{0} units of Item {1} is not available in any of the warehouses.,所有仓库中物料 {1} 的可拣货库存不足，缺少 {0} 个库存单位。
+{0} units of Item {1} is not available in any of the warehouses. Other Pick Lists exist for this item.,所有仓库中物料 {1} 的可拣货库存不足，缺少 {0} 个库存单位。该物料还存在其他拣货单，请核对。
+Annual Purchase,年度采购额
+Active Suppliers,活跃供应商
+Material Request Analysis,物料需求分析
+Top Suppliers,主要供应商
+Sales Order Production Cost and Margin,销售订单生产成本与毛利
+Finished Goods Inventory,成品库存
+Workshop Virtual Warehouse Inventory,车间虚拟仓库存
+China Cost Summary,中国成本汇总
+Product Cost Quotation,产品成本报价单
+Product Cost Material,成本报价材料
+Product Cost Operation,成本报价工序
+Product Cost Investment,成本报价投入
+Product Cost Scenario,成本报价批量
+Supplier Rule,供应商阶梯规则
+Manual,手工估价
+Exclusive,未税
+Inclusive,含税
+Reusable,余量可复用
+Charge Batch,本批全部承担
+Per Unit,按台
+Per Batch,按批
+Amortize,摊入单价
+Separate,单独收费
+Mixed,混合回收
+Target Margin,目标毛利率
+Cost Ratio,成本占售价比例
+Incomplete,不完整
+Estimated,估算
+Complete,完整
+Direct,直接新增
+Source warehouse required for stock item {0},库存物料 {0} 必须填写发料仓库

@@ -2,6 +2,7 @@
 # Patches added in this section will be executed before doctypes are migrated
 # Read docs to understand patches: https://frappeframework.com/docs/v14/user/en/database-migrations
 client_akivision.patches.v0_0_1.move_sample_loan_warehouses_to_rows
+client_akivision.patches.v0_0_1.ensure_product_cost_roles
 
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
@@ -40,6 +41,7 @@ client_akivision.patches.v0_0_1.backfill_purchase_receipt_po_link
 client_akivision.patches.v0_0_1.move_purchase_receipt_po_link_to_details
 client_akivision.patches.v0_0_1.add_payment_terms_template_to_accounts_setup_sidebar
 client_akivision.patches.v0_0_1.force_sync_sample_loan_list_fields
+client_akivision.patches.v0_0_1.enable_sample_data_import
 client_akivision.patches.v0_0_1.migrate_sample_loan_out_customer_to_items
 client_akivision.patches.v0_0_1.use_contract_no_as_sample_loan_out_name
 client_akivision.patches.v0_0_1.add_delivery_list_to_selling_sidebar
@@ -76,6 +78,8 @@ client_akivision.patches.v0_0_1.seed_aging_period_rules
 client_akivision.patches.v0_0_1.seed_purchase_delay_risk_rules
 client_akivision.patches.v0_0_1.add_purchase_delay_analysis_to_buying_sidebar
 client_akivision.patches.v0_0_1.add_project_custom_fields
+client_akivision.patches.v0_0_1.setup_project_cost_detail
+client_akivision.patches.v0_0_1.setup_project_development_application
 client_akivision.patches.v0_0_1.add_rd_project_list_to_projects_sidebar
 client_akivision.patches.v0_0_1.add_item_version_and_applicable_model_fields
 client_akivision.patches.v0_0_1.fix_item_applicable_model_field
@@ -100,3 +104,11 @@ client_akivision.patches.v0_0_1.add_buying_settings_supplier_quotation_warehouse
 client_akivision.patches.v0_0_1.hide_item_price_reference_column
 client_akivision.patches.v0_0_1.add_supplier_rating_standard_field
 client_akivision.patches.v0_0_1.add_rating_settings_to_buying_settings
+client_akivision.patches.v0_0_1.backfill_payment_term_links
+client_akivision.patches.v0_0_1.add_auto_fulfilment_source_fields
+client_akivision.patches.enable_finance_auto_draft_badges
+client_akivision.patches.v0_0_1.ensure_manufacture_quality_schema
+client_akivision.patches.v0_0_1.add_direct_component_supply_mode
+client_akivision.patches.v0_0_1.add_project_workbench
+client_akivision.patches.v0_0_1.setup_product_cost_quotation
+client_akivision.patches.v0_0_1.migrate_product_list_to_item

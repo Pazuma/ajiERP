@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
  "creation": "2026-07-10 00:00:00.000000",
@@ -26,7 +27,12 @@
   "status",
   "section_break_references",
   "stock_entry_reference",
-  "remarks"
+  "remarks",
+  "custom_excel_source_row",
+  "custom_excel_source_status",
+  "custom_excel_is_loaned",
+  "custom_excel_latest_disposition",
+  "custom_excel_source_item_name"
  ],
  "fields": [
   {
@@ -162,7 +168,12 @@
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "备注"
-  }
+  },
+  {"fieldname":"custom_excel_source_row","fieldtype":"Int","label":"Excel来源行","read_only":1},
+  {"fieldname":"custom_excel_source_status","fieldtype":"Data","label":"Excel原始状态"},
+  {"fieldname":"custom_excel_is_loaned","fieldtype":"Data","label":"Excel是否借出"},
+  {"fieldname":"custom_excel_latest_disposition","fieldtype":"Data","label":"最新去向"},
+  {"fieldname":"custom_excel_source_item_name","fieldtype":"Data","label":"Excel品名"}
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,

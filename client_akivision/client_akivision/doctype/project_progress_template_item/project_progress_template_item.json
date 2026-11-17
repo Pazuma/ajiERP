@@ -1,0 +1,20 @@
+{
+ "doctype": "DocType",
+ "name": "Project Progress Template Item",
+ "module": "Client Akivision",
+ "istable": 1,
+ "editable_grid": 1,
+ "field_order": ["progress_category", "milestone_code", "subject", "weight", "start_day_offset", "end_day_offset", "completion_rule", "reference_doctype", "remarks"],
+ "fields": [
+  {"fieldname":"progress_category","fieldtype":"Select","label":"进度类别","options":"\n光学参数\n结构\n光源\n物料表\n其他","in_list_view":1},
+  {"fieldname":"milestone_code","fieldtype":"Data","label":"节点编码","read_only":1,"hidden":1},
+  {"fieldname":"subject","fieldtype":"Data","label":"节点名称","reqd":1,"in_list_view":1},
+  {"fieldname":"weight","fieldtype":"Percent","label":"权重","reqd":1,"in_list_view":1},
+  {"default":"0","fieldname":"start_day_offset","fieldtype":"Int","label":"开始日偏移","reqd":1},
+  {"fieldname":"end_day_offset","fieldtype":"Int","label":"完成日偏移","reqd":1,"in_list_view":1},
+  {"default":"Document Submitted","fieldname":"completion_rule","fieldtype":"Select","label":"完成规则","options":"Document Submitted\nManual","reqd":1},
+  {"depends_on":"eval:doc.completion_rule=='Document Submitted'","fieldname":"reference_doctype","fieldtype":"Link","label":"关联表单","options":"DocType"},
+  {"fieldname":"remarks","fieldtype":"Small Text","label":"备注"}
+ ],
+ "permissions": []
+}

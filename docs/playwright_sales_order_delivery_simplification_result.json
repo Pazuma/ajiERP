@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "tested_at": "2026-08-25T02:10:42.534Z",
+  "browser": "Chromium",
+  "orders": {
+    "partial": "SAL-ORD-2026-00001",
+    "completed": "SAL-ORD-2026-00004"
+  },
+  "assertions": [
+    "部分交付销售订单显示一键创建销售送货单入口",
+    "一键入口只生成草稿销售送货单，不自动提交",
+    "剩余数量按订单数量减已交付数量计算为 17",
+    "客户、销售订单明细、物料、数量、仓库、单位和换算字段完整映射",
+    "已完成销售订单不显示一键出库入口",
+    "一键出库请求返回成功，功能链路未发现新增异常"
+  ],
+  "delivery": {
+    "doctype": "Delivery Note",
+    "docstatus": 0,
+    "against_sales_order": "SAL-ORD-2026-00001",
+    "so_detail": "7ee910v5u8",
+    "item_code": "product item1",
+    "qty": 17,
+    "warehouse": "成品 - T",
+    "uom": "Nos",
+    "stock_uom": "Nos",
+    "conversion_factor": 1
+  },
+  "requests": [
+    {
+      "url": "http://127.0.0.1:8300/api/method/frappe.model.mapper.make_mapped_doc",
+      "status": 200
+    }
+  ],
+  "runtime_issues": [
+    "requestfailed: http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')"
+  ],
+  "known_site_issues": [
+    "requestfailed: http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')",
+    "requestfailed: http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: Cannot read properties of null (reading 'join')"
+  ]
+}

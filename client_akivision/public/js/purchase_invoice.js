@@ -1,6 +1,15 @@
 frappe.ui.form.on("Purchase Invoice", {
 	refresh(frm) {
 		if (frm.doc.docstatus !== 0) return;
+		if (frm.fields_dict.custom_purchase_follow_up) {
+			frm.set_query("custom_purchase_follow_up", () => ({
+				filters: {
+					company: frm.doc.company,
+					supplier: frm.doc.supplier,
+					docstatus: 1,
+				},
+			}));
+		}
 		frm.add_custom_button(__("零星采购需求"), () => select_misc_requests(frm), __("Get Items From"));
 	},
 });

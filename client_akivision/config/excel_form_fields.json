@@ -1,0 +1,1109 @@
+{
+  "custom_fields": {
+    "Finished Goods Status": [
+      {"fieldname":"custom_excel_customer_name","label":"客户","fieldtype":"Data","insert_after":"customer"},
+      {"fieldname":"custom_excel_contact_name","label":"客户联系人","fieldtype":"Data","insert_after":"custom_excel_customer_name"},
+      {"fieldname":"custom_excel_contact_phone","label":"联系方式","fieldtype":"Data","insert_after":"custom_excel_contact_name"},
+      {"fieldname":"custom_excel_source_row","label":"行号","fieldtype":"Int","insert_after":"remarks"}
+    ],
+    "Customer": [
+      {
+        "fieldname": "custom_customer_code",
+        "label": "客户编号",
+        "fieldtype": "Data",
+        "insert_after": "customer_name",
+        "unique": 1,
+        "in_list_view": 0,
+        "in_standard_filter": 0
+      },
+      {
+        "fieldname": "custom_responsible_sales_person",
+        "label": "业务人员",
+        "fieldtype": "Link",
+        "options": "Sales Person",
+        "insert_after": "territory",
+        "link_filters": "[[\"Sales Person\", \"enabled\", \"=\", 1], [\"Sales Person\", \"is_group\", \"=\", 0]]",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_responsible_business_name",
+        "label": "负责业务名称",
+        "fieldtype": "Data",
+        "insert_after": "custom_responsible_sales_person",
+        "description": "Excel 客户清单的负责业务原始名称；不要求预先建立销售人员主数据。",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_contact_name",
+        "label": "联系人",
+        "fieldtype": "Data",
+        "insert_after": "customer_name",
+        "description": "Excel 客户清单的联系人原始文本；导入时不要求 Contact 预先存在。",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_contact_phone",
+        "label": "联系电话",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_contact_name",
+        "description": "Excel 客户清单的联系电话原始文本；正式联系人电话由关联补全逻辑维护。",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_address",
+        "label": "地址",
+        "fieldtype": "Small Text",
+        "insert_after": "custom_excel_contact_phone",
+        "description": "Excel 客户清单的地址原始文本；正式 Address 由关联补全逻辑维护。",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_credit_days",
+        "label": "账期天数",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_address",
+        "description": "客户约定账期天数。"
+      }
+    ],
+    "Supplier": [
+      {"fieldname":"custom_review_total_orders","label":"回顾采购订单总数","fieldtype":"Int","insert_after":"custom_supplier_code","in_list_view":1},
+      {"fieldname":"custom_review_on_time_orders","label":"回顾按时到货订单数","fieldtype":"Int","insert_after":"custom_review_total_orders"},
+      {"fieldname":"custom_review_on_time_rate","label":"回顾到货及时率","fieldtype":"Percent","insert_after":"custom_review_on_time_orders","in_list_view":1},
+      {"fieldname":"custom_review_delayed_orders","label":"回顾延迟订单数","fieldtype":"Int","insert_after":"custom_review_on_time_rate"},
+      {"fieldname":"custom_review_average_delay_days","label":"回顾平均延迟天数","fieldtype":"Float","insert_after":"custom_review_delayed_orders"},
+      {"fieldname":"custom_review_rating","label":"供应商回顾评级","fieldtype":"Data","insert_after":"custom_review_average_delay_days","in_list_view":1},
+      {
+        "fieldname": "custom_supplier_code",
+        "label": "供应商编号",
+        "fieldtype": "Data",
+        "insert_after": "supplier_name",
+        "reqd": 1,
+        "unique": 1,
+        "in_list_view": 0,
+        "in_standard_filter": 0
+      },
+      {
+        "fieldname": "custom_cooperation_status",
+        "label": "合作状态",
+        "fieldtype": "Select",
+        "options": "\n合作中\n暂停合作\n终止合作",
+        "insert_after": "supplier_type",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_supplier_remarks",
+        "label": "供应商备注",
+        "fieldtype": "Small Text",
+        "insert_after": "custom_cooperation_status"
+      },
+      {
+        "fieldname": "custom_credit_days",
+        "label": "账期天数",
+        "fieldtype": "Int",
+        "insert_after": "payment_terms",
+        "description": "Excel 供应商清单中的账期天数；付款条件模板仍作为正式结算规则。",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_quick_contact_name",
+        "label": "快速录入联系人",
+        "fieldtype": "Data",
+        "hidden": 1,
+        "insert_after": "custom_credit_days"
+      },
+      {
+        "fieldname": "custom_quick_contact_phone",
+        "label": "快速录入联系电话",
+        "fieldtype": "Data",
+        "hidden": 1,
+        "insert_after": "custom_quick_contact_name"
+      },
+      {
+        "fieldname": "custom_quick_address",
+        "label": "快速录入地址",
+        "fieldtype": "Small Text",
+        "hidden": 1,
+        "insert_after": "custom_quick_contact_phone"
+      }
+    ],
+    "Payment Terms Template": [
+      {
+        "fieldname": "custom_mode_code",
+        "label": "模式编号",
+        "fieldtype": "Data",
+        "insert_after": "template_name",
+        "unique": 1,
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      }
+    ],
+    "Project": [
+      {
+        "fieldname": "custom_project_code",
+        "label": "PRO流水号（自动生成）",
+        "fieldtype": "Data",
+        "insert_after": "project_name",
+        "read_only": 1,
+        "unique": 1,
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {"fieldname":"custom_application_date","label":"申请日期","fieldtype":"Date","insert_after":"custom_project_code"},
+      {"fieldname":"custom_product_attr_proofing","label":"打样测试","fieldtype":"Check","insert_after":"custom_application_date"},
+      {"fieldname":"custom_product_attr_refurbished","label":"改造品","fieldtype":"Check","insert_after":"custom_product_attr_proofing"},
+      {"fieldname":"custom_product_attr_new","label":"新产品","fieldtype":"Check","insert_after":"custom_product_attr_refurbished"},
+      {"fieldname":"custom_product_attr_other","label":"其他","fieldtype":"Check","insert_after":"custom_product_attr_new"},
+      {"fieldname":"custom_replaced_customer_product","label":"取代客户现用产品","fieldtype":"Small Text","insert_after":"custom_product_attr_other"},
+      {"fieldname":"custom_magnification","label":"倍率","fieldtype":"Data","insert_after":"custom_replaced_customer_product"},
+      {"fieldname":"custom_working_distance","label":"WD","fieldtype":"Data","insert_after":"custom_magnification"},
+      {"fieldname":"custom_resolution","label":"分辨率","fieldtype":"Data","insert_after":"custom_working_distance"},
+      {"fieldname":"custom_oi_distance","label":"O/I距","fieldtype":"Data","insert_after":"custom_resolution"},
+      {"fieldname":"custom_tv_distortion","label":"TV畸变","fieldtype":"Data","insert_after":"custom_oi_distance"},
+      {"fieldname":"custom_business_impact","label":"业务影响度","fieldtype":"Long Text","insert_after":"custom_tv_distortion"},
+      {"fieldname":"custom_project_budget_total","label":"预算总金额(元)","fieldtype":"Currency","read_only":1,"insert_after":"custom_business_impact"},
+      {"fieldname":"custom_department_manager","label":"部门经理","fieldtype":"Link","options":"User","insert_after":"custom_project_budget_total"},
+      {"fieldname":"custom_project_leader_sign_date","label":"项目负责人签字日期","fieldtype":"Date","insert_after":"custom_department_manager"},
+      {"fieldname":"custom_department_manager_sign_date","label":"部门经理签字日期","fieldtype":"Date","insert_after":"custom_project_leader_sign_date"}
+    ],
+    "Item": [
+      {"fieldname":"custom_live_stock_version","label":"库存快照版本","fieldtype":"Data","insert_after":"custom_version","in_list_view":1},
+      {"fieldname":"custom_live_stock_applicable_model","label":"库存快照适用机种","fieldtype":"Data","insert_after":"custom_live_stock_version","in_list_view":1},
+      {"fieldname":"custom_live_stock_category","label":"库存快照类别","fieldtype":"Data","insert_after":"custom_live_stock_applicable_model"},
+      {"fieldname":"custom_live_stock_opening_qty","label":"库存快照期初","fieldtype":"Float","insert_after":"custom_live_stock_category"},
+      {"fieldname":"custom_live_stock_total_in_qty","label":"库存快照总入库","fieldtype":"Float","insert_after":"custom_live_stock_opening_qty"},
+      {"fieldname":"custom_live_stock_total_out_qty","label":"库存快照总出库","fieldtype":"Float","insert_after":"custom_live_stock_total_in_qty"},
+      {"fieldname":"custom_live_stock_qty","label":"库存快照实时库存","fieldtype":"Float","insert_after":"custom_live_stock_total_out_qty","in_list_view":1,"in_standard_filter":1},
+      {"fieldname":"custom_live_stock_new_warehouse","label":"库存快照新货位","fieldtype":"Data","insert_after":"custom_live_stock_qty","in_list_view":1},
+      {"fieldname":"custom_live_stock_count_date","label":"库存快照盘点日期","fieldtype":"Date","insert_after":"custom_live_stock_new_warehouse"},
+      {"fieldname":"custom_live_stock_unit_price","label":"库存快照单价","fieldtype":"Currency","insert_after":"custom_live_stock_count_date"},
+      {"fieldname":"custom_live_stock_total_value","label":"库存快照总值","fieldtype":"Currency","insert_after":"custom_live_stock_unit_price"},
+      {"fieldname":"custom_live_stock_remarks","label":"库存快照备注","fieldtype":"Small Text","insert_after":"custom_live_stock_total_value"},
+      {"fieldname":"custom_live_stock_old_warehouse","label":"库存快照原库位","fieldtype":"Data","insert_after":"custom_live_stock_remarks"}
+    ],
+    "Sales Order": [
+      {"fieldname":"custom_excel_customer_code","label":"客户代码","fieldtype":"Data","insert_after":"customer","fetch_from":"customer.custom_customer_code","fetch_if_empty":1,"hidden":0,"read_only":1,"in_list_view":1,"in_standard_filter":1},
+      {"fieldname":"custom_excel_import_status","label":"导入状态","fieldtype":"Data","insert_after":"custom_excel_customer_code","default":"导入","hidden":1,"in_list_view":1},
+      {"fieldname":"custom_sales_person","label":"业务人员","fieldtype":"Link","options":"Sales Person","insert_after":"custom_excel_import_status","link_filters":"[[\"Sales Person\",\"enabled\",\"=\",1],[\"Sales Person\",\"is_group\",\"=\",0]]","in_list_view":1,"in_standard_filter":1},
+      {"fieldname":"custom_excel_year","label":"年份","fieldtype":"Int","insert_after":"transaction_date","read_only":1,"in_list_view":1},
+      {"fieldname":"custom_excel_month","label":"月份","fieldtype":"Int","insert_after":"custom_excel_year","read_only":1,"in_list_view":1},
+      {"fieldname":"custom_excel_order_status","label":"订单完成状态","fieldtype":"Data","insert_after":"po_no","in_list_view":1},
+      {"fieldname":"custom_excel_completion_flag","label":"订单完成标记","fieldtype":"Data","insert_after":"custom_excel_order_status"},
+      {"fieldname":"custom_excel_sales_person","label":"业务员","fieldtype":"Data","insert_after":"custom_excel_completion_flag","in_list_view":1},
+      {"fieldname":"custom_excel_invoice_no","label":"发票号","fieldtype":"Data","insert_after":"custom_excel_sales_person"},
+      {"fieldname":"custom_excel_invoice_date","label":"开票日期","fieldtype":"Date","insert_after":"custom_excel_invoice_no"},
+      {"fieldname":"custom_excel_received_amount","label":"已收金额","fieldtype":"Currency","insert_after":"custom_excel_invoice_date"},
+      {"fieldname":"custom_excel_unreceived_amount","label":"未收金额","fieldtype":"Currency","insert_after":"custom_excel_received_amount"},
+      {"fieldname":"custom_excel_reconcile_cycle","label":"对账周期","fieldtype":"Data","insert_after":"custom_excel_unreceived_amount"},
+      {"fieldname":"custom_excel_agreed_payment_date","label":"约定收款日期","fieldtype":"Date","insert_after":"custom_excel_reconcile_cycle"},
+      {"fieldname":"custom_excel_full_completion","label":"整单全部型号完成","fieldtype":"Data","insert_after":"custom_excel_agreed_payment_date"}
+      ,{"fieldname":"custom_excel_payment_days","label":"帐期","fieldtype":"Data","insert_after":"custom_excel_full_completion"},
+      {"fieldname":"custom_excel_payment_terms","label":"收款条件","fieldtype":"Data","insert_after":"custom_excel_payment_days","in_list_view":1}
+    ],
+    "Sales Order Item": [
+      {
+        "fieldname": "custom_external_model",
+        "label": "型号",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_external_model",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "item_name",
+        "in_list_view": 1
+      },
+      {"fieldname":"custom_excel_model","label":"型号","fieldtype":"Data","insert_after":"custom_external_model","in_list_view":1},
+      {"fieldname":"custom_excel_order_amount","label":"订单金额","fieldtype":"Currency","insert_after":"custom_excel_model","in_list_view":1},
+      {"fieldname":"custom_excel_cumulative_delivery_qty","label":"该型号累计送货量","fieldtype":"Float","insert_after":"custom_excel_order_amount"},
+      {"fieldname":"custom_excel_model_completion","label":"型号是否完成","fieldtype":"Data","insert_after":"custom_excel_cumulative_delivery_qty"},
+      {"fieldname":"custom_excel_goods_name","label":"货物名称","fieldtype":"Data","insert_after":"custom_excel_model_completion"},
+      {"fieldname":"custom_excel_source_row","label":"行号","fieldtype":"Int","insert_after":"custom_excel_goods_name"}
+      ,{"fieldname":"custom_excel_undelivered_qty","label":"未送货件数","fieldtype":"Float","insert_after":"custom_excel_source_row"}
+    ],
+    "Delivery Note Item": [
+      {
+        "fieldname": "custom_external_model",
+        "label": "型号",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_external_model",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "item_name",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_model",
+        "label": "型号",
+        "fieldtype": "Data",
+        "insert_after": "custom_external_model",
+        "in_list_view": 1,
+        "description": "送货清单中的原始型号；即使物料主数据型号后来变化，也保留导入时的值。"
+      },
+      {
+        "fieldname": "custom_excel_unit",
+        "label": "单位",
+        "fieldtype": "Data",
+        "insert_after": "uom",
+        "in_list_view": 1,
+        "description": "送货清单中的原始单位文本。"
+      },
+      {
+        "fieldname": "custom_excel_order_amount",
+        "label": "订单金额",
+        "fieldtype": "Currency",
+        "insert_after": "amount",
+        "in_list_view": 1,
+        "description": "送货清单中的订单金额原值；允许为空。"
+      }
+    ],
+    "Delivery Note": [
+      {
+        "fieldname": "custom_excel_year",
+        "label": "年份",
+        "fieldtype": "Int",
+        "insert_after": "posting_date",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_month",
+        "label": "月份",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_year",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_customer_code",
+        "label": "客户代码",
+        "fieldtype": "Data",
+        "insert_after": "customer",
+        "in_list_view": 1,
+        "in_standard_filter": 1,
+        "description": "送货清单中的客户编号，来自客户主档；客户字段保存客户主档名称。"
+      },
+      {
+        "fieldname": "custom_excel_customer_name",
+        "label": "客户名称",
+        "fieldtype": "Data",
+        "insert_after": "customer_name",
+        "in_list_view": 0,
+        "description": "送货清单中的客户名称，来自客户主档；客户编号用于关联客户。"
+      },
+      {
+        "fieldname": "custom_sales_order",
+        "label": "销售订单",
+        "fieldtype": "Link",
+        "options": "Sales Order",
+        "insert_after": "custom_excel_customer_name",
+        "read_only": 1,
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_sales_person",
+        "label": "业务员",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_customer_name",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_delivery_no",
+        "label": "送货单号",
+        "fieldtype": "Data",
+        "insert_after": "po_no",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_invoice_no",
+        "label": "发票号",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_delivery_no",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_invoice_date",
+        "label": "开票日期",
+        "fieldtype": "Date",
+        "insert_after": "custom_excel_invoice_no",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_order_status",
+        "label": "订单状态",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_invoice_date",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      }
+    ],
+    "Payment Entry": [
+      {
+        "fieldname": "custom_excel_payment_history_section",
+        "label": "回款业务信息",
+        "fieldtype": "Section Break",
+        "insert_after": "custom_china_voucher_number",
+        "collapsible": 1
+      },
+      {"fieldname":"custom_excel_year","label":"年份","fieldtype":"Int","insert_after":"custom_excel_payment_history_section"},
+      {"fieldname":"custom_excel_model","label":"型号","fieldtype":"Data","insert_after":"custom_excel_year"},
+      {"fieldname":"custom_excel_month","label":"月份","fieldtype":"Int","insert_after":"custom_excel_model"},
+      {"fieldname":"custom_excel_order_no","label":"订单号","fieldtype":"Data","insert_after":"custom_excel_month"},
+      {"fieldname":"custom_excel_invoice_date","label":"开票日期","fieldtype":"Date","insert_after":"custom_excel_order_no"},
+      {"fieldname":"custom_excel_sales_person","label":"业务员","fieldtype":"Data","insert_after":"custom_excel_invoice_date"},
+      {"fieldname":"custom_excel_total_amount","label":"总金额","fieldtype":"Currency","insert_after":"custom_excel_sales_person"},
+      {"fieldname":"custom_excel_customer_code","label":"客户代码","fieldtype":"Data","insert_after":"custom_excel_total_amount"},
+      {"fieldname":"custom_excel_customer_name","label":"客户名称","fieldtype":"Data","insert_after":"custom_excel_customer_code"},
+      {"fieldname":"custom_excel_delivery_date","label":"送货日期","fieldtype":"Date","insert_after":"custom_excel_customer_name"},
+      {"fieldname":"custom_excel_delivery_note","label":"送货单号","fieldtype":"Data","insert_after":"custom_excel_delivery_date"},
+      {"fieldname":"custom_excel_internal_model","label":"内部机号","fieldtype":"Data","insert_after":"custom_excel_delivery_note"},
+      {"fieldname":"custom_excel_invoice_issued","label":"是否开发票","fieldtype":"Data","insert_after":"custom_excel_internal_model"},
+      {"fieldname":"custom_excel_payment_status","label":"收款状态","fieldtype":"Data","insert_after":"custom_excel_invoice_issued"},
+      {"fieldname":"custom_excel_receivable_days","label":"应收账天数","fieldtype":"Int","insert_after":"custom_excel_payment_status"},
+      {"fieldname":"custom_excel_unreceived_amount","label":"未收金额","fieldtype":"Currency","insert_after":"custom_excel_receivable_days"},
+      {"fieldname":"custom_excel_payment_term_range","label":"账期区间","fieldtype":"Data","insert_after":"custom_excel_unreceived_amount"},
+      {"fieldname":"custom_excel_agreed_payment_date","label":"约定收款日期","fieldtype":"Date","insert_after":"custom_excel_payment_term_range"}
+    ],
+    "BOM": [
+      {
+        "fieldname": "custom_excel_model",
+        "label": "型号",
+        "fieldtype": "Data",
+        "insert_after": "item",
+        "in_list_view": 1,
+        "description": "BOM表中的原始型号。"
+      },
+      {
+        "fieldname": "custom_excel_item_name",
+        "label": "物料名称",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_model",
+        "in_list_view": 1,
+        "description": "BOM表顶层行中的原始物料名称。"
+      },
+      {
+        "fieldname": "custom_excel_drawing_no",
+        "label": "图纸号",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_item_name",
+        "in_list_view": 1
+      }
+    ],
+    "BOM Item": [
+      {
+        "fieldname": "custom_excel_model",
+        "label": "型号",
+        "fieldtype": "Data",
+        "insert_after": "item_code",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_item_name",
+        "label": "物料名称",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_model",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_drawing_no",
+        "label": "图纸号",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_item_name",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_level",
+        "label": "层级",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_drawing_no",
+        "in_list_view": 1
+      }
+    ],
+    "Purchase Order": [
+      {"fieldname":"custom_procurement_specialist","label":"采购专员","fieldtype":"Link","options":"Employee","insert_after":"supplier","in_list_view":1,"in_standard_filter":1,"link_filters":"[[\"Employee\",\"status\",\"=\",\"Active\"]]"},
+      {"fieldname":"custom_excel_category","label":"分类","fieldtype":"Data","insert_after":"supplier","in_list_view":1},
+      {"fieldname":"custom_excel_order_no","label":"单号","fieldtype":"Data","insert_after":"custom_excel_category","in_list_view":1,"in_standard_filter":1},
+      {"fieldname":"custom_excel_import_status","label":"导入状态","fieldtype":"Data","insert_after":"custom_excel_order_no","default":"导入","in_list_view":1,"in_standard_filter":1},
+      {"fieldname":"custom_excel_total_amount","label":"含税总额","fieldtype":"Currency","insert_after":"grand_total","in_list_view":1},
+      {"fieldname":"custom_excel_remarks","label":"备注","fieldtype":"Small Text","insert_after":"custom_excel_total_amount"},
+      {"fieldname":"custom_excel_source_file","label":"来源文件","fieldtype":"Data","insert_after":"custom_excel_remarks","read_only":1},
+      {"fieldname":"custom_excel_source_rows","label":"来源行","fieldtype":"Small Text","insert_after":"custom_excel_source_file","read_only":1},
+      {"fieldname":"custom_excel_reconciliation_status","label":"对账/开票状况","fieldtype":"Data","insert_after":"custom_excel_source_rows","in_list_view":1}
+    ],
+    "Purchase Order Item": [
+      {"fieldname":"custom_excel_sequence","label":"序号","fieldtype":"Int","insert_after":"item_code"},
+      {"fieldname":"custom_excel_item_name","label":"物料名称","fieldtype":"Data","insert_after":"item_name"},
+      {"fieldname":"custom_excel_amount","label":"含税金额","fieldtype":"Currency","insert_after":"rate"},
+      {"fieldname":"custom_excel_tax_rate","label":"税率","fieldtype":"Percent","insert_after":"custom_excel_amount"},
+      {"fieldname":"custom_excel_model","label":"机种","fieldtype":"Data","insert_after":"custom_excel_tax_rate"},
+      {"fieldname":"custom_excel_order_qty","label":"订单总数","fieldtype":"Float","insert_after":"qty"},
+      {"fieldname":"custom_excel_delivered_qty","label":"已交","fieldtype":"Float","insert_after":"custom_excel_order_qty"},
+      {"fieldname":"custom_excel_undelivered_qty","label":"未交","fieldtype":"Float","insert_after":"custom_excel_delivered_qty"},
+      {"fieldname":"custom_excel_delivery_1_qty","label":"交货1数量","fieldtype":"Float","insert_after":"schedule_date"},
+      {"fieldname":"custom_excel_delivery_1_date","label":"交货1日期","fieldtype":"Date","insert_after":"custom_excel_delivery_1_qty"},
+      {"fieldname":"custom_excel_delivery_2_qty","label":"交货2数量","fieldtype":"Float","insert_after":"custom_excel_delivery_1_date"},
+      {"fieldname":"custom_excel_delivery_2_date","label":"交货2日期","fieldtype":"Date","insert_after":"custom_excel_delivery_2_qty"},
+      {"fieldname":"custom_excel_delivery_3_qty","label":"交货3数量","fieldtype":"Float","insert_after":"custom_excel_delivery_2_date"},
+      {"fieldname":"custom_excel_delivery_3_date","label":"交货3日期","fieldtype":"Date","insert_after":"custom_excel_delivery_3_qty"},
+      {"fieldname":"custom_excel_delivery_4_qty","label":"交货4数量","fieldtype":"Float","insert_after":"custom_excel_delivery_3_date"},
+      {"fieldname":"custom_excel_delivery_4_date","label":"交货4日期","fieldtype":"Date","insert_after":"custom_excel_delivery_4_qty"},
+      {"fieldname":"custom_excel_delivery_5_qty","label":"交货5数量","fieldtype":"Float","insert_after":"custom_excel_delivery_4_date"},
+      {"fieldname":"custom_excel_delivery_5_date","label":"交货5日期","fieldtype":"Date","insert_after":"custom_excel_delivery_5_qty"},
+      {"fieldname":"custom_excel_delivery_6_qty","label":"交货6数量","fieldtype":"Float","insert_after":"custom_excel_delivery_5_date"},
+      {"fieldname":"custom_excel_delivery_6_date","label":"交货6日期","fieldtype":"Date","insert_after":"custom_excel_delivery_6_qty"},
+      {"fieldname":"custom_excel_delivery_7_qty","label":"交货7数量","fieldtype":"Float","insert_after":"custom_excel_delivery_6_date"},
+      {"fieldname":"custom_excel_delivery_7_date","label":"交货7日期","fieldtype":"Date","insert_after":"custom_excel_delivery_7_qty"},
+      {"fieldname":"custom_excel_return_1_qty","label":"退货1数量","fieldtype":"Float","insert_after":"custom_excel_delivery_7_date"},
+      {"fieldname":"custom_excel_return_1_date","label":"退货1日期","fieldtype":"Date","insert_after":"custom_excel_return_1_qty"},
+      {"fieldname":"custom_excel_return_2_qty","label":"退货2数量","fieldtype":"Float","insert_after":"custom_excel_return_1_date"},
+      {"fieldname":"custom_excel_return_2_date","label":"退货2日期","fieldtype":"Date","insert_after":"custom_excel_return_2_qty"},
+      {"fieldname":"custom_excel_replenished_qty","label":"已补","fieldtype":"Float","insert_after":"custom_excel_return_2_date"},
+      {"fieldname":"custom_excel_replenished_date","label":"已补日期","fieldtype":"Date","insert_after":"custom_excel_replenished_qty"},
+      {"fieldname":"custom_excel_pending_replenishment_qty","label":"待补","fieldtype":"Float","insert_after":"custom_excel_replenished_date"},
+      {"fieldname":"custom_excel_reconciled_qty","label":"对帐数量","fieldtype":"Float","insert_after":"custom_excel_pending_replenishment_qty"},
+      {"fieldname":"custom_excel_reconciliation_status","label":"对账/开票状况","fieldtype":"Data","insert_after":"custom_excel_reconciled_qty"},
+      {"fieldname":"custom_excel_item_remarks","label":"备注","fieldtype":"Small Text","insert_after":"custom_excel_reconciliation_status"},
+      {"fieldname":"custom_excel_source_row","label":"来源行","fieldtype":"Int","insert_after":"custom_excel_item_remarks","read_only":1},
+      {
+        "fieldname": "custom_applicable_model",
+        "label": "机种",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_applicable_model",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "item_name",
+        "in_list_view": 1
+      }
+    ],
+    "Purchase Receipt Item": [
+      {
+        "fieldname": "custom_version",
+        "label": "版本",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_version",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "item_name",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_applicable_model",
+        "label": "适用机种",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_applicable_model",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "custom_version",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_item_group",
+        "label": "物料类别",
+        "fieldtype": "Link",
+        "options": "Item Group",
+        "fetch_from": "item_code.item_group",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "custom_applicable_model",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_item_name",
+        "label": "物料名称",
+        "fieldtype": "Data",
+        "insert_after": "custom_item_group",
+        "description": "保留入库清单中的原始物料名称；物料主数据名称变化后仍可追溯。"
+      },
+      {
+        "fieldname": "custom_excel_version",
+        "label": "版本",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_item_name",
+        "description": "保留入库清单中的原始版本。"
+      },
+      {
+        "fieldname": "custom_excel_applicable_model",
+        "label": "适用机种",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_version",
+        "description": "保留入库清单中的原始适用机种。"
+      },
+      {
+        "fieldname": "custom_excel_item_group",
+        "label": "物料类别",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_applicable_model",
+        "description": "保留入库清单中的原始物料类别；系统物料组不匹配时也不丢失。"
+      },
+      {
+        "fieldname": "custom_excel_total_amount",
+        "label": "总价",
+        "fieldtype": "Currency",
+        "insert_after": "amount",
+        "description": "保留入库清单中的总价原值；为空时保持为空，系统金额仍按数量和单价计算。"
+      },
+      {
+        "fieldname": "custom_excel_source_qty",
+        "label": "原始数量",
+        "fieldtype": "Float",
+        "insert_after": "custom_excel_total_amount",
+        "description": "保留入库清单中的原始数量（含负数）。"
+      },
+      {
+        "fieldname": "custom_excel_delivery_note",
+        "label": "送货单",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_total_amount"
+      },
+      {
+        "fieldname": "custom_excel_purchase_order",
+        "label": "采购单号",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_delivery_note"
+      },
+      {
+        "fieldname": "custom_excel_warehouse",
+        "label": "库位",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_purchase_order"
+      },
+      {
+        "fieldname": "custom_excel_source_row",
+        "label": "来源行",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_purchase_order",
+        "read_only": 1
+      },
+      {
+        "fieldname": "custom_excel_expected_qty",
+        "label": "应出库",
+        "fieldtype": "Float",
+        "insert_after": "custom_excel_source_row"
+      }
+    ],
+    "Purchase Receipt": [
+      {
+        "fieldname": "custom_lens_receipt_no",
+        "label": "镜片入库单/退料单",
+        "fieldtype": "Data",
+        "insert_after": "supplier_delivery_note",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_reconciliation_date",
+        "label": "对帐日期",
+        "fieldtype": "Date",
+        "insert_after": "custom_lens_receipt_no",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_receipt_type",
+        "label": "入库类型",
+        "fieldtype": "Data",
+        "insert_after": "custom_reconciliation_date",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_delivery_note",
+        "label": "送货单",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_receipt_type",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_supplier_name",
+        "label": "供应商",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_delivery_note"
+      },
+      {
+        "fieldname": "custom_excel_operator",
+        "label": "操作员",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_supplier_name"
+      },
+      {
+        "fieldname": "custom_excel_source_row",
+        "label": "来源行",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_operator",
+        "read_only": 1
+      }
+    ],
+    "Stock Entry Detail": [
+      {
+        "fieldname": "custom_version",
+        "label": "版本",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_version",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "item_name",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_applicable_model",
+        "label": "适用机种",
+        "fieldtype": "Data",
+        "fetch_from": "item_code.custom_applicable_model",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "custom_version",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_item_group",
+        "label": "物料类别",
+        "fieldtype": "Link",
+        "options": "Item Group",
+        "fetch_from": "item_code.item_group",
+        "fetch_if_empty": 1,
+        "read_only": 1,
+        "insert_after": "custom_applicable_model",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_item_name",
+        "label": "物料名称",
+        "fieldtype": "Data",
+        "insert_after": "custom_item_group"
+      },
+      {
+        "fieldname": "custom_excel_version",
+        "label": "版本",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_item_name"
+      },
+      {
+        "fieldname": "custom_excel_applicable_model",
+        "label": "适用机种",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_version"
+      },
+      {
+        "fieldname": "custom_excel_item_group",
+        "label": "物料类别",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_applicable_model"
+      },
+      {
+        "fieldname": "custom_excel_total_amount",
+        "label": "总价",
+        "fieldtype": "Currency",
+        "insert_after": "basic_amount"
+      },
+      {
+        "fieldname": "custom_excel_source_qty",
+        "label": "原始数量",
+        "fieldtype": "Float",
+        "insert_after": "custom_excel_total_amount"
+      },
+      {
+        "fieldname": "custom_excel_delivery_note",
+        "label": "送货单",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_total_amount"
+      },
+      {
+        "fieldname": "custom_excel_purchase_order",
+        "label": "采购单号",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_delivery_note"
+      },
+      {
+        "fieldname": "custom_excel_warehouse",
+        "label": "库位",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_purchase_order"
+      },
+      {
+        "fieldname": "custom_excel_source_row",
+        "label": "来源行",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_purchase_order",
+        "read_only": 1
+      }
+    ],
+    "Stock Entry": [
+      {
+        "fieldname": "custom_stock_movement_section",
+        "label": "出入库信息",
+        "fieldtype": "Section Break",
+        "insert_after": "company"
+      },
+      {
+        "fieldname": "custom_stock_direction",
+        "label": "出/入库方向",
+        "fieldtype": "Select",
+        "options": "\n出库\n入库",
+        "insert_after": "custom_stock_movement_section",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_stock_reason",
+        "label": "出入库原因",
+        "fieldtype": "Select",
+        "options": "\n生产领料\n生产补料\n外发领料\n产线借用\n其它领用\n生产退料\n生产入库\n采购入库",
+        "insert_after": "custom_stock_direction",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_stock_entry_number",
+        "label": "单号",
+        "fieldtype": "HTML",
+        "insert_after": "custom_stock_reason"
+      },
+      {
+        "fieldname": "custom_stock_history_section",
+        "label": "历史导入信息",
+        "fieldtype": "Section Break",
+        "insert_after": "remarks",
+        "collapsible": 1,
+        "collapsed": 1
+      },
+      {
+        "fieldname": "custom_excel_receipt_type",
+        "label": "入库类型",
+        "fieldtype": "Data",
+        "insert_after": "custom_stock_history_section",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_delivery_note",
+        "label": "送货单",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_receipt_type",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_supplier_name",
+        "label": "供应商",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_delivery_note"
+      },
+      {
+        "fieldname": "custom_excel_lens_receipt_no",
+        "label": "镜片入库单/退料单",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_supplier_name"
+      },
+      {
+        "fieldname": "custom_excel_reconciliation_date",
+        "label": "对帐日期",
+        "fieldtype": "Date",
+        "insert_after": "custom_excel_lens_receipt_no"
+      },
+      {
+        "fieldname": "custom_excel_operator",
+        "label": "操作员",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_reconciliation_date"
+      },
+      {
+        "fieldname": "custom_excel_source_row",
+        "label": "来源行",
+        "fieldtype": "Int",
+        "insert_after": "custom_excel_operator",
+        "read_only": 1
+      },
+      {
+        "fieldname": "custom_excel_outbound_no",
+        "label": "出库单号",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_source_row",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_excel_issue_category",
+        "label": "出库类别",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_outbound_no",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_excel_model",
+        "label": "机种",
+        "fieldtype": "Data",
+        "insert_after": "custom_excel_issue_category"
+      },
+      {
+        "fieldname": "custom_excel_explanation",
+        "label": "说明",
+        "fieldtype": "Small Text",
+        "insert_after": "custom_excel_model"
+      },
+      {
+        "fieldname": "custom_excel_expected_qty",
+        "label": "应出库",
+        "fieldtype": "Float",
+        "insert_after": "custom_excel_explanation"
+      }
+    ],
+    "Timesheet Detail": [
+      {
+        "fieldname": "custom_work_order",
+        "label": "工单号",
+        "fieldtype": "Link",
+        "options": "Work Order",
+        "insert_after": "activity_type",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      }
+      ,{"fieldname":"custom_excel_date","label":"日期","fieldtype":"Date","insert_after":"from_time","in_list_view":1},
+      {"fieldname":"custom_excel_total_hours","label":"总工时","fieldtype":"Float","insert_after":"hours"}
+    ],
+    "Asset": [
+      {
+        "fieldname": "custom_asset_code",
+        "label": "固定资产编号",
+        "fieldtype": "Data",
+        "insert_after": "asset_name",
+        "unique": 1,
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_national_asset_classification_code",
+        "label": "国标分类编号",
+        "fieldtype": "Data",
+        "insert_after": "asset_category",
+        "description": "国家标准固定资产分类编号；当前按文本保存，后续建立分类主数据后可调整为 Link。"
+      },
+      {
+        "fieldname": "custom_asset_specification",
+        "label": "规格型号",
+        "fieldtype": "Data",
+        "insert_after": "asset_name",
+        "in_list_view": 1,
+        "description": "固定资产清单中的规格型号原文。"
+      },
+      {
+        "fieldname": "custom_asset_serial_no",
+        "label": "资产序列号",
+        "fieldtype": "Data",
+        "insert_after": "custom_asset_specification",
+        "in_list_view": 1,
+        "description": "固定资产清单中的序列号原文；不强制创建 Serial No 交易记录。"
+      },
+      {
+        "fieldname": "custom_asset_depreciation_years",
+        "label": "折旧年限（年）",
+        "fieldtype": "Int",
+        "insert_after": "purchase_date",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_asset_monthly_depreciation",
+        "label": "每月折旧金额",
+        "fieldtype": "Currency",
+        "insert_after": "net_purchase_amount",
+        "description": "Excel 原始金额，仅用于核对；正式折旧金额由资产折旧计划计算。"
+      },
+      {
+        "fieldname": "custom_asset_department",
+        "label": "使用部门",
+        "fieldtype": "Data",
+        "insert_after": "department",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_asset_custodian",
+        "label": "保管人",
+        "fieldtype": "Data",
+        "insert_after": "custodian",
+        "in_list_view": 1
+      },
+      {
+        "fieldname": "custom_asset_status",
+        "label": "资产状态",
+        "fieldtype": "Data",
+        "insert_after": "status",
+        "in_list_view": 1,
+        "in_standard_filter": 1
+      },
+      {
+        "fieldname": "custom_asset_remarks",
+        "label": "资产备注",
+        "fieldtype": "Small Text",
+        "insert_after": "custom_asset_status"
+      }
+    ]
+  },
+  "property_setters": [
+    {"doctype": "Sales Order", "fieldname": "custom_excel_customer_code", "property": "hidden", "value": "0", "property_type": "Check"},
+    {"doctype": "Sales Order", "fieldname": "custom_excel_customer_code", "property": "read_only", "value": "1", "property_type": "Check"},
+    {"doctype": "Delivery Note", "fieldname": "customer_name", "property": "hidden", "value": "1", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "customer_name", "property": "label", "value": "客户名称", "property_type": "Data"},
+    {"doctype": "Customer", "fieldname": "custom_responsible_sales_person", "property": "label", "value": "业务人员", "property_type": "Data"},
+    {"doctype": "Customer", "fieldname": "custom_responsible_sales_person", "property": "hidden", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "custom_responsible_sales_person", "property": "insert_after", "value": "territory", "property_type": "Data"},
+    {"doctype": "Customer", "fieldname": "customer_name", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "customer_primary_contact", "property": "label", "value": "主联系人(系统关联)", "property_type": "Data"},
+    {"doctype": "Customer", "fieldname": "customer_primary_contact", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "mobile_no", "property": "label", "value": "主联系人电话(系统关联)", "property_type": "Data"},
+    {"doctype": "Customer", "fieldname": "mobile_no", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "primary_address", "property": "label", "value": "主地址(系统关联)", "property_type": "Data"},
+    {"doctype": "Customer", "fieldname": "primary_address", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "customer_group", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "territory", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "image", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "default_bank_account", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "custom_customer_code", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Customer", "fieldname": "custom_customer_code", "property": "in_standard_filter", "value": "0", "property_type": "Check"},
+
+    {"doctype": "Supplier", "fieldname": "supplier_name", "property": "label", "value": "供应商名称", "property_type": "Data"},
+    {"doctype": "Supplier", "fieldname": "supplier_name", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Supplier", "fieldname": "supplier_primary_contact", "property": "label", "value": "联系人", "property_type": "Data"},
+    {"doctype": "Supplier", "fieldname": "supplier_primary_contact", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Supplier", "fieldname": "mobile_no", "property": "label", "value": "联系电话", "property_type": "Data"},
+    {"doctype": "Supplier", "fieldname": "mobile_no", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Supplier", "fieldname": "primary_address", "property": "label", "value": "供应商地址", "property_type": "Data"},
+    {"doctype": "Supplier", "fieldname": "primary_address", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Supplier", "fieldname": "custom_supplier_code", "property": "in_list_view", "value": "0", "property_type": "Check"},
+    {"doctype": "Supplier", "fieldname": "custom_supplier_code", "property": "in_standard_filter", "value": "0", "property_type": "Check"},
+
+    {"doctype": "Contact", "fieldname": "first_name", "property": "label", "value": "联系人", "property_type": "Data"},
+
+    {"doctype": "Payment Terms Template", "fieldname": "template_name", "property": "label", "value": "收款模式名称", "property_type": "Data"},
+    {"doctype": "Payment Terms Template Detail", "fieldname": "credit_days", "property": "label", "value": "默认账期天数", "property_type": "Data"},
+
+    {"doctype": "Project", "fieldname": "project_name", "property": "label", "value": "项目名称", "property_type": "Data"},
+    {"doctype": "Project", "fieldname": "expected_start_date", "property": "label", "value": "立项日期", "property_type": "Data"},
+    {"doctype": "Project", "fieldname": "expected_end_date", "property": "label", "value": "预计结项日期", "property_type": "Data"},
+    {"doctype": "Project", "fieldname": "estimated_costing", "property": "label", "value": "预算", "property_type": "Data"},
+    {"doctype": "Project", "fieldname": "custom_project_leader", "property": "label", "value": "项目负责人", "property_type": "Data"},
+
+    {"doctype": "Asset", "fieldname": "asset_name", "property": "label", "value": "固定资产名称", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "item_code", "property": "label", "value": "关联物料", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "purchase_date", "property": "label", "value": "入账日期", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "net_purchase_amount", "property": "label", "value": "原值", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "total_number_of_depreciations", "property": "label", "value": "折旧期数（月）", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "frequency_of_depreciation", "property": "label", "value": "折旧频率（月）", "property_type": "Data"},
+
+    {"doctype": "Item", "fieldname": "item_group", "property": "label", "value": "物料组", "property_type": "Data"},
+    {"doctype": "Item", "fieldname": "item_code", "property": "label", "value": "物料编号", "property_type": "Data"},
+    {"doctype": "Item", "fieldname": "item_code", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Item", "fieldname": "item_name", "property": "label", "value": "物料名称", "property_type": "Data"},
+    {"doctype": "Item", "fieldname": "safety_stock", "property": "label", "value": "安全库存", "property_type": "Data"},
+    {"doctype": "Item", "fieldname": "safety_stock", "property": "in_list_view", "value": "1", "property_type": "Check"},
+    {"doctype": "Item", "fieldname": "custom_remarks", "property": "label", "value": "备注（曾用名）", "property_type": "Data"},
+    {"doctype": "Item", "fieldname": "custom_product_status", "property": "label", "value": "状态", "property_type": "Data"},
+    {"doctype": "Item", "fieldname": "description", "property": "label", "value": "说明", "property_type": "Data"},
+
+    {"doctype": "Sales Order", "fieldname": "customer_name", "property": "label", "value": "客户名称", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "customer", "property": "label", "value": "客户名称", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "transaction_date", "property": "label", "value": "日期", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "po_no", "property": "label", "value": "客户订单号", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "payment_terms_template", "property": "label", "value": "收款条件", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "custom_is_high_tech_revenue", "property": "label", "value": "是否高新收入", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "cost_center", "property": "label", "value": "销售业绩归属", "property_type": "Data"},
+    {"doctype": "Sales Order", "fieldname": "cost_center", "property": "description", "value": "订单金额及业绩计入的销售部门或团队。", "property_type": "Small Text"},
+    {"doctype": "Sales Order", "fieldname": "custom_remarks", "property": "label", "value": "备注", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "item_code", "property": "label", "value": "产品代码", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "item_name", "property": "label", "value": "货物名称", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "uom", "property": "label", "value": "单位", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "qty", "property": "label", "value": "数量", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "rate", "property": "label", "value": "含税单价", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "amount", "property": "label", "value": "订单金额", "property_type": "Data"},
+    {"doctype": "Sales Order Item", "fieldname": "delivery_date", "property": "label", "value": "交货日期", "property_type": "Data"},
+
+    {"doctype": "Purchase Order", "fieldname": "transaction_date", "property": "label", "value": "订单日期", "property_type": "Data"},
+    {"doctype": "Purchase Order", "fieldname": "supplier", "property": "label", "value": "供应商", "property_type": "Data"},
+    {"doctype": "Purchase Order", "fieldname": "grand_total", "property": "label", "value": "含税总额", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "item_code", "property": "label", "value": "物料编码", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "item_name", "property": "label", "value": "物料名称", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "uom", "property": "label", "value": "单位", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "qty", "property": "label", "value": "数量", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "rate", "property": "label", "value": "含税价", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "amount", "property": "label", "value": "含税金额", "property_type": "Data"},
+    {"doctype": "Purchase Order Item", "fieldname": "schedule_date", "property": "label", "value": "最新交期", "property_type": "Data"},
+
+    {"doctype": "Purchase Receipt Item", "fieldname": "item_code", "property": "label", "value": "物料编码", "property_type": "Data"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "item_name", "property": "label", "value": "物料名称", "property_type": "Data"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "qty", "property": "label", "value": "入库数量", "property_type": "Data"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "warehouse", "property": "label", "value": "库位", "property_type": "Data"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "purchase_order", "property": "label", "value": "采购单号", "property_type": "Data"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "rate", "property": "label", "value": "单价", "property_type": "Data"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "amount", "property": "label", "value": "总价", "property_type": "Data"},
+    {"doctype": "Purchase Receipt", "fieldname": "posting_date", "property": "label", "value": "入库日期", "property_type": "Data"},
+    {"doctype": "Purchase Receipt", "fieldname": "posting_time", "property": "label", "value": "入库时间", "property_type": "Data"},
+
+    {"doctype": "Delivery Note", "fieldname": "customer", "property": "label", "value": "客户", "property_type": "Data"},
+    {"doctype": "Delivery Note", "fieldname": "customer_name", "property": "label", "value": "客户名称", "property_type": "Data"},
+    {"doctype": "Delivery Note", "fieldname": "posting_date", "property": "label", "value": "日期", "property_type": "Data"},
+    {"doctype": "Delivery Note", "fieldname": "custom_remarks", "property": "label", "value": "备注", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "item_code", "property": "label", "value": "产品代码", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "item_name", "property": "label", "value": "货物名称", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "against_sales_order", "property": "label", "value": "客户订单号", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "qty", "property": "label", "value": "数量", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "uom", "property": "label", "value": "单位", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "rate", "property": "label", "value": "含税单价", "property_type": "Data"},
+    {"doctype": "Delivery Note Item", "fieldname": "amount", "property": "label", "value": "订单金额", "property_type": "Data"},
+
+    {"doctype": "Stock Entry", "fieldname": "posting_date", "property": "label", "value": "出入库日期", "property_type": "Data"},
+    {"doctype": "Stock Entry", "fieldname": "stock_entry_type", "property": "label", "value": "系统库存类型", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "item_code", "property": "label", "value": "物料编码", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "item_name", "property": "label", "value": "物料名称", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "qty", "property": "label", "value": "数量", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "s_warehouse", "property": "label", "value": "源库位", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "t_warehouse", "property": "label", "value": "目标库位", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "basic_rate", "property": "label", "value": "单价", "property_type": "Data"},
+    {"doctype": "Stock Entry Detail", "fieldname": "amount", "property": "label", "value": "出入库金额", "property_type": "Data"},
+
+    {"doctype": "BOM", "fieldname": "item", "property": "label", "value": "型号", "property_type": "Data"},
+    {"doctype": "BOM", "fieldname": "custom_bom_code", "property": "label", "value": "BOM 编码", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "item_code", "property": "label", "value": "物料编码", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "item_name", "property": "label", "value": "物料名称", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "custom_engineering_drawing_no", "property": "label", "value": "图纸号", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "custom_import_level", "property": "label", "value": "层级（导入校验）", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "qty", "property": "label", "value": "用量", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "uom", "property": "label", "value": "单位", "property_type": "Data"},
+    {"doctype": "BOM Item", "fieldname": "bom_no", "property": "label", "value": "子 BOM 编码", "property_type": "Data"},
+
+    {"doctype": "Asset", "fieldname": "asset_name", "property": "label", "value": "固定资产名称", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "item_code", "property": "label", "value": "规格型号", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "purchase_date", "property": "label", "value": "入帐日期", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "net_purchase_amount", "property": "label", "value": "原值", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "department", "property": "label", "value": "使用部门", "property_type": "Data"},
+    {"doctype": "Asset", "fieldname": "custodian", "property": "label", "value": "保管人", "property_type": "Data"},
+
+    {"doctype": "Timesheet", "fieldname": "employee", "property": "label", "value": "姓名", "property_type": "Data"},
+    {"doctype": "Timesheet Detail", "fieldname": "from_time", "property": "label", "value": "开始时间", "property_type": "Data"},
+    {"doctype": "Timesheet Detail", "fieldname": "to_time", "property": "label", "value": "结束时间", "property_type": "Data"},
+    {"doctype": "Timesheet Detail", "fieldname": "hours", "property": "label", "value": "总工时", "property_type": "Data"}
+  ],
+  "existing_links": [
+    {"doctype": "Customer", "fieldname": "custom_responsible_sales_person", "options": "Sales Person"},
+    {"doctype": "Timesheet Detail", "fieldname": "custom_work_order", "options": "Work Order"},
+    {"doctype": "Sales Order", "fieldname": "customer", "options": "Customer"},
+    {"doctype": "Sales Order Item", "fieldname": "item_code", "options": "Item"},
+    {"doctype": "Purchase Order", "fieldname": "supplier", "options": "Supplier"},
+    {"doctype": "Purchase Order Item", "fieldname": "item_code", "options": "Item"},
+    {"doctype": "Purchase Receipt", "fieldname": "supplier", "options": "Supplier"},
+    {"doctype": "Purchase Receipt Item", "fieldname": "purchase_order", "options": "Purchase Order"},
+    {"doctype": "Delivery Note", "fieldname": "customer", "options": "Customer"},
+    {"doctype": "Delivery Note Item", "fieldname": "against_sales_order", "options": "Sales Order"},
+    {"doctype": "Stock Entry Detail", "fieldname": "item_code", "options": "Item"},
+    {"doctype": "Stock Entry Detail", "fieldname": "s_warehouse", "options": "Warehouse"},
+    {"doctype": "Stock Entry Detail", "fieldname": "t_warehouse", "options": "Warehouse"},
+    {"doctype": "Project", "fieldname": "custom_project_leader", "options": "User"},
+    {"doctype": "Serial No", "fieldname": "custom_akivision_customer", "options": "Customer"},
+    {"doctype": "Serial No", "fieldname": "custom_akivision_supplier", "options": "Supplier"},
+    {"doctype": "Serial No", "fieldname": "custom_akivision_loan_out", "options": "Sample Loan Out"},
+    {"doctype": "Serial No", "fieldname": "custom_akivision_loan_in", "options": "Sample Loan In"},
+    {"doctype": "Sample Loan Out", "fieldname": "customer", "options": "Customer"},
+    {"doctype": "Sample Loan In", "fieldname": "supplier", "options": "Supplier"},
+    {"doctype": "Finished Goods Status", "fieldname": "serial_no", "options": "Serial No"},
+    {"doctype": "Finished Goods Status", "fieldname": "item_code", "options": "Item"}
+  ]
+}

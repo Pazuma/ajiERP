@@ -51,6 +51,8 @@ def apply_work_order_labor_cost(doc, method=None):
 		(doc.work_order, f"%{LABOR_MARKER}%"),
 	)[0][0]
 	remaining = max(total_labor - flt(allocated), 0)
+	if frappe.db.get_value("Work Order", doc.work_order, "custom_layered_mode"):
+		remaining = min(remaining, total_labor * flt(doc.fg_completed_qty) / flt(work_order.qty)) if flt(work_order.qty) else 0
 	if not remaining:
 		return
 	account = _get_additional_cost_account(doc.company)

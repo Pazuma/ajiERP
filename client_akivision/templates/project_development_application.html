@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>
+@page { size: A4 portrait; margin: 7mm 8mm; }
+* { box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body { color:#111; font-family:"WenQuanYi Zen Hei","文泉驿正黑","Noto Sans CJK SC","Microsoft YaHei","SimSun",sans-serif; font-size:9px; line-height:1.25; }
+.title-row { width:100%; border-collapse:collapse; margin:0 0 3mm; table-layout:fixed; }
+.title-row td { border:0; padding:0; vertical-align:middle; }
+.title-side,.title-logo-cell { width:25%; }
+.title-logo-cell { text-align:right; }
+.title-row h1 { margin:0; text-align:center; font-size:20px; font-weight:700; letter-spacing:0; }
+.project-logo { display:inline-block; width:29mm; height:auto; max-height:14.5mm; object-fit:contain; }
+.instruction { margin:0 0 2.5mm; font-size:10px; }
+.application-date { margin:0 0 4mm; font-size:10px; font-weight:600; }
+.date-line { display:inline-block; min-width:34mm; padding:0 2mm 1px; border-bottom:.7px solid #111; text-align:center; font-weight:400; }
+.priority { width:100%; margin:0 0 1mm; border-collapse:collapse; table-layout:fixed; font-size:10px; }
+.priority td { border:0; padding:0; }
+.priority-label { width:21%; font-weight:600; }
+.priority-option { text-align:center; }
+.box { display:inline-block; width:3.4mm; height:3.4mm; margin-right:2mm; border:.8px solid #111; vertical-align:-.5mm; text-align:center; font-family:sans-serif; font-size:9px; font-weight:700; line-height:3mm; }
+.main-table { width:100%; border-collapse:collapse; table-layout:fixed; border:1.2px solid #000; }
+.main-table th,.main-table td { border:1px solid #000 !important; padding:1.1mm 1.3mm; vertical-align:middle; overflow-wrap:anywhere; word-break:break-word; }
+.main-table th { font-weight:400; text-align:left; }
+.form-title { height:8mm; background:#dedfce; font-size:14px; }
+.group-label { width:20%; background:#dedfce; font-size:10px; font-weight:600 !important; }
+.project-name-row { height:8mm; }
+.attribute-row { height:7mm; }
+.description-blank { height:6mm; }
+.description-line { height:6mm; white-space:pre-wrap; }
+.description-heading { font-weight:600; }
+.impact-cell { height:15mm; white-space:pre-wrap; vertical-align:top !important; }
+.budget-total { height:8mm; }
+.budget-head { background:#ededed; text-align:left; }
+.budget-row td { height:8.5mm; }
+.number { text-align:right; white-space:nowrap; }
+.start-row { height:9mm; }
+.signatures { width:100%; margin-top:5mm; border-collapse:collapse; table-layout:fixed; font-size:10px; page-break-inside:avoid; }
+.signatures td { border:0; padding:0 0 4mm; vertical-align:bottom; }
+.signature-label { display:inline-block; min-width:30mm; }
+.signature-line { display:inline-block; min-width:55mm; padding:0 2mm 1px; border-bottom:.7px solid #111; }
+.signature-date { text-align:right; }
+</style></head><body>
+<table class="title-row"><tr><td class="title-side"></td><td><h1>项目开发申请表</h1></td><td class="title-logo-cell">{% if project_logo_data_uri %}<img class="project-logo" src="{{ project_logo_data_uri }}" alt="项目 Logo">{% endif %}</td></tr></table>
+<p class="instruction">为保证项目理解清晰以及项目开发的顺利进行，请填写以下空白内容：</p>
+<p class="application-date">申请日期：<span class="date-line">{{ application_date }}</span></p>
+<table class="priority"><tr><td class="priority-label">请填写项目优先程度</td><td class="priority-option"><span class="box">{{ "✓" if priority == "High" else "" }}</span>High(高)</td><td class="priority-option"><span class="box">{{ "✓" if priority == "Medium" else "" }}</span>Medium(中)</td><td class="priority-option"><span class="box">{{ "✓" if priority == "Low" else "" }}</span>Low(低)</td></tr></table>
+<table class="main-table">
+<colgroup><col style="width:20%">{% for i in range(11) %}<col style="width:7.2727%">{% endfor %}</colgroup>
+<tr><th class="form-title" colspan="12">项目细节描述</th></tr>
+<tr class="project-name-row"><th class="group-label">项目名称</th><td colspan="11">{{ project_name }}</td></tr>
+<tr class="attribute-row"><th class="group-label" rowspan="2">产品属性</th><td colspan="5"><span class="box">{{ "✓" if product_attributes[0].checked else "" }}</span>{{ product_attributes[0].label }}</td><td colspan="6"><span class="box">{{ "✓" if product_attributes[1].checked else "" }}</span>{{ product_attributes[1].label }}</td></tr>
+<tr class="attribute-row"><td colspan="5"><span class="box">{{ "✓" if product_attributes[2].checked else "" }}</span>{{ product_attributes[2].label }}</td><td colspan="6"><span class="box">{{ "✓" if product_attributes[3].checked else "" }}</span>{{ product_attributes[3].label }}</td></tr>
+<tr><th class="group-label" rowspan="8">项目描述</th><td class="description-blank" colspan="11"></td></tr>
+<tr><td class="description-line" colspan="11">{{ replaced_product }}</td></tr>
+<tr><td class="description-heading" colspan="11">参数如下：</td></tr>
+{% for label, value in optical_parameters %}<tr><td class="description-line" colspan="11">{{ label }}：{{ value }}</td></tr>{% endfor %}
+<tr><th class="group-label">业务影响度</th><td class="impact-cell" colspan="11">{{ business_impact }}</td></tr>
+<tr><th class="group-label">预算总金额(元)</th><td class="budget-total" colspan="11">人民币元：{{ budget_total }}</td></tr>
+<tr><th class="group-label" rowspan="7" style="text-align:center">预算明细</th><th class="budget-head" colspan="3">费用分类</th><th class="budget-head" colspan="2">金额</th><th class="budget-head" colspan="4">计算依据</th><th class="budget-head" colspan="2">备注</th></tr>
+{% for row in budget_rows %}<tr class="budget-row"><td colspan="3">{{ row.category }}</td><td class="number" colspan="2">{{ row.amount }}</td><td colspan="4">{{ row.calculation_basis }}</td><td colspan="2">{{ row.remarks }}</td></tr>{% endfor %}
+<tr class="start-row"><th class="group-label" rowspan="2">项目起始点要求</th><td colspan="11">项目启动日期：<span class="date-line">{{ start_date }}</span></td></tr>
+<tr class="start-row"><td colspan="11">项目完成日期：<span class="date-line">{{ end_date }}</span></td></tr>
+</table>
+<table class="signatures"><tr><td><span class="signature-label">项目负责人签名：</span><span class="signature-line">{{ project_leader }}</span></td><td class="signature-date">日期：<span class="signature-line">{{ leader_sign_date }}</span></td></tr><tr><td><span class="signature-label">部门经理签名：</span><span class="signature-line">{{ department_manager }}</span></td><td class="signature-date">日期：<span class="signature-line">{{ manager_sign_date }}</span></td></tr></table>
+</body></html>

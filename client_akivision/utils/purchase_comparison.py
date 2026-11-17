@@ -8,6 +8,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate, today
 
+from custom_filters.pricing_formula import evaluate_supplier_rule, get_active_rule
+
 from client_akivision.client_akivision.doctype.supplier_quote_import.supplier_quote_import import (
 	_default_warehouse,
 )
@@ -30,7 +32,11 @@ def create_from_material_request(mr_name):
 		limit=1,
 	)
 	if existing:
-		return existing[0]
+		comparison = frappe.get_doc(COMPARISON_DOCTYPE, existing[0])
+		preferred_supplier = frappe.db.get_value("Material Request", mr_name, "custom_preferred_supplier")
+		if comparison.get("custom_preferred_supplier") != preferred_supplier:
+			comparison.db_set("custom_preferred_supplier", preferred_supplier or None, update_modified=False)
+		return comparison.name
 
 	mr = frappe.get_doc("Material Request", mr_name)
 	if mr.docstatus == 2:
@@ -51,6 +57,7 @@ def create_from_material_request(mr_name):
 			"material_request": mr_name,
 		}
 	)
+	doc.custom_preferred_supplier = mr.get("custom_preferred_supplier")
 	for row in mr.items:
 		if not row.item_code:
 			continue
@@ -74,6 +81,35 @@ def create_from_material_request(mr_name):
 	run_comparison(doc)
 	doc.insert()
 	return doc.name
+
+
+@frappe.whitelist()
+def get_material_request_comparison(mr_name):
+	"""Return the current comparison rows for display on a submitted Material Request."""
+	comparison_name = create_from_material_request(mr_name)
+	doc = frappe.get_doc(COMPARISON_DOCTYPE, comparison_name)
+	doc.check_permission("read")
+	return {
+		"comparison": doc.name,
+		"preferred_supplier": doc.get("custom_preferred_supplier"),
+		"rows": [
+			{
+				"item_code": row.item_code,
+				"item_name": row.item_name,
+				"supplier": row.supplier,
+				"supplier_name": row.supplier_name,
+				"demanded_qty": row.demanded_qty,
+				"recommended_qty": row.recommended_qty,
+				"recommended_rate": row.recommended_rate,
+				"recommended_total": row.recommended_total,
+				"price_source": row.price_source,
+				"supplier_quotation": row.get("supplier_quotation"),
+				"is_best_item": row.is_best_item,
+				"selected": row.selected,
+			}
+			for row in doc.get("rows", [])
+		],
+	}
 
 
 @frappe.whitelist()
@@ -127,13 +163,21 @@ def run_comparison(doc):
 	prices = engine._get_item_prices_by_item(item_codes, on_date)
 	po_rates = engine._get_po_rates_by_item(item_codes)
 	suppliers = engine._get_suppliers_universe(rules_by_item, quotes, prices)
+	formula_suppliers = _get_formula_supplier_names(item_codes, doc.company, on_date)
+	for supplier in frappe.get_all(
+		"Supplier",
+		filters={"name": ("in", list(formula_suppliers))},
+		fields=["name", "supplier_name", "supplier_group", "payment_terms"],
+	):
+		suppliers[supplier.name] = supplier
 
 	unquoted_items = []
 	item_rows_by_index = {}
 	for item_index, item in enumerate(items):
 		item_rows = []
 		for name, supplier in suppliers.items():
-			row_data = engine._build_supplier_row(
+			formula_rule = get_active_rule(item["item_code"], name, doc.company, on_date)
+			row_data = _build_formula_supplier_row(formula_rule, supplier, item, company_currency) if formula_rule else engine._build_supplier_row(
 				name,
 				supplier,
 				item["item_code"],
@@ -205,6 +249,7 @@ def run_comparison(doc):
 				"rows",
 				{
 					"selected": 1 if row_data["supplier"] == selected_supplier else 0,
+					"material_request_item": next((source.get("material_request_item") for source in doc.get("items", []) if source.item_code == items[item_index]["item_code"]), None),
 					"is_best_item": 1 if row_data["supplier"] == selected_supplier else 0,
 					"item_code": items[item_index]["item_code"],
 					"item_name": items[item_index].get("item_name"),
@@ -231,6 +276,14 @@ def run_comparison(doc):
 						else 0
 					),
 					"payment_terms": row_data["payment_terms"],
+					"item_supplier_pricing_rule": row_data.get("item_supplier_pricing_rule"),
+					"supplier_quotation": row_data.get("supplier_quotation"),
+					"pricing_rule_type": row_data.get("pricing_rule_type"),
+					"pricing_formula": row_data.get("pricing_formula"),
+					"matched_tier": row_data.get("matched_tier"),
+					"calculation_qty": row_data.get("calculation_qty"),
+					"source_currency": row_data.get("source_currency"),
+					"calculated_at": row_data.get("calculated_at"),
 					"note": row_data["note"],
 				},
 			)
@@ -313,6 +366,54 @@ def _remaining_mr_qty(row):
 	return max(flt(stock_qty - ordered_qty) / conversion, 0)
 
 
+def _get_formula_supplier_names(item_codes, company, on_date):
+	filters = {
+		"item_code": ("in", item_codes),
+		"disabled": 0,
+		"valid_from": ("<=", on_date),
+	}
+	if company:
+		filters["company"] = ("in", ["", company])
+	rows = frappe.get_all(
+		"Item Supplier Pricing Rule", filters=filters, fields=["supplier", "valid_upto"]
+	)
+	return {row.supplier for row in rows if not row.valid_upto or getdate(row.valid_upto) >= on_date}
+
+
+def _build_formula_supplier_row(rule, supplier, item, company_currency):
+	if company_currency and rule.currency != company_currency:
+		return {"supplier": supplier.name, "supplier_name": supplier.supplier_name, "price_source": "", "recommended_total": None}
+	try:
+		result = evaluate_supplier_rule(rule, item["qty"])
+	except ValueError:
+		return {"supplier": supplier.name, "supplier_name": supplier.supplier_name, "price_source": "", "recommended_total": None}
+	recommended_qty = result["calculation_qty"]
+	direct = evaluate_supplier_rule(rule, item["qty"])
+	return {
+		"supplier": supplier.name,
+		"supplier_name": supplier.supplier_name,
+		"price_source": _("Supplier Formula"),
+		"demanded_qty": item["qty"],
+		"recommended_qty": recommended_qty,
+		"recommended_rate": result["rate"],
+		"recommended_total": result["total"],
+		"direct_total": direct["total"],
+		"savings": direct["total"] - result["total"],
+		"min_order_qty": rule.minimum_order_qty,
+		"quote_valid_till": rule.valid_upto,
+		"payment_terms": supplier.payment_terms,
+		"note": "",
+		"item_supplier_pricing_rule": rule.name,
+		"supplier_quotation": rule.source_supplier_quotation,
+		"pricing_rule_type": rule.rule_type,
+		"pricing_formula": result["formula"],
+		"matched_tier": result["matched_tier"],
+		"calculation_qty": result["calculation_qty"],
+		"source_currency": result["source_currency"],
+		"calculated_at": result["calculated_at"],
+	}
+
+
 def _sync_remaining_mr_items(doc):
 	"""Refresh saved comparison demand from the linked MR before re-comparing."""
 	mr = frappe.get_doc("Material Request", doc.material_request)
@@ -339,6 +440,13 @@ def create_po_drafts(comparison_name):
 	doc.check_permission("write")
 
 	rows = [row for row in doc.get("rows", []) if row.selected]
+	preferred_supplier = doc.get("custom_preferred_supplier")
+	if preferred_supplier:
+		preferred_rows = [row for row in doc.get("rows", []) if row.supplier == preferred_supplier]
+		if preferred_rows:
+			rows = preferred_rows
+		else:
+			frappe.throw(_("预选供应商 {0} 没有有效的比价结果，请重新比价或清空预选供应商。" ).format(preferred_supplier))
 	if not rows:
 		frappe.throw(_("Please select at least one comparison row."))
 
@@ -351,17 +459,21 @@ def create_po_drafts(comparison_name):
 		if qty <= 0 or row.recommended_rate is None:
 			skipped.append(f"{row.item_code} / {row.supplier}")
 			continue
+		verified_rate = _verify_formula_row(row, qty, doc.company)
 		result = add_item_to_supplier_po_draft(
 			supplier=row.supplier,
 			item_code=row.item_code,
 			qty=qty,
-			rate=row.recommended_rate,
+			rate=verified_rate,
 			company=doc.company,
 			payment_terms=row.payment_terms,
 			material_request=doc.material_request,
 			material_request_item=mr_item_map.get(row.item_code),
 			purchase_comparison=doc.name,
 			warehouse=warehouse_map.get(row.item_code),
+			supplier_quotation=row.get("supplier_quotation"),
+			preferred_supplier=preferred_supplier,
+			material_request_source=doc.material_request,
 		)
 		if result["purchase_order"] not in purchase_orders:
 			purchase_orders.append(result["purchase_order"])
@@ -374,6 +486,73 @@ def create_po_drafts(comparison_name):
 	doc.db_set("purchase_orders", ", ".join(purchase_orders))
 	doc.db_set("status", "PO Created")
 	return purchase_orders
+
+
+@frappe.whitelist()
+def recalculate_comparison_row(comparison_name, row_name, order_qty):
+	"""Re-evaluate one formula-priced row after the intended order quantity changes."""
+	doc = frappe.get_doc(COMPARISON_DOCTYPE, comparison_name)
+	doc.check_permission("write")
+	row = next((candidate for candidate in doc.rows if candidate.name == row_name), None)
+	if not row:
+		frappe.throw(_("Comparison row not found."))
+	qty = flt(order_qty)
+	if qty <= 0:
+		frappe.throw(_("Order quantity must be greater than zero."))
+	if not row.item_supplier_pricing_rule:
+		row.order_qty = qty
+		row.order_total = qty * flt(row.recommended_rate)
+		doc.save()
+		return {"order_qty": qty, "recommended_rate": row.recommended_rate, "order_total": row.order_total}
+
+	rule = get_active_rule(row.item_code, row.supplier, doc.company, doc.date)
+	if not rule or rule.name != row.item_supplier_pricing_rule:
+		frappe.throw(_("The supplier pricing rule has changed. Please run the comparison again."))
+	result = evaluate_supplier_rule(rule, qty)
+	row.order_qty = result["calculation_qty"]
+	row.recommended_qty = result["calculation_qty"]
+	row.recommended_rate = result["rate"]
+	row.recommended_total = result["total"]
+	row.order_total = result["total"]
+	row.matched_tier = result["matched_tier"]
+	row.calculation_qty = result["calculation_qty"]
+	row.pricing_formula = result["formula"]
+	row.calculated_at = result["calculated_at"]
+	_rebuild_supplier_summary(doc)
+	doc.save()
+	return {
+		"order_qty": row.order_qty,
+		"recommended_rate": row.recommended_rate,
+		"order_total": row.order_total,
+		"matched_tier": row.matched_tier,
+	}
+
+
+def _verify_formula_row(row, qty, company):
+	if not row.item_supplier_pricing_rule:
+		return row.recommended_rate
+	rule = get_active_rule(row.item_code, row.supplier, company, today())
+	if not rule or rule.name != row.item_supplier_pricing_rule:
+		frappe.throw(_("Pricing for {0} / {1} has changed. Run supplier comparison again.").format(row.item_code, row.supplier))
+	result = evaluate_supplier_rule(rule, qty)
+	if abs(flt(result["rate"]) - flt(row.recommended_rate)) > 0.000001 or abs(flt(result["calculation_qty"]) - flt(qty)) > 0.000001:
+		frappe.throw(_("Pricing for {0} / {1} changed to quantity {2} at rate {3}. Run supplier comparison again.").format(row.item_code, row.supplier, result["calculation_qty"], result["rate"]))
+	return result["rate"]
+
+
+def _rebuild_supplier_summary(doc):
+	totals = {}
+	coverage = {}
+	item_count = len(doc.items)
+	for row in doc.rows:
+		totals[row.supplier] = totals.get(row.supplier, 0) + flt(row.order_total or row.recommended_total)
+		coverage.setdefault(row.supplier, set()).add(row.item_code)
+	doc.set("supplier_summary", [])
+	full = [supplier for supplier, items in coverage.items() if len(items) == item_count]
+	preferred = min(full, key=lambda supplier: (totals[supplier], supplier)) if full else None
+	for supplier in sorted(coverage):
+		count = len(coverage[supplier])
+		doc.append("supplier_summary", {"supplier": supplier, "coverage_count": count, "coverage_rate": count * 100 / item_count if item_count else 0, "recommended_total": totals[supplier], "full_coverage": count == item_count, "is_preferred": supplier == preferred})
 
 
 @frappe.whitelist()

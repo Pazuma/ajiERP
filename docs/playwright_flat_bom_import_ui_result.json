@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "browser": "Chromium",
+  "tested_at": "2026-08-25T09:30:03.444Z",
+  "results": [
+    {
+      "name": "五列表 BOM 直接导入预览",
+      "status": "passed",
+      "details": "识别 1 张 BOM、40 条组件并展示匹配编码和单位"
+    },
+    {
+      "name": "直接导入启动反馈",
+      "status": "passed",
+      "details": "预览通过后可启动任务并显示完成状态"
+    },
+    {
+      "name": "阻断警告与问题记录",
+      "status": "passed",
+      "details": "匹配失败行显示具体错误并阻止启动"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{font-family:"WenQuanYi Zen Hei",sans-serif;font-size:11px;color:#243b53}h1,h2{text-align:center}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{padding:8px;border:1px solid #d8dee6}th{background:#24415c;color:white}.number{text-align:right}thead{display:table-header-group}tr{page-break-inside:avoid}.logo{max-width:120px;max-height:50px}
+</style></head><body>
+{% if logo_data_uri %}<img class="logo" src="{{ logo_data_uri }}">{% endif %}
+<h2>{{ company|e }}</h2><h1>销售订单 · {{ status|e }}</h1>
+<table><tr><td>订单编号：{{ name|e }}</td><td>订单日期：{{ date|e }}</td></tr><tr><td>客户：{{ customer|e }}</td><td>联系人：{{ contact|e }}</td></tr><tr><td>联系电话：{{ phone|e }}</td><td>币种：{{ currency|e }}</td></tr><tr><td colspan="2">收货地址：{{ address|e }}</td></tr></table>
+<table><thead><tr><th>序号</th><th>产品编码</th><th>产品名称/型号</th><th>数量</th><th>单位</th><th>{{ basis|e }}单价</th><th>{{ basis|e }}金额</th><th>交货日期</th></tr></thead><tbody>
+{% for row in items %}<tr><td>{{ loop.index }}</td><td>{{ row.code|e }}</td><td>{{ row.name|e }} {{ row.model|e }}</td><td class="number">{{ row.qty }}</td><td>{{ row.uom|e }}</td><td class="number">{{ "%.2f"|format(row.rate) }}</td><td class="number">{{ "%.2f"|format(row.amount) }}</td><td>{{ row.date|e }}</td></tr>{% endfor %}
+</tbody></table>
+<p>合计数量：{{ qty }}　未税金额：{{ net }}　税费：{{ tax }}　折扣：{{ discount }}　舍入调整：{{ rounding }}　订单合计：{{ total }}</p>
+{% for row in taxes %}<p>{{ row.label|e }}：{{ row.amount }}</p>{% endfor %}
+<p>大写金额：{{ words|e }}</p><p>付款方式：{{ payment|e }}</p><p>订单条款：{{ terms|e }}</p><hr><p>制单人：________　　公司确认：________　　客户确认：________</p>
+</body></html>

@@ -1,0 +1,6 @@
+{
+ "doctype": "DocType", "istable": 1, "module": "Client Akivision", "name": "Material Stocktake Warehouse", "editable_grid": 1,
+ "field_order": ["warehouse"],
+ "fields": [{"fieldname":"warehouse","fieldtype":"Link","label":"仓库","options":"Warehouse","in_list_view":1,"reqd":1}],
+ "permissions": []
+}

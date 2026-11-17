@@ -1,0 +1,68 @@
+.client-akivision-sales-product-trigger {
+	display: inline-block;
+	max-width: 220px;
+	vertical-align: middle;
+	cursor: help;
+}
+
+.list-row-col.sales_products {
+	min-width: 0;
+	max-width: 220px;
+}
+
+.client-akivision-sales-products-popover .popover-body {
+	max-width: 420px;
+	max-height: 280px;
+	overflow-y: auto;
+}
+
+.client-akivision-sales-product-loading,
+.client-akivision-sales-product-empty {
+	min-width: 180px;
+	padding: 4px 0;
+}
+
+.client-akivision-sales-product-item {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--margin-md);
+	padding: 6px 0;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.client-akivision-sales-product-item:last-child {
+	border-bottom: 0;
+}
+
+.client-akivision-sales-product-name {
+	min-width: 0;
+	word-break: break-word;
+}
+
+.client-akivision-sales-product-description {
+	margin-top: 2px;
+	font-size: var(--text-sm);
+	white-space: pre-wrap;
+}
+
+.client-akivision-sales-product-quantity {
+	flex: 0 0 auto;
+	white-space: nowrap;
+}
+
+.aki-order-cost-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px 24px;
+	width: 100%;
+	padding: 0 15px;
+}
+.aki-order-cost-grid > .frappe-control { min-width: 0; margin-bottom: 0; }
+@media (max-width: 991px) {
+	.aki-order-cost-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.aki-order-cost-spacer { display: none; }
+}
+@media (max-width: 575px) {
+	.aki-order-cost-grid { grid-template-columns: minmax(0, 1fr); }
+}

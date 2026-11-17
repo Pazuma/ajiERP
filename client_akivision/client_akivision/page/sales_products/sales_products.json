@@ -1,0 +1,14 @@
+{
+ "doctype": "Page",
+ "name": "sales-products",
+ "page_name": "sales-products",
+ "module": "Client Akivision",
+ "standard": "Yes",
+ "system_page": 0,
+ "title": "产品表",
+ "roles": [
+  {"role": "Sales User"},
+  {"role": "Sales Manager"},
+  {"role": "System Manager"}
+ ]
+}

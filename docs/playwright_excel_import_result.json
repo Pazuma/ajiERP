@@ -1,0 +1,22 @@
+{
+  "tested_at": "2026-08-24T02:47:41.405Z",
+  "browser": "Chromium 151",
+  "base_url": "http://127.0.0.1:35083/",
+  "results": [
+    {
+      "name": "只读报表不可导入",
+      "status": "passed",
+      "details": "实时库存选项被禁用"
+    },
+    {
+      "name": "产品清单展示去向",
+      "status": "passed",
+      "details": "列表、详情和系统计算字段均显示"
+    },
+    {
+      "name": "销售订单计算字段与明细",
+      "status": "passed",
+      "details": "计算字段只读说明显示，订单金额未出现在可写字段选择器，明细数量可选"
+    }
+  ]
+}

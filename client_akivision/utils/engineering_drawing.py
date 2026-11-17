@@ -30,7 +30,7 @@ def snapshot_component_drawings(doc):
         item = items.get(row.item_code)
         if not item or not item.custom_engineering_drawing:
             row.custom_engineering_drawing = None
-            row.custom_engineering_drawing_no = None
+            row.custom_engineering_drawing_no = row.item_code or None
             row.custom_engineering_drawing_revision = None
             continue
 

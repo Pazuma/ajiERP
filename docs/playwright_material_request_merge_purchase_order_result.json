@@ -1,0 +1,26 @@
+{
+  "tested_at": "2026-08-27T10:44:00.874Z",
+  "browser": "Chromium",
+  "results": [
+    {
+      "name": "采购申请批量入口",
+      "status": "passed",
+      "details": "列表操作菜单新增合并生成采购订单"
+    },
+    {
+      "name": "合并确认字段",
+      "status": "passed",
+      "details": "供应商、公司及 7 个明细字段完整，包含两张申请的两行物料"
+    },
+    {
+      "name": "生成采购订单",
+      "status": "passed",
+      "details": "供应商、申请和明细参数完整，成功路由到未保存采购订单"
+    },
+    {
+      "name": "移动端对话框",
+      "status": "passed",
+      "details": "明细表在容器内横向滚动，无视口级横向溢出"
+    }
+  ]
+}

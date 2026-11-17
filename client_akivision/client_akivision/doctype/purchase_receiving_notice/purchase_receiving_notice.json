@@ -1,0 +1,23 @@
+{
+ "doctype":"DocType", "name":"Purchase Receiving Notice", "module":"Client Akivision", "autoname":"naming_series:", "engine":"InnoDB", "is_submittable":1, "track_changes":1, "title_field":"supplier_name",
+ "field_order":["naming_series","company","supplier","supplier_name","purchase_order","posting_date","status","items","remarks"],
+ "fields":[
+  {"fieldname":"naming_series","label":"编号规则","fieldtype":"Select","options":"MAT-RN-.YYYY.-","default":"MAT-RN-.YYYY.-","reqd":1,"hidden":1},
+  {"fieldname":"company","label":"公司","fieldtype":"Link","options":"Company","reqd":1},
+  {"fieldname":"supplier","label":"供应商","fieldtype":"Link","options":"Supplier","reqd":1},
+  {"fieldname":"supplier_name","label":"供应商名称","fieldtype":"Data","read_only":1,"fetch_from":"supplier.supplier_name"},
+  {"fieldname":"purchase_order","label":"采购订单","fieldtype":"Link","options":"Purchase Order","read_only":1,"reqd":1},
+  {"fieldname":"posting_date","label":"到货日期","fieldtype":"Date","default":"Today","reqd":1},
+  {"fieldname":"status","label":"状态","fieldtype":"Select","options":"Draft\nPending Inspection\nInspected\nReceived\nCancelled","default":"Draft","read_only":1},
+  {"fieldname":"items","label":"到货明细","fieldtype":"Table","options":"Purchase Receiving Notice Item","reqd":1},
+  {"fieldname":"remarks","label":"备注","fieldtype":"Small Text"}
+ ],
+ "permissions":[
+  {"role":"Purchase User","read":1,"create":1,"write":1,"submit":1,"cancel":1,"print":1,"email":1,"export":1,"share":1},
+  {"role":"Purchase Manager","read":1,"create":1,"write":1,"submit":1,"cancel":1,"delete":1,"print":1,"email":1,"export":1,"share":1},
+  {"role":"Stock User","read":1,"create":1,"write":1,"submit":1,"print":1,"email":1,"export":1,"share":1},
+  {"role":"Stock Manager","read":1,"create":1,"write":1,"submit":1,"cancel":1,"delete":1,"print":1,"email":1,"export":1,"share":1},
+  {"role":"System Manager","read":1,"create":1,"write":1,"submit":1,"cancel":1,"delete":1,"print":1,"email":1,"export":1,"share":1}
+ ],
+ "actions":[], "links":[], "states":[], "sort_field":"modified", "sort_order":"DESC"
+}

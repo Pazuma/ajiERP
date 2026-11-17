@@ -1,0 +1,125 @@
+/* Use the existing top strip without moving the sidebar or page below it. */
+.body-sidebar > .sidebar-header:has(.aki-company-logo) {
+	padding: 0 !important;
+	cursor: default !important;
+	background: transparent !important;
+	border-radius: 0;
+}
+
+.aki-company-logo {
+	position: absolute;
+	inset: -8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #263b53;
+	border-bottom: 1px solid var(--sidebar-border-color, #ededed);
+	box-sizing: border-box;
+	cursor: default;
+}
+
+.aki-company-logo img {
+	display: block;
+	width: 180px;
+	height: 72px;
+	max-width: calc(100% - 16px);
+	max-height: 100%;
+	object-fit: contain;
+	border-radius: 0;
+	background: #263b53;
+	box-shadow: none;
+}
+
+/* Shared brand palette for the menu column and the separate module rail. */
+.custom-filters-right-sidebar-container .custom-filters-right-sidebar {
+	--sidebar-hover-color: #324d6b;
+	--icon-stroke: #dbe5f0;
+	background: #263b53;
+	border-right-color: rgba(255, 255, 255, .12);
+}
+
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item,
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item-label {
+	color: #e5edf5;
+}
+
+.custom-filters-right-sidebar .custom-filters-right-sidebar-icon-img,
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item-icon .icon-container {
+	filter: url("/assets/client_akivision/images/sidebar_icon_palette.svg#slate");
+}
+
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item-icon > .icon {
+	--icon-stroke: #e5edf5;
+	color: #e5edf5;
+}
+
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item:hover {
+	background: #324d6b;
+}
+
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item.active {
+	background: #3b5879;
+	box-shadow: inset 0 0 0 1px #91aac5;
+}
+
+.custom-filters-right-sidebar .custom-filters-right-sidebar-item:focus-visible {
+	outline: 2px solid #e2bd59;
+	outline-offset: -2px;
+}
+
+.body-sidebar-container .body-sidebar {
+	--sidebar-hover-color: #324d6b;
+	--sidebar-active-color: #3b5879;
+	--sidebar-border-color: rgba(255, 255, 255, .12);
+	--divider-color: rgba(255, 255, 255, .12);
+	--icon-stroke: #dbe5f0;
+	--icon-fill: transparent;
+	background: #263b53;
+	color: #e5edf5;
+	scrollbar-color: #61768e #263b53;
+}
+
+.body-sidebar-container .body-sidebar .sidebar-item-label,
+.body-sidebar-container .body-sidebar .item-anchor,
+.body-sidebar-container .body-sidebar .standard-sidebar-item.section-break .item-anchor,
+.body-sidebar-container .body-sidebar .sidebar-user-button,
+.body-sidebar-container .body-sidebar .avatar-name-email,
+.body-sidebar-container .body-sidebar .header-title,
+.body-sidebar-container .body-sidebar .header-subtitle {
+	color: #e5edf5 !important;
+}
+
+.body-sidebar-container .body-sidebar .avatar-name-email .text-secondary {
+	color: #b8c8da !important;
+}
+
+.body-sidebar-container .body-sidebar :is(.sidebar-item-icon, .drop-icon, .sidebar-item-control) .icon {
+	--icon-stroke: #c6d5e5;
+	color: #c6d5e5;
+}
+
+.body-sidebar-container .body-sidebar .active-sidebar {
+	background: #3b5879;
+	box-shadow: none;
+}
+
+.body-sidebar-container .body-sidebar .active-sidebar .sidebar-item-label {
+	color: #fff !important;
+	font-weight: 600;
+}
+
+.body-sidebar-container .body-sidebar .item-anchor:focus-visible,
+.body-sidebar-container .body-sidebar .sidebar-user-button:focus-visible {
+	outline: 2px solid #e2bd59;
+	outline-offset: -2px;
+}
+
+.body-sidebar-container .body-sidebar .divider {
+	border-color: rgba(255, 255, 255, .12);
+}
+
+.body-sidebar > .sidebar-header:has(.aki-company-logo) > .sidebar-item-icon,
+.body-sidebar > .sidebar-header:has(.aki-company-logo) > .title-container,
+.body-sidebar > .sidebar-header:has(.aki-company-logo) > .drop-icon {
+	display: none !important;
+}

@@ -1,0 +1,24 @@
+{
+  "status": "diagnosed",
+  "browser": "Chromium",
+  "tested_at": "2026-08-24T11:38:42.955Z",
+  "diagnosis": {
+    "configured_warehouse": "仓库 - T",
+    "consumed_warehouses": [
+      "进行中 - T",
+      "仓库 - T",
+      "样品仓 - T"
+    ],
+    "matched_warehouses": [
+      "仓库 - T"
+    ],
+    "unmatched_warehouses": [
+      "进行中 - T",
+      "样品仓 - T"
+    ],
+    "auto_indent": 1,
+    "stock_entry_submit_logged": true,
+    "material_request_created": false
+  },
+  "limitation": "真实 Frappe/Redis 服务当前不可连接；页面使用本次站点截图与 Stock Entry 日志中捕获的字段进行 Playwright 复现，未写入数据库。"
+}

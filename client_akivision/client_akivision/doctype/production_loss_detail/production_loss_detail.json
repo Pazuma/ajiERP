@@ -1,0 +1,16 @@
+{
+ "doctype": "DocType", "name": "Production Loss Detail", "module": "Client Akivision",
+ "istable": 1, "editable_grid": 1, "engine": "InnoDB", "track_changes": 0,
+ "field_order": ["loss_type", "qty", "item_code", "scrap_warehouse", "reason", "remarks", "recorded_by", "recorded_at"],
+ "fields": [
+  {"fieldname":"loss_type","label":"损耗类型","fieldtype":"Select","options":"正常损耗\n异常损耗","reqd":1,"in_list_view":1},
+  {"fieldname":"qty","label":"损耗数量","fieldtype":"Float","reqd":1,"in_list_view":1},
+  {"fieldname":"item_code","label":"废料物料","fieldtype":"Link","options":"Item","in_list_view":1},
+  {"fieldname":"scrap_warehouse","label":"废料仓","fieldtype":"Link","options":"Warehouse"},
+  {"fieldname":"reason","label":"原因","fieldtype":"Small Text","in_list_view":1},
+  {"fieldname":"remarks","label":"备注","fieldtype":"Small Text"},
+  {"fieldname":"recorded_by","label":"记录人","fieldtype":"Link","options":"User","read_only":1,"default":"__user"},
+  {"fieldname":"recorded_at","label":"记录时间","fieldtype":"Datetime","read_only":1,"default":"Now"}
+ ],
+ "permissions": []
+}
