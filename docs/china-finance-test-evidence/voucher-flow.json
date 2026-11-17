@@ -1,0 +1,56 @@
+{
+  "marker": "CF-CONNECT-20260907081745",
+  "company": "阿基视觉（东莞）",
+  "amount": 100,
+  "steps": [
+    {
+      "name": "凭证录入与借贷平衡",
+      "passed": true
+    },
+    {
+      "name": "Journal Entry 提交",
+      "passed": true
+    },
+    {
+      "name": "中国会计凭证快照",
+      "passed": true
+    },
+    {
+      "name": "总账分录",
+      "passed": true
+    },
+    {
+      "name": "现金流指定未自动生成（启用日期为空）",
+      "passed": true
+    }
+  ],
+  "journal_entry": "ACC-JV-2026-00029",
+  "database": {
+    "marker": "CF-CONNECT-20260907081745",
+    "voucher": {
+      "name": "CNV-2026-00113",
+      "statutory_number": "记1",
+      "docstatus": 1,
+      "total_debit": 100,
+      "total_credit": 100
+    },
+    "gl_entries": [
+      {
+        "name": "2ff6b8711b",
+        "account": "6001 - 主营业务收入 - T",
+        "debit": 0,
+        "credit": 100,
+        "remarks": "CF-CONNECT-20260907081745"
+      },
+      {
+        "name": "361791f621",
+        "account": "100201 - 基本存款账户 - T",
+        "debit": 100,
+        "credit": 0,
+        "remarks": "CF-CONNECT-20260907081745"
+      }
+    ],
+    "cash_flow_assignments": []
+  },
+  "screenshot": "/workspace/docs/china-finance-test-evidence/voucher-flow.png"
+}

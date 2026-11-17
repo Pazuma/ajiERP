@@ -1,0 +1,64 @@
+{
+  "raw": "PCQ-UAT-1022-RAW",
+  "product": "PCQ-UAT-1022-FG",
+  "rule": "ISPR-00008",
+  "project": "PROJ-0012",
+  "bom": "BOM-PCQ-UAT-1022-FG",
+  "work_order": "MFG-WO-2026-00065",
+  "receipt": "MAT-RECO-2026-00005",
+  "manufacture": "MAT-STE-2026-00092",
+  "quotation": "PCQ-2026-00108",
+  "result": {
+    "actual": {
+      "actual_labor_cost": 180,
+      "actual_labor_hours": 3,
+      "actual_material_reference": 300,
+      "actual_operating_cost": 0,
+      "complete": false,
+      "currency": "CNY",
+      "entries": [
+        {
+          "consumption_amount": 300,
+          "purpose": "Manufacture",
+          "stock_entry": "MAT-STE-2026-00092"
+        }
+      ],
+      "note": "历史参考，不计入未来报价。仅统计当前可读的生产耗用凭证；未自动认定凭证齐全。operating_cost可能已包含自定义人工，不再累加。",
+      "planned_qty": 10,
+      "produced_qty": 10,
+      "status": "Completed",
+      "work_order": "MFG-WO-2026-00065"
+    },
+    "scenarios": [
+      {
+        "quantity": 50,
+        "cost": 54,
+        "price": 101.7,
+        "completeness": "Estimated"
+      },
+      {
+        "quantity": 100,
+        "cost": 54,
+        "price": 101.7,
+        "completeness": "Estimated"
+      },
+      {
+        "quantity": 200,
+        "cost": 54,
+        "price": 101.7,
+        "completeness": "Complete"
+      },
+      {
+        "quantity": 500,
+        "cost": 54,
+        "price": 101.7,
+        "completeness": "Complete"
+      }
+    ]
+  },
+  "submitted": 1,
+  "passed": true,
+  "confirmed_readonly": true,
+  "manual_test_draft": "PCQ-2026-00109",
+  "refresh_preserves_manual_operations": true
+}

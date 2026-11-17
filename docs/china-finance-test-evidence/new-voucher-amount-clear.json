@@ -1,0 +1,48 @@
+{
+  "base_url": "http://aki_test.localhost:8300",
+  "writes_business_documents": false,
+  "steps": [
+    {
+      "name": "录入借方金额后显示金额九格",
+      "passed": true
+    },
+    {
+      "name": "Backspace 清空借方金额、九格及合计",
+      "passed": true
+    },
+    {
+      "name": "Delete 清空借方金额、九格及合计",
+      "passed": true
+    },
+    {
+      "name": "同一行借贷互斥且九格同步",
+      "passed": true
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (NOT FOUND)",
+    "Failed to load resource: the server responded with a status of 404 (NOT FOUND)",
+    "Error connecting to socket.io: Unauthorized: TypeError: fetch failed",
+    "Failed to load resource: the server responded with a status of 404 (NOT FOUND)",
+    "Error connecting to socket.io: Unauthorized: TypeError: fetch failed"
+  ],
+  "page_errors": [
+    "Cannot read properties of null (reading 'join')",
+    "Cannot read properties of null (reading 'join')"
+  ],
+  "http_errors": [
+    {
+      "status": 404,
+      "url": "http://aki_test.localhost:8300/custom_filters/public/js/naming_series_i18n.js"
+    },
+    {
+      "status": 404,
+      "url": "http://aki_test.localhost:8300/undefined"
+    },
+    {
+      "status": 404,
+      "url": "http://aki_test.localhost:8300/custom_filters/public/js/naming_series_i18n.js"
+    }
+  ],
+  "screenshot": "/workspace/docs/china-finance-test-evidence/new-voucher-amount-clear.png"
+}

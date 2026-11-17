@@ -1,0 +1,46 @@
+{
+  "statementName": "CNR-2026-00001",
+  "pageUrl": "http://127.0.0.1:8300/desk/china-reconciliation-statement/CNR-2026-00001",
+  "exportVisible": true,
+  "downloadFilename": "download",
+  "pdfPath": "/workspace/docs/china-finance-test-evidence/customer-account-statement.pdf",
+  "pdfBytes": 64129,
+  "showsOrderDetails": true,
+  "errors": [
+    {
+      "type": "http",
+      "status": 404,
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js"
+    },
+    {
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "status": 404,
+      "url": "http://127.0.0.1:8300/undefined"
+    },
+    {
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "http",
+      "status": 404,
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js"
+    },
+    {
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of null (reading 'join')"
+    }
+  ]
+}

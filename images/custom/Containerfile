@@ -23,6 +23,8 @@ RUN useradd -ms /bin/bash frappe \
     nginx \
     gettext-base \
     file \
+    # Chinese font for wkhtmltopdf PDF exports
+    fonts-wqy-zenhei \
     # weasyprint dependencies
     libpango-1.0-0 \
     libharfbuzz0b \

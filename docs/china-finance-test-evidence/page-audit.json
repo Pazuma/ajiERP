@@ -1,0 +1,2528 @@
+{
+  "generatedAt": "2026-09-07T06:45:41.355Z",
+  "metadata": {
+    "doctypes": {
+      "China Accounting Policy": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Accounting Voucher": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 112
+      },
+      "China Accounting Voucher Entry": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Cash Equivalent Scope": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 12
+      },
+      "China Cash Flow Assignment": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 17
+      },
+      "China Cash Flow Assignment Item": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Closing Check": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Closing Run": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Electronic Document": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 1
+      },
+      "China Finance Settings": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 3
+      },
+      "China Financial Statement Mapping": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 961
+      },
+      "China Financial Statement Notes": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Financial Statement Reclassification Rule": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 18
+      },
+      "China Financial Statement Row": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Financial Statement Template": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 8
+      },
+      "China Input Tax Deduction Batch": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Input Tax Deduction Item": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Invoice Control Rule": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Prior Period Error Adjustment": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Prior Period Error Adjustment Line": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Purchase Reconciliation Rule": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Reconciliation Difference": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Reconciliation Line": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Reconciliation Scope": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Reconciliation Statement": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Report Snapshot": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Sales Invoice Control": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Sales Settlement": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Sales Settlement Item": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Sales Settlement Rule": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Tax Account Mapping": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 6
+      },
+      "China Tax Integration Call": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Tax Invoice": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Tax Invoice Allocation": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Tax Invoice Item": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Tax Invoice Recognition": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 2
+      },
+      "China Tax Invoice Request": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Tax Invoice Request Item": {
+        "installed": true,
+        "istable": true,
+        "issingle": false,
+        "count": null
+      },
+      "China Voucher Recycle Bin Item": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 0
+      },
+      "China Voucher Sequence": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 14
+      },
+      "China Voucher Sync Issue": {
+        "installed": true,
+        "istable": false,
+        "issingle": false,
+        "count": 163
+      }
+    },
+    "reports": {
+      "China AR AP Ledger Reconciliation": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Business Document Chain": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Daily Ledger": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Financial Statements": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Output Invoice Reconciliation": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Purchase Document Chain": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Purchase Reconciliation": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China VAT Ledger": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China VAT Return Worksheet": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Voucher Integrity": {
+        "installed": true,
+        "report_type": "Script Report"
+      },
+      "China Voucher Ledger": {
+        "installed": true,
+        "report_type": "Script Report"
+      }
+    }
+  },
+  "pages": [
+    {
+      "kind": "doctype",
+      "name": "China Accounting Policy",
+      "path": "/desk/china-accounting-policy/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list",
+      "title": "中国会计政策",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Accounting Voucher",
+      "path": "/desk/china-accounting-voucher/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list",
+      "title": "中国会计凭证",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Accounting Voucher Entry",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Cash Equivalent Scope",
+      "path": "/desk/china-cash-equivalent-scope/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list",
+      "title": "现金及现金等价物范围",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Cash Flow Assignment",
+      "path": "/desk/china-cash-flow-assignment/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list",
+      "title": "现金流量指定单",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Cash Flow Assignment Item",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Closing Check",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Closing Run",
+      "path": "/desk/china-closing-run/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-closing-run/view/list",
+      "title": "结账",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-closing-run/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-closing-run/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-closing-run/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Electronic Document",
+      "path": "/desk/china-electronic-document/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-electronic-document/view/list",
+      "title": "电子会计档案",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-electronic-document/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-electronic-document/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-electronic-document/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Finance Settings",
+      "path": "/desk/china-finance-settings/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-finance-settings/view/list?company=%E9%98%BF%E5%9F%BA%E8%A7%86%E8%A7%89%EF%BC%88%E4%B8%9C%E8%8E%9E%EF%BC%89",
+      "title": "中国财务设置",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-finance-settings/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-finance-settings/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-finance-settings/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Financial Statement Mapping",
+      "path": "/desk/china-financial-statement-mapping/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list",
+      "title": "财务报表科目映射",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Financial Statement Notes",
+      "path": "/desk/china-financial-statement-notes/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list",
+      "title": "财务报表附注",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Financial Statement Reclassification Rule",
+      "path": "/desk/china-financial-statement-reclassification-rule/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list",
+      "title": "China Financial Statement Reclassification Rule",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Financial Statement Row",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Financial Statement Template",
+      "path": "/desk/china-financial-statement-template/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list?effective_to=%5B%22is%22%2C%22not+set%22%5D",
+      "title": "财务报表模板",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Input Tax Deduction Batch",
+      "path": "/desk/china-input-tax-deduction-batch/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+      "title": "进项税抵扣批次",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+          "message": "play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Input Tax Deduction Item",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Invoice Control Rule",
+      "path": "/desk/china-invoice-control-rule/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list",
+      "title": "开票控制规则",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Prior Period Error Adjustment",
+      "path": "/desk/china-prior-period-error-adjustment/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+      "title": "China Prior Period Error Adjustment",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+          "message": "play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Prior Period Error Adjustment Line",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Purchase Reconciliation Rule",
+      "path": "/desk/china-purchase-reconciliation-rule/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list",
+      "title": "采购应付对账规则",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Reconciliation Difference",
+      "path": "/desk/china-reconciliation-difference/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list",
+      "title": "对账差异事项",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Reconciliation Line",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Reconciliation Scope",
+      "path": "/desk/china-reconciliation-scope/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list",
+      "title": "对账范围配置",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Reconciliation Statement",
+      "path": "/desk/china-reconciliation-statement/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list?name=%5B%22like%22%2C%22%25%E9%A2%86%E6%96%99%25%22%5D",
+      "title": "对账单",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Report Snapshot",
+      "path": "/desk/china-report-snapshot/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list",
+      "title": "报表快照",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Sales Invoice Control",
+      "path": "/desk/china-sales-invoice-control/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list",
+      "title": "销售发票开票控制",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Sales Settlement",
+      "path": "/desk/china-sales-settlement/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list",
+      "title": "销售结算单",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Sales Settlement Item",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Sales Settlement Rule",
+      "path": "/desk/china-sales-settlement-rule/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list",
+      "title": "销售结算规则",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Account Mapping",
+      "path": "/desk/china-tax-account-mapping/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list",
+      "title": "税务科目映射",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Integration Call",
+      "path": "/desk/china-tax-integration-call/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list",
+      "title": "税务接口调用日志",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Invoice",
+      "path": "/desk/china-tax-invoice/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list",
+      "title": "中国税务发票",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Invoice Allocation",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Invoice Item",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Invoice Recognition",
+      "path": "/desk/china-tax-invoice-recognition/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list",
+      "title": "China Tax Invoice Recognition",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Invoice Request",
+      "path": "/desk/china-tax-invoice-request/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list",
+      "title": "中国开票申请",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Tax Invoice Request Item",
+      "skipped": true,
+      "reason": "child table"
+    },
+    {
+      "kind": "doctype",
+      "name": "China Voucher Recycle Bin Item",
+      "path": "/desk/china-voucher-recycle-bin-item/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list",
+      "title": "China Voucher Recycle Bin Item",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Voucher Sequence",
+      "path": "/desk/china-voucher-sequence/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list",
+      "title": "凭证流水号",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "doctype",
+      "name": "China Voucher Sync Issue",
+      "path": "/desk/china-voucher-sync-issue/view/list",
+      "finalUrl": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list",
+      "title": "凭证快照同步异常",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China AR AP Ledger Reconciliation",
+      "path": "/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+      "title": "往来总账与付款台账核对",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+          "message": "Filter missing"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Business Document Chain",
+      "path": "/desk/query-report/China%20Business%20Document%20Chain",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+      "title": "业务单据链",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+          "message": "Filter missing"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Daily Ledger",
+      "path": "/desk/query-report/China%20Daily%20Ledger",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger?company=%E9%98%BF%E5%9F%BA%E8%A7%86%E8%A7%89%EF%BC%88%E4%B8%9C%E8%8E%9E%EF%BC%89&month=2026-09&from_date=2026-09-01&to_date=2026-09-30",
+      "title": "China Daily Ledger",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Financial Statements",
+      "path": "/desk/query-report/China%20Financial%20Statements",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements?company=%E9%98%BF%E5%9F%BA%E8%A7%86%E8%A7%89%EF%BC%88%E4%B8%9C%E8%8E%9E%EF%BC%89&statement_type=Balance+Sheet&fiscal_year=2026&periodicity=%E5%B9%B4%E5%BA%A6&accounting_period=%E5%85%A8%E5%B9%B4&from_date=2026-01-01&to_date=2026-12-31&expand_party=1",
+      "title": "中国财务报表",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Output Invoice Reconciliation",
+      "path": "/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+      "title": "销项票账对账",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+          "message": "Filter missing"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Purchase Document Chain",
+      "path": "/desk/query-report/China%20Purchase%20Document%20Chain",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+      "title": "",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "http",
+          "method": "POST",
+          "resourceType": "xhr",
+          "url": "http://127.0.0.1:8300/api/method/frappe.desk.query_report.get_script",
+          "status": 417,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+          "message": "Failed to load resource: the server responded with a status of 417 (EXPECTATION FAILED)"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+          "message": "Traceback (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 121, in application\n    response = frappe.api.handle(request)\n  File \"apps/frappe/frappe/api/__init__.py\", line 63, in handle\n    data = endpoint(**arguments)\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return frappe.handler.handle()\n           ~~~~~~~~~~~~~~~~~~~~~^^\n  File \"apps/frappe/frappe/handler.py\", line 53, in handle\n    data = execute_cmd(cmd)\n  File \"apps/frappe/frappe/handler.py\", line 86, in execute_cmd\n    return frappe.call(method, **frappe.form_dict)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/__init__.py\", line 1131, in call\n    return fn(*args, **newargs)\n  File \"apps/frappe/frappe/utils/typing_validations.py\", line 36, in wrapper\n    return func(*args, **kwargs)\n  File \"apps/frappe/frappe/desk/query_report.py\", line 162, in get_script\n    report = get_report_doc(report_name)\n  File \"apps/frappe/frappe/desk/query_report.py\", line 56, in get_report_doc\n    frappe.throw(_(\"Report {0} is disabled\").format(_(report_name)))\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/utils/messages.py\", line 159, in throw\n    msgprint(\n    ~~~~~~~~^\n    \tmsg,\n     ^^^^\n    ...<7 lines>...\n    \tallow_dangerous_html=allow_dangerous_html,\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"apps/frappe/frappe/utils/messages.py\", line 118, in msgprint\n    _raise_exception()\n    ~~~~~~~~~~~~~~~~^^\n  File \"apps/frappe/frappe/utils/messages.py\", line 59, in _raise_exception\n    raise exc\nfrappe.exceptions.ValidationError: 报表采购业务单据链无效\n"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+          "message": "undefined"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Purchase Reconciliation",
+      "path": "/desk/query-report/China%20Purchase%20Reconciliation",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+      "title": "采购应付对账",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "xhr",
+          "url": "http://127.0.0.1:8300/api/method/frappe.desk.query_report.run?report_name=China%20Purchase%20Reconciliation&filters=%7B%7D&ignore_prepared_report=false&are_default_filters=true&js_filters=%5B%5D&_=1788763533780",
+          "status": 500,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+          "message": "Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR)"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+          "message": "Traceback (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 121, in application\n    response = frappe.api.handle(request)\n  File \"apps/frappe/frappe/api/__init__.py\", line 63, in handle\n    data = endpoint(**arguments)\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return frappe.handler.handle()\n           ~~~~~~~~~~~~~~~~~~~~~^^\n  File \"apps/frappe/frappe/handler.py\", line 53, in handle\n    data = execute_cmd(cmd)\n  File \"apps/frappe/frappe/handler.py\", line 86, in execute_cmd\n    return frappe.call(method, **frappe.form_dict)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/__init__.py\", line 1131, in call\n    return fn(*args, **newargs)\n  File \"apps/frappe/frappe/utils/typing_validations.py\", line 36, in wrapper\n    return func(*args, **kwargs)\n  File \"apps/frappe/frappe/__init__.py\", line 493, in wrapper_fn\n    retval = fn(*args, **get_newargs(fn, kwargs))\n  File \"apps/frappe/frappe/desk/query_report.py\", line 245, in run\n    result = generate_report_result(report, filters, user, custom_columns, is_tree, parent_field)\n  File \"apps/frappe/frappe/__init__.py\", line 493, in wrapper_fn\n    retval = fn(*args, **get_newargs(fn, kwargs))\n  File \"apps/frappe/frappe/desk/query_report.py\", line 92, in generate_report_result\n    res = get_report_result(report, filters) or []\n          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/desk/query_report.py\", line 68, in get_report_result\n    res = report.execute_script_report(filters)\n  File \"apps/frappe/frappe/core/doctype/report/report.py\", line 199, in execute_script_report\n    res = self.execute_module(filters)\n  File \"apps/frappe/frappe/core/doctype/report/report.py\", line 218, in execute_module\n    return self.get_module_method(\"execute\")(frappe._dict(filters))\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/china_finance/china_finance/china_finance/report/china_purchase_reconciliation/china_purchase_reconciliation.py\", line 30, in execute\n    invoices = frappe.db.sql(\n    \tf\"\"\"\n    ...<6 lines>...\n    \tas_dict=True,\n    )\n  File \"apps/frappe/frappe/database/database.py\", line 272, in sql\n    self.execute_query(query, values)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/database/database.py\", line 372, in execute_query\n    return self._cursor.execute(query, values)\n           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"env/lib/python3.14/site-packages/MySQLdb/cursors.py\", line 176, in execute\n    mogrified_query = self._mogrify(query, args)\n  File \"env/lib/python3.14/site-packages/MySQLdb/cursors.py\", line 200, in _mogrify\n    query = query % args\n            ~~~~~~^~~~~~\nKeyError: b'company'\n"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+          "message": "play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China VAT Ledger",
+      "path": "/desk/query-report/China%20VAT%20Ledger",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+      "title": "增值税台账",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+          "message": "Filter missing"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China VAT Return Worksheet",
+      "path": "/desk/query-report/China%20VAT%20Return%20Worksheet",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+      "title": "增值税申报底稿",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+          "message": "Filter missing"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Voucher Integrity",
+      "path": "/desk/query-report/China%20Voucher%20Integrity",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+      "title": "凭证完整性检查",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+          "message": "Cannot read properties of null (reading 'join')"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+          "message": "Filter missing"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+          "message": "Filter missing"
+        }
+      ]
+    },
+    {
+      "kind": "report",
+      "name": "China Voucher Ledger",
+      "path": "/desk/query-report/China%20Voucher%20Ledger",
+      "finalUrl": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger?company=%E9%98%BF%E5%9F%BA%E8%A7%86%E8%A7%89%EF%BC%88%E4%B8%9C%E8%8E%9E%EF%BC%89&period_preset=%E6%9C%AC%E6%9C%88%E5%87%AD%E8%AF%81&from_date=2026-09-01&to_date=2026-09-30",
+      "title": "查凭证",
+      "loadError": null,
+      "errors": [
+        {
+          "type": "http",
+          "method": "GET",
+          "resourceType": "script",
+          "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+          "status": 404,
+          "page": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger"
+        },
+        {
+          "type": "console",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger",
+          "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        },
+        {
+          "type": "pageerror",
+          "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger",
+          "message": "Cannot read properties of null (reading 'join')"
+        }
+      ]
+    }
+  ],
+  "globalErrors": [
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "http://127.0.0.1:8300/undefined",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-accounting-policy/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-accounting-voucher/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-cash-equivalent-scope/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-cash-flow-assignment/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-closing-run/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-closing-run/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-closing-run/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-electronic-document/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-electronic-document/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-electronic-document/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-finance-settings/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-finance-settings/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-finance-settings/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-mapping/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-notes/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-reclassification-rule/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-financial-statement-template/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-input-tax-deduction-batch/view/list",
+      "message": "play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-invoice-control-rule/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-prior-period-error-adjustment/view/list",
+      "message": "play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-purchase-reconciliation-rule/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-reconciliation-difference/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-reconciliation-scope/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-reconciliation-statement/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-report-snapshot/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-sales-invoice-control/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-sales-settlement/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-sales-settlement-rule/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-tax-account-mapping/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-tax-integration-call/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-tax-invoice/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-tax-invoice-recognition/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-tax-invoice-request/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-voucher-recycle-bin-item/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-voucher-sequence/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/china-voucher-sync-issue/view/list",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+      "message": "Filter missing"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20AR%20AP%20Ledger%20Reconciliation",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+      "message": "Filter missing"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Business%20Document%20Chain",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Daily%20Ledger",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Financial%20Statements",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+      "message": "Filter missing"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Output%20Invoice%20Reconciliation",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "resourceType": "xhr",
+      "url": "http://127.0.0.1:8300/api/method/frappe.desk.query_report.get_script",
+      "status": 417,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+      "message": "Failed to load resource: the server responded with a status of 417 (EXPECTATION FAILED)"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+      "message": "Traceback (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 121, in application\n    response = frappe.api.handle(request)\n  File \"apps/frappe/frappe/api/__init__.py\", line 63, in handle\n    data = endpoint(**arguments)\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return frappe.handler.handle()\n           ~~~~~~~~~~~~~~~~~~~~~^^\n  File \"apps/frappe/frappe/handler.py\", line 53, in handle\n    data = execute_cmd(cmd)\n  File \"apps/frappe/frappe/handler.py\", line 86, in execute_cmd\n    return frappe.call(method, **frappe.form_dict)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/__init__.py\", line 1131, in call\n    return fn(*args, **newargs)\n  File \"apps/frappe/frappe/utils/typing_validations.py\", line 36, in wrapper\n    return func(*args, **kwargs)\n  File \"apps/frappe/frappe/desk/query_report.py\", line 162, in get_script\n    report = get_report_doc(report_name)\n  File \"apps/frappe/frappe/desk/query_report.py\", line 56, in get_report_doc\n    frappe.throw(_(\"Report {0} is disabled\").format(_(report_name)))\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/utils/messages.py\", line 159, in throw\n    msgprint(\n    ~~~~~~~~^\n    \tmsg,\n     ^^^^\n    ...<7 lines>...\n    \tallow_dangerous_html=allow_dangerous_html,\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"apps/frappe/frappe/utils/messages.py\", line 118, in msgprint\n    _raise_exception()\n    ~~~~~~~~~~~~~~~~^^\n  File \"apps/frappe/frappe/utils/messages.py\", line 59, in _raise_exception\n    raise exc\nfrappe.exceptions.ValidationError: 报表采购业务单据链无效\n"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Document%20Chain",
+      "message": "undefined"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "xhr",
+      "url": "http://127.0.0.1:8300/api/method/frappe.desk.query_report.run?report_name=China%20Purchase%20Reconciliation&filters=%7B%7D&ignore_prepared_report=false&are_default_filters=true&js_filters=%5B%5D&_=1788763533780",
+      "status": 500,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+      "message": "Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR)"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+      "message": "Traceback (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 121, in application\n    response = frappe.api.handle(request)\n  File \"apps/frappe/frappe/api/__init__.py\", line 63, in handle\n    data = endpoint(**arguments)\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return frappe.handler.handle()\n           ~~~~~~~~~~~~~~~~~~~~~^^\n  File \"apps/frappe/frappe/handler.py\", line 53, in handle\n    data = execute_cmd(cmd)\n  File \"apps/frappe/frappe/handler.py\", line 86, in execute_cmd\n    return frappe.call(method, **frappe.form_dict)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/__init__.py\", line 1131, in call\n    return fn(*args, **newargs)\n  File \"apps/frappe/frappe/utils/typing_validations.py\", line 36, in wrapper\n    return func(*args, **kwargs)\n  File \"apps/frappe/frappe/__init__.py\", line 493, in wrapper_fn\n    retval = fn(*args, **get_newargs(fn, kwargs))\n  File \"apps/frappe/frappe/desk/query_report.py\", line 245, in run\n    result = generate_report_result(report, filters, user, custom_columns, is_tree, parent_field)\n  File \"apps/frappe/frappe/__init__.py\", line 493, in wrapper_fn\n    retval = fn(*args, **get_newargs(fn, kwargs))\n  File \"apps/frappe/frappe/desk/query_report.py\", line 92, in generate_report_result\n    res = get_report_result(report, filters) or []\n          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/desk/query_report.py\", line 68, in get_report_result\n    res = report.execute_script_report(filters)\n  File \"apps/frappe/frappe/core/doctype/report/report.py\", line 199, in execute_script_report\n    res = self.execute_module(filters)\n  File \"apps/frappe/frappe/core/doctype/report/report.py\", line 218, in execute_module\n    return self.get_module_method(\"execute\")(frappe._dict(filters))\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\n  File \"apps/china_finance/china_finance/china_finance/report/china_purchase_reconciliation/china_purchase_reconciliation.py\", line 30, in execute\n    invoices = frappe.db.sql(\n    \tf\"\"\"\n    ...<6 lines>...\n    \tas_dict=True,\n    )\n  File \"apps/frappe/frappe/database/database.py\", line 272, in sql\n    self.execute_query(query, values)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"apps/frappe/frappe/database/database.py\", line 372, in execute_query\n    return self._cursor.execute(query, values)\n           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"env/lib/python3.14/site-packages/MySQLdb/cursors.py\", line 176, in execute\n    mogrified_query = self._mogrify(query, args)\n  File \"env/lib/python3.14/site-packages/MySQLdb/cursors.py\", line 200, in _mogrify\n    query = query % args\n            ~~~~~~^~~~~~\nKeyError: b'company'\n"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Purchase%20Reconciliation",
+      "message": "play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+      "message": "Filter missing"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Ledger",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+      "message": "Filter missing"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20VAT%20Return%20Worksheet",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+      "message": "Cannot read properties of null (reading 'join')"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+      "message": "Filter missing"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Integrity",
+      "message": "Filter missing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+      "status": 404,
+      "page": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger"
+    },
+    {
+      "type": "console",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger",
+      "message": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+    },
+    {
+      "type": "pageerror",
+      "url": "http://127.0.0.1:8300/desk/query-report/China%20Voucher%20Ledger",
+      "message": "Cannot read properties of null (reading 'join')"
+    }
+  ]
+}

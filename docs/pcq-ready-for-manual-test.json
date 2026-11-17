@@ -1,0 +1,57 @@
+{
+  "name": "PCQ-2026-00106",
+  "docstatus": 0,
+  "estimate_acknowledged": 1,
+  "materials": [
+    {
+      "item": "1141301104-v1",
+      "rule": "ISPR-00006",
+      "tax": "Exclusive"
+    },
+    {
+      "item": "1141302101-v0",
+      "rule": "ISPR-00007",
+      "tax": "Exclusive"
+    }
+  ],
+  "operations": 2,
+  "investments": 1,
+  "scenarios": [
+    {
+      "quantity": 50,
+      "cost": 53,
+      "price": 99.816667,
+      "final": 99.816667,
+      "completeness": "Estimated",
+      "warnings": "低于建议接单MOQ",
+      "customer": 0
+    },
+    {
+      "quantity": 100,
+      "cost": 53,
+      "price": 99.816667,
+      "final": 99.816667,
+      "completeness": "Estimated",
+      "warnings": "低于建议接单MOQ",
+      "customer": 0
+    },
+    {
+      "quantity": 200,
+      "cost": 53,
+      "price": 99.816667,
+      "final": 99.816667,
+      "completeness": "Complete",
+      "warnings": "",
+      "customer": 1
+    },
+    {
+      "quantity": 500,
+      "cost": 53,
+      "price": 99.816667,
+      "final": 99.816667,
+      "completeness": "Complete",
+      "warnings": "",
+      "customer": 1
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-29",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "businessWrites": false,
+  "results": [
+    {
+      "file": "sales-order.png",
+      "doctype": "Sales Order",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/sales-order/new-sales-order-vculedvyck"
+    },
+    {
+      "file": "purchase-order.png",
+      "doctype": "Purchase Order",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/purchase-order/new-purchase-order-ysrlgoirbv"
+    },
+    {
+      "file": "receiving-notice.png",
+      "doctype": "Purchase Receiving Notice",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/purchase-receiving-notice/new-purchase-receiving-notice-vlaggtcrys"
+    },
+    {
+      "file": "quality-inspection.png",
+      "doctype": "Quality Inspection",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/quality-inspection/new-quality-inspection-otmhijvujn"
+    },
+    {
+      "file": "stock-entry.png",
+      "doctype": "Stock Entry",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/stock-entry/new-stock-entry-fugdwoqskm"
+    },
+    {
+      "file": "work-order.png",
+      "doctype": "Work Order",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/work-order/new-work-order-epgsexhnxf"
+    },
+    {
+      "file": "project.png",
+      "doctype": "Project",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/project/new-project-rknhbuwuvx"
+    },
+    {
+      "file": "cost-quotation.png",
+      "doctype": "Product Cost Quotation",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/product-cost-quotation/new-product-cost-quotation-uszayzcjiy"
+    },
+    {
+      "file": "sample-loan-out.png",
+      "doctype": "Sample Loan Out",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/sample-loan-out/new-sample-loan-out-lolvbqlyxu"
+    },
+    {
+      "file": "purchase-follow-up.png",
+      "doctype": "Purchase Follow Up",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/purchase-follow-up/new-purchase-follow-up-texarcbtlg"
+    },
+    {
+      "file": "reconciliation.png",
+      "doctype": "China Reconciliation Statement",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/china-reconciliation-statement/new-china-reconciliation-statement-ainzuqgdpi"
+    },
+    {
+      "file": "payment-entry.png",
+      "doctype": "Payment Entry",
+      "status": "captured",
+      "mode": "new unsaved form",
+      "url": "/desk/payment-entry/new-payment-entry-dkofwodenu"
+    }
+  ]
+}

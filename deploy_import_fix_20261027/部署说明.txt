@@ -1,0 +1,20 @@
+客户导入 XLSX 格式错误提示修复
+
+本包不包含数据库、密码或站点配置。
+修复内容：无效 XLSX 文件改为显示中文处理提示；不会把无效文件转换为 Excel。
+
+1. 解压本包。
+2. 备份服务器原来的文件，再将 apps 下的 data_import.py 上传到服务器 Bench 的同名相对路径：
+   apps/client_akivision/client_akivision/client_akivision/api/data_import.py
+   注意：本文件为本地完整版本。如果服务器另有修改，需对比合并，不要直接覆盖。
+3. 在服务器实际运行 Frappe 的环境中，进入 frappe-bench，执行：
+   bench --site 实际站点名 clear-cache
+4. 按服务器现有部署方式重启 Python 后端及队列进程。
+   Docker 部署重启 backend/worker 对应容器；普通 Bench 部署执行 bench restart。
+   本次无需 migrate，无需 build，无需导入数据库。
+5. 刷新浏览器，重新上传 Excel 验证。
+
+如果应用代码内置在 Docker 镜像中，请将修复合入镜像构建源并重新构建部署。
+只改容器内文件会在容器重建后丢失。
+
+回退：恢复第 2 步备份的原文件，然后重启应用进程。

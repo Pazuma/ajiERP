@@ -34,3 +34,13 @@ node_modules
 # VitePress
 **/.vitepress/dist
 **/.vitepress/cache
+
+# Local backups and release artifacts
+docker-backup-*/
+migration_backup_*/
+release/
+*.tar
+*.tar.gz
+*.zip
+*.sql
+*.sql.gz

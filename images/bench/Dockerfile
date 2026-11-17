@@ -17,6 +17,7 @@ RUN apt-get update \
     # for PDF
     libssl-dev \
     fonts-cantarell \
+    fonts-wqy-zenhei \
     xfonts-75dpi \
     xfonts-base \
     # weasyprint dependencies

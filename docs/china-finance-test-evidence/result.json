@@ -1,0 +1,12 @@
+{
+  "statementName": "CNR-2026-00007",
+  "url": "http://127.0.0.1:8300/desk/china-reconciliation-statement/CNR-2026-00007",
+  "filename": "客户往来对账单-华润万家-2026-08-01至2026-09-28.pdf",
+  "bytes": 105076,
+  "errors": [
+    "http 404 http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "http 404 http://127.0.0.1:8300/undefined",
+    "http 404 http://127.0.0.1:8300/custom_filters/public/js/naming_series_i18n.js",
+    "pageerror: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD"
+  ]
+}

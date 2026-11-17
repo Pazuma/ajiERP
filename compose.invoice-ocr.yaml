@@ -1,0 +1,22 @@
+services:
+  invoice-ocr:
+    build:
+      context: ../services/invoice_ocr
+    restart: unless-stopped
+    environment:
+      INVOICE_OCR_TOKEN: ${INVOICE_OCR_TOKEN:-change-this-local-token}
+      INVOICE_OCR_MAX_FILE_MB: ${INVOICE_OCR_MAX_FILE_MB:-10}
+      INVOICE_OCR_MAX_PAGES: ${INVOICE_OCR_MAX_PAGES:-3}
+      INVOICE_OCR_RENDER_DPI: ${INVOICE_OCR_RENDER_DPI:-250}
+      INVOICE_OCR_DEVICE: cpu
+    volumes:
+      - invoice-ocr-models:/models/paddle
+    expose:
+      - "8080"
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+
+volumes:
+  invoice-ocr-models:

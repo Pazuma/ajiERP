@@ -1,0 +1,63 @@
+{
+  "list": {
+    "url": "/desk/sales-products",
+    "doctype": "Item",
+    "title": "产品表",
+    "filters": [
+      [
+        "Item",
+        "is_sales_item",
+        "=",
+        1
+      ],
+      [
+        "Item",
+        "disabled",
+        "=",
+        0
+      ]
+    ],
+    "rows": [
+      "11",
+      "ASC0826",
+      "1108208103-v1",
+      "1076202108-v0",
+      "1074202105-v0",
+      "1076302101-v0",
+      "1090302107-v0",
+      "1090202103-v0",
+      "1090302106-v0",
+      "1090208103-v0",
+      "1108302109-v0",
+      "1108302108-v0",
+      "1108302107-v0",
+      "1141201110-v0",
+      "1141201104-v0",
+      "1141201112-v1",
+      "1141301101-v1",
+      "1141201107-v1",
+      "1141201105-v1",
+      "1141208102-v2"
+    ]
+  },
+  "fields": [
+    "__section_1",
+    "item_code",
+    "item_name",
+    "item_group",
+    "stock_uom",
+    "brand",
+    "is_stock_item",
+    "custom_product_name",
+    "custom_internal_model",
+    "custom_external_model",
+    "image",
+    "__section_2",
+    "description",
+    "__section_3",
+    "price_list",
+    "currency",
+    "price"
+  ],
+  "errors": []
+}
