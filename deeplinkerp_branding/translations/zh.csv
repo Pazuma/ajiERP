@@ -1,0 +1,22 @@
+Import Setup Guide,导入设置引导
+Import Object,导入对象
+Import Method,导入方式
+Next Step,下一步
+Advanced Settings,高级设置
+Create Import Task,创建导入任务
+Choose object,选择导入对象
+Choose method,选择导入方式
+Download template,下载模板
+Upload file,上传文件
+Preview and import,预览并导入
+Start by choosing what data to import and how the uploaded rows should be handled.,请先选择要导入的数据以及系统应如何处理上传文件中的每一行。
+"This will update existing records only. Keep the ID column in the template so the system can match each row.",仅更新现有记录。请保留模板中的 ID 列，系统会用它匹配每一行。
+"This will create new records. Leave the ID column blank unless you intentionally want to provide a record name.",将创建新记录。如无特殊需要请将 ID 列留空，系统会自动生成记录名称。
+selected object,已选对象
+Next: prepare your import file,下一步：准备导入文件
+"Download the system template first, keep the headers unchanged, then upload the completed file for preview.",请先下载系统模板并保持表头不变，再上传填写完成的文件进行预览。
+Choose the document or master data that this file should import into.,选择此文件要导入的单据或基础资料。
+Choose whether the file should create new records or update records that already exist.,选择文件应创建新记录还是更新现有记录。
+"Choose the document or master data that this file should import into, such as Supplier, Location, Purchase Order, or Journal Entry.",选择此文件要导入的单据或基础资料，例如供应商、地点、采购订单或记账凭证。
+Insert creates new records. Update changes existing records and requires the ID column from the template.,新增会创建新记录；更新会修改现有记录，并需要使用模板中的 ID 列。
+Keep enabled for bulk imports to avoid sending system emails while rows are being created or updated.,批量导入时建议保持开启，避免创建或更新数据时发送系统邮件。

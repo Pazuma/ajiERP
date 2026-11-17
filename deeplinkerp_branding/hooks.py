@@ -24,8 +24,11 @@ add_to_apps_screen = [
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/deeplinkerp_branding/css/deeplinkerp_branding.css"
-app_include_js = "/assets/deeplinkerp_branding/js/deeplinkerp_branding.js?v=0.0.7"
+app_include_css = ["/assets/deeplinkerp_branding/css/data_import.css?v=0.0.1"]
+app_include_js = [
+	"/assets/deeplinkerp_branding/js/deeplinkerp_branding.js?v=0.0.7",
+	"/assets/deeplinkerp_branding/js/msgprint_action_fix.js?v=0.0.2",
+]
 
 # include js, css files in header of web template
 web_include_css = "/assets/deeplinkerp_branding/css/deeplinkerp_branding.css"
@@ -42,7 +45,7 @@ web_include_css = "/assets/deeplinkerp_branding/css/deeplinkerp_branding.css"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"Data Import": "public/js/data_import.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -116,7 +119,10 @@ boot_session = "deeplinkerp_branding.deeplinkerp_branding.branding.apply_boot_br
 # To hook into the build process
 
 # after_build = "deeplinkerp_branding.build.after_build"
-after_migrate = ["deeplinkerp_branding.deeplinkerp_branding.branding.apply_deeplinkerp_settings_branding"]
+after_migrate = [
+	"deeplinkerp_branding.deeplinkerp_branding.branding.apply_deeplinkerp_settings_branding",
+	"deeplinkerp_branding.deeplinkerp_branding.data_import.ensure_data_import_customization",
+]
 website_context = {
 	"favicon": "/assets/deeplinkerp_branding/logo/tab_logo.svg?v=0.0.6",
 	"splash_image": "/assets/deeplinkerp_branding/logo/deeplinkerp_logo_radius.png?v=0.0.6",

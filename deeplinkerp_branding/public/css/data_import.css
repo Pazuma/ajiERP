@@ -1,0 +1,68 @@
+.data-import-guide {
+	background: var(--fg-color);
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	margin: 2px 0 16px;
+	padding: 16px 18px;
+}
+
+.data-import-guide-title,
+.data-import-next-title {
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.data-import-guide-text,
+.data-import-method-help {
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+.data-import-steps {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 14px 0;
+}
+
+.data-import-step {
+	align-items: center;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	color: var(--text-muted);
+	display: inline-flex;
+	font-size: 12px;
+	gap: 6px;
+	line-height: 1.2;
+	min-height: 34px;
+	padding: 5px 8px;
+}
+
+.data-import-step span {
+	align-items: center;
+	background: var(--control-bg);
+	border-radius: 50%;
+	display: inline-flex;
+	font-size: 11px;
+	height: 18px;
+	justify-content: center;
+	width: 18px;
+}
+
+.data-import-step.active {
+	border-color: var(--primary);
+	color: var(--text-color);
+}
+
+.data-import-step.active span {
+	background: var(--primary);
+	color: var(--fg-color);
+}
+
+.data-import-next-step {
+	background: var(--control-bg);
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	margin: 2px 0 16px;
+	padding: 12px 14px;
+}
