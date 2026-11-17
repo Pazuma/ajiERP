@@ -1,0 +1,17 @@
+{
+ "doctype": "Report",
+ "name": "Sales Commission Management",
+ "ref_doctype": "Sales Order",
+ "report_type": "Script Report",
+ "is_standard": "Yes",
+ "module": "China Finance",
+ "disabled": 0,
+ "add_total_row": 0,
+ "roles": [
+  {"role": "Sales User"},
+  {"role": "Sales Manager"},
+  {"role": "销售总监"},
+  {"role": "Sales Commission Manager"},
+  {"role": "Sales Commission Finance"}
+ ]
+}

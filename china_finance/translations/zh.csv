@@ -1,9 +1,32 @@
 China Finance,中国财务
+Sales Commission Sheet,销售提成单
+Sales Commission Sheet Item,销售提成明细
+Sales Commission Receipt Allocation,提成回款分配
+Sales Commission Disbursement,提成发放记录
+Sales Commission Summary,销售提成统计
+My Sales Commission,我的提成
+Sales Commission Manager,销售提成总监
+Sales Commission Finance,销售提成财务
+Sales Commission Margin Reader,提成毛利基数查看
+Company is mandatory,公司为必填项
+From Date and To Date are mandatory,起始日期和结束日期为必填项
+From Date must be before To Date,起始日期不能晚于结束日期
+Date range cannot exceed 366 days,日期范围不能超过 366 天
 China Accounting Voucher,中国会计凭证
 China Accounting Voucher Entry,中国会计凭证分录
 China Voucher Sync Issue,凭证快照同步异常
+China Prior Period Error Adjustment,前期差错更正
+China Prior Period Error Adjustment Line,前期差错更正明细
+China Financial Statement Reclassification Rule,财务报表重分类规则
+China Manual Voucher Draft,手工凭证草稿
+China Manual Voucher Draft Entry,手工凭证草稿分录
+China Reconciliation Opening Document,对账期初单据
+China Reconciliation Order Billing Line,对账订单开票明细
+China Tax Invoice Recognition,税务发票识别
+China Voucher Recycle Bin Item,凭证回收站明细
 China Closing Check,中国结账检查
-China Closing Run,中国结账运行单
+China Closing Run,结账
+Period Closing Voucher,期末结账
 China Electronic Document,电子会计档案
 China Finance Settings,中国财务设置
 China Financial Statement Mapping,财务报表科目映射
@@ -178,3 +201,5 @@ Formal Statutory Financial Statements,正式法定财务报表
 China Finance User,中国财务用户
 Confirm Assignment,确认指定
 Cancel Assignment,作废指定单
+Materials To Be Transferred,待发委外原材料
+Items To Be Received,待入库委外成品

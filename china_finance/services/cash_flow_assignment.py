@@ -3,7 +3,7 @@ from collections import defaultdict
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Max
-from frappe.utils import flt, getdate, now_datetime
+from frappe.utils import flt, getdate, now_datetime, nowdate
 
 from china_finance.services.financial_statement import get_mappings, get_template
 from china_finance.services.voucher import get_company_settings
@@ -35,6 +35,39 @@ def is_direct_assignment_required(company, posting_date):
 		and settings.cash_flow_assignment_activation_date
 		and getdate(posting_date) >= getdate(settings.cash_flow_assignment_activation_date)
 	)
+
+
+@frappe.whitelist()
+def get_cash_flow_configuration_status(company):
+	"""Return a read-only explanation of cash-flow assignment readiness."""
+	if not frappe.has_permission("Company", "read", company):
+		frappe.throw(_("无权查看该公司"), frappe.PermissionError)
+	settings = get_company_settings(company)
+	activation_date = settings.cash_flow_assignment_activation_date if settings else None
+	reference_date = getdate(activation_date or nowdate())
+	missing = []
+	if not activation_date:
+		missing.append("cash_flow_assignment_activation_date")
+	try:
+		template = _get_cash_template(company, reference_date)
+	except (frappe.ValidationError, frappe.DoesNotExistError):
+		template = None
+	if not template:
+		missing.append("cash_flow_template")
+	from china_finance.services.cash_equivalent_scope import get_cash_scope_accounts
+
+	cash_scope_count = len(get_cash_scope_accounts(company, reference_date))
+	if not cash_scope_count:
+		missing.append("cash_equivalent_scope")
+	return {
+		"company": company,
+		"configured": not missing,
+		"activation_date": str(activation_date) if activation_date else None,
+		"reference_date": str(reference_date),
+		"has_template": bool(template),
+		"cash_scope_count": cash_scope_count,
+		"missing": missing,
+	}
 
 
 def _require_roles(roles):
@@ -73,6 +106,25 @@ def get_cash_flow_row_options(name):
 		{"value": row.row_code, "label": row.label, "description": row.row_code}
 		for row in template.rows
 		if row.row_code in valid_rows
+	]
+
+
+@frappe.whitelist()
+def get_source_cash_flow_options(company, posting_date, direction=None):
+	if not company or not posting_date:
+		return []
+	if not frappe.has_permission("Company", "read", company):
+		frappe.throw(_("无权查看该公司"), frappe.PermissionError)
+	valid_rows, template = _valid_cash_flow_rows(company, posting_date)
+	allowed_rows = valid_rows
+	if direction == "收款":
+		allowed_rows = valid_rows & (INFLOW_ROWS | {"FX_EFFECT"})
+	elif direction == "付款":
+		allowed_rows = valid_rows & (OUTFLOW_ROWS | {"FX_EFFECT"})
+	return [
+		{"value": row.row_code, "label": row.label, "description": row.row_code}
+		for row in template.rows
+		if row.row_code in allowed_rows
 	]
 
 
@@ -128,18 +180,30 @@ def get_cash_legs_for_voucher(voucher):
 	if not cash_rows or not counterpart_rows:
 		return []
 	suggestions = _suggestion_by_account(voucher.company, voucher.posting_date)
+	valid_rows, template = _valid_cash_flow_rows(voucher.company, voucher.posting_date)
+	row_labels = {row.row_code: row.label for row in template.rows if row.row_code in valid_rows}
 	counterparts = ", ".join(sorted({row.account for row in counterpart_rows}))
 	primary_counterpart = max(counterpart_rows, key=lambda row: abs(flt(row.debit) - flt(row.credit)))
 	mapping = suggestions.get(primary_counterpart.account)
+	source_suggestion = None
+	if voucher.source_doctype in ("Journal Entry", "Payment Entry") and frappe.db.has_column(
+		voucher.source_doctype, "custom_china_cash_flow_suggestion"
+	):
+		source_suggestion = frappe.db.get_value(
+			voucher.source_doctype, voucher.source_name, "custom_china_cash_flow_suggestion"
+		)
 	legs = []
 	for row in cash_rows:
 		movement = flt(row.debit) - flt(row.credit)
 		if abs(movement) <= EPSILON:
 			continue
 		direction = "收款" if movement > 0 else "付款"
-		suggested = mapping.cash_inflow_row_code if movement > 0 and mapping else None
-		if movement < 0 and mapping:
+		suggested = source_suggestion or (mapping.cash_inflow_row_code if movement > 0 and mapping else None)
+		if movement < 0 and mapping and not source_suggestion:
 			suggested = mapping.cash_outflow_row_code
+		allowed_rows = INFLOW_ROWS | {"FX_EFFECT"} if movement > 0 else OUTFLOW_ROWS | {"FX_EFFECT"}
+		if suggested not in allowed_rows:
+			suggested = None
 		legs.append(
 			frappe._dict(
 				gl_entry=row.name,
@@ -148,7 +212,7 @@ def get_cash_legs_for_voucher(voucher):
 				cash_amount=abs(movement),
 				counterpart_accounts=counterparts,
 				suggested_row_code=suggested,
-				suggested_row_label=mapping.label if mapping else None,
+				suggested_row_label=row_labels.get(suggested) or (mapping.label if mapping else None),
 				cash_flow_row_code=suggested,
 				assigned_amount=abs(movement),
 			)
@@ -243,9 +307,40 @@ def _create_cash_flow_assignment(voucher):
 			"items": legs,
 		}
 	)
+	doc.flags.from_cash_flow_assignment_service = True
 	doc.flags.ignore_permissions = True
 	doc.insert()
+	_sync_source_assignment_state(doc)
+	_try_auto_confirm_assignment(doc)
 	return doc.name
+
+
+def _sync_source_assignment_state(doc):
+	from china_finance.services.voucher import sync_source_cash_flow_state
+
+	sync_source_cash_flow_state(
+		doc.source_doctype,
+		doc.source_name,
+		frappe._dict(name=doc.name, status=doc.status),
+	)
+
+
+def _try_auto_confirm_assignment(doc):
+	settings = get_company_settings(doc.company)
+	if settings and settings.enforce_role_separation:
+		return False
+	if not set(CONFIRM_ROLES).intersection(frappe.get_roles()):
+		return False
+	row_codes = {row.cash_flow_row_code for row in doc.items if row.cash_flow_row_code}
+	if len(row_codes) != 1 or any(not row.cash_flow_row_code for row in doc.items):
+		return False
+	try:
+		doc.submit()
+	except frappe.ValidationError:
+		frappe.log_error(frappe.get_traceback(), _("现金流量指定自动确认失败：{0}").format(doc.name))
+		return False
+	_sync_source_assignment_state(doc)
+	return True
 
 
 def create_cash_flow_assignment(voucher_name):
@@ -361,6 +456,7 @@ def cancel_cash_flow_assignment(name, reason):
 		doc.save()
 	else:
 		doc.cancel()
+	_sync_source_assignment_state(doc)
 	return {"name": doc.name, "status": doc.status}
 
 
@@ -401,6 +497,7 @@ def cancel_assignments_for_source(doc):
 			assignment.save()
 		else:
 			assignment.cancel()
+		_sync_source_assignment_state(assignment)
 
 
 def get_confirmed_cash_flow_values(company, from_date, to_date, finance_book=None, cost_center=None, project=None):

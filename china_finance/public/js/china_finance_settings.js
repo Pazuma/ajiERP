@@ -10,6 +10,7 @@ frappe.ui.form.on("China Finance Settings", {
 			frappe.confirm(__("只补齐空白的默认科目、税务建议、现金范围和收付款方式科目，不会覆盖已有配置或创建业务主数据。是否继续？"), () => sync_master_data(frm, true));
 		}, __("中国科目模板"));
 		load_configuration_readiness(frm);
+		load_cash_flow_configuration_status(frm);
 	},
 });
 
@@ -19,6 +20,25 @@ function sync_coa_profile(frm, repairDefaults) {
 		args: { company: frm.doc.company, repair_defaults: repairDefaults ? 1 : 0 },
 		freeze: true,
 		callback: () => frm.reload_doc(),
+	});
+}
+
+function load_cash_flow_configuration_status(frm) {
+	frappe.call({
+		method: "china_finance.services.cash_flow_assignment.get_cash_flow_configuration_status",
+		args: { company: frm.doc.company },
+		callback: (result) => {
+			const status = result.message;
+			if (!status) return;
+			const label = status.configured ? __("完整") : __("待处理");
+			const color = status.configured ? "text-success" : "text-danger";
+			const missing = status.missing.length ? __("缺少：{0}").format(status.missing.join("、")) : __("启用日期、模板和现金范围均已配置");
+			frm.dashboard.add_section(
+				`<div class="china-finance-cash-flow-status"><span class="${color} font-weight-bold">${frappe.utils.escape_html(label)}</span><span class="text-muted ml-2">${frappe.utils.escape_html(missing)}</span></div>`,
+				__("现金流量指定配置"),
+			);
+			frm.dashboard.show();
+		},
 	});
 }
 

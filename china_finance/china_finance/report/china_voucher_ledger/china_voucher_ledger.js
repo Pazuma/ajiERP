@@ -1,4 +1,5 @@
 frappe.query_reports["China Voucher Ledger"] = {
+	_client_selected_vouchers: new Set(),
 	filters: [
 		{
 			fieldname: "company",
@@ -44,7 +45,28 @@ frappe.query_reports["China Voucher Ledger"] = {
 	name_field: "row_id",
 	parent_field: "parent_row_id",
 	initial_depth: 1,
+	get_datatable_options(options) {
+		const select_all_html = `<input type="checkbox" class="china-voucher-select-all" aria-label="${__("全选凭证")}">`;
+		if (options.columns?.[0]?.id === "_select_voucher") {
+			options.columns[0].name = select_all_html;
+			options.columns[0].content = select_all_html;
+		}
+		return options;
+	},
+	after_datatable_render(datatable) {
+		const wrapper = $(datatable.wrapper);
+		const header = wrapper.querySelector(".dt-header .dt-cell__content--header-0");
+		if (header && !header.querySelector(".china-voucher-select-all")) {
+			header.innerHTML = `<input type="checkbox" class="china-voucher-select-all" aria-label="${__("全选凭证")}">`;
+		}
+		update_voucher_selection_ui($(datatable.wrapper));
+	},
 	formatter(value, row, column, data, default_formatter) {
+		if (column.fieldname === "_select_voucher") {
+			if (!data?.voucher_snapshot || data.indent > 0) return "";
+			const checked = frappe.query_reports["China Voucher Ledger"]._client_selected_vouchers.has(data.voucher_snapshot) ? "checked" : "";
+			return `<input type="checkbox" class="china-voucher-select" value="${frappe.utils.escape_html(data.voucher_snapshot)}" ${checked} aria-label="${__("选择凭证")}">`;
+		}
 		const formatted = default_formatter(value, row, column, data);
 		if (column.fieldname === "voucher_status" && data?.voucher_status !== undefined && data?.voucher_status !== null) {
 			const status = {
@@ -79,6 +101,21 @@ frappe.query_reports["China Voucher Ledger"] = {
 			const source_name = decodeURIComponent(event.currentTarget.dataset.sourceName);
 			frappe.set_route("Form", source_doctype, source_name);
 		});
+		report.page.wrapper.on("change", ".china-voucher-select", (event) => {
+			const selected = frappe.query_reports["China Voucher Ledger"]._client_selected_vouchers;
+			if (event.currentTarget.checked) selected.add(event.currentTarget.value);
+			else selected.delete(event.currentTarget.value);
+			update_voucher_selection_ui(report.page.wrapper);
+		});
+		report.page.wrapper.on("change", ".china-voucher-select-all", (event) => {
+			const selected = frappe.query_reports["China Voucher Ledger"]._client_selected_vouchers;
+			const visible_vouchers = get_visible_voucher_names();
+			if (event.currentTarget.checked) visible_vouchers.forEach((name) => selected.add(name));
+			else visible_vouchers.forEach((name) => selected.delete(name));
+			update_voucher_selection_ui(report.page.wrapper);
+		});
+		report.page.add_menu_item(__("导出选中项"), () => export_selected_vouchers(report));
+		hide_all_rows_export(report);
 		if (!report.get_filter_value("company")) {
 			report.set_filter_value("company", frappe.defaults.get_user_default("Company"));
 		}
@@ -93,13 +130,68 @@ frappe.query_reports["China Voucher Ledger"] = {
 	},
 };
 
+function export_selected_vouchers(report) {
+	const voucher_names = Array.from(frappe.query_reports["China Voucher Ledger"]._client_selected_vouchers);
+	if (!voucher_names.length) return frappe.msgprint(__("请先勾选要导出的凭证。"));
+	open_url_post("/api/method/china_finance.services.voucher_ledger_export.download_selected_vouchers", {
+		voucher_names: JSON.stringify(voucher_names),
+		filters: JSON.stringify(report.get_filter_values(true)),
+	});
+}
+
+function get_visible_voucher_names() {
+	return [...new Set((frappe.query_report.data || [])
+		.filter((row) => row.voucher_snapshot && !row.indent)
+		.map((row) => row.voucher_snapshot))];
+}
+
+function update_voucher_selection_ui(wrapper) {
+	const selected = frappe.query_reports["China Voucher Ledger"]._client_selected_vouchers;
+	const names = get_visible_voucher_names();
+	wrapper.find(".china-voucher-select").each((_, checkbox) => {
+		checkbox.checked = selected.has(checkbox.value);
+	});
+	const select_all = wrapper.find(".china-voucher-select-all").get(0);
+	if (select_all) {
+		const selected_count = names.filter((name) => selected.has(name)).length;
+		select_all.checked = names.length > 0 && selected_count === names.length;
+		select_all.indeterminate = selected_count > 0 && selected_count < names.length;
+	}
+}
+
+function hide_all_rows_export(report) {
+	const hide = () => {
+		report.page.wrapper.find(".dropdown-menu a, .dropdown-menu button").each((_, node) => {
+			if (["导出", "Export"].includes((node.textContent || "").trim())) $(node).closest("li, .dropdown-item").hide();
+		});
+	};
+	hide();
+	const observer = new MutationObserver(hide);
+	observer.observe(report.page.wrapper[0], { childList: true, subtree: true });
+	setTimeout(() => observer.disconnect(), 10000);
+}
+
 function ensure_voucher_ledger_styles() {
 	if (document.getElementById("china-voucher-ledger-inline-style")) return;
 	$("<style>")
 		.attr("id", "china-voucher-ledger-inline-style")
 		.text(`
+			.china-voucher-ledger-report .datatable {
+				width: 100%;
+			}
+			.china-voucher-ledger-report .dt-row {
+				width: 100%;
+			}
+			.china-voucher-ledger-report .dt-cell--col-4,
+			.china-voucher-ledger-report .dt-cell--col-6,
+			.china-voucher-ledger-report .dt-cell--col-8 {
+				flex-grow: 1;
+			}
 			.china-voucher-ledger-report .dt-scrollable,
-			.china-voucher-ledger-report .dt-header { max-width: 100%; }
+			.china-voucher-ledger-report .dt-header {
+				width: 100%;
+				max-width: 100%;
+			}
 			.china-voucher-ledger-report .dt-cell__content {
 				line-height: 24px;
 				padding-left: 6px;
@@ -109,6 +201,25 @@ function ensure_voucher_ledger_styles() {
 				text-overflow: ellipsis;
 			}
 			.china-voucher-ledger-report .dt-row { min-height: 28px; }
+			.china-voucher-ledger-report .dt-cell--header-0 .dt-cell__content,
+			.china-voucher-ledger-report .dt-cell--col-0 .dt-cell__content {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.china-voucher-ledger-report .china-voucher-select {
+				width: 15px;
+				height: 15px;
+				margin: 0;
+				cursor: pointer;
+			}
+			.china-voucher-ledger-report .china-voucher-select-all {
+				width: 15px;
+				height: 15px;
+				margin: 0;
+				vertical-align: middle;
+				cursor: pointer;
+			}
 		`)
 		.appendTo(document.head);
 }

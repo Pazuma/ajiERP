@@ -1,5 +1,13 @@
 frappe.ui.form.on("China Tax Invoice", {
 	refresh(frm) {
+		if (frm.doc.invoice_request) {
+			frm.add_custom_button(__("查看开票申请"), () => frappe.set_route("Form", "China Tax Invoice Request", frm.doc.invoice_request), __("关联单据"));
+		}
+		const allocations = frm.doc.allocations || [];
+		const references = [...new Map(allocations.filter((row) => row.reference_doctype && row.reference_name).map((row) => [`${row.reference_doctype}:${row.reference_name}`, row])).values()];
+		if (references.length === 1) {
+			frm.add_custom_button(__("查看业务单据"), () => frappe.set_route("Form", references[0].reference_doctype, references[0].reference_name), __("关联单据"));
+		}
 		if (frm.doc.docstatus !== 1 || frm.doc.direction !== "进项" || frm.doc.invoice_status !== "蓝票") return;
 		if (["未查验", "查验失败"].includes(frm.doc.verification_status)) {
 			frm.add_custom_button(__("确认查验通过"), () => frappe.call({

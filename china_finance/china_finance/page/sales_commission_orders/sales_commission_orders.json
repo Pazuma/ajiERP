@@ -1,0 +1,5 @@
+{
+ "doctype": "Page", "name": "sales-commission-orders", "page_name": "sales-commission-orders",
+ "title": "销售提成单", "module": "China Finance", "standard": "Yes",
+ "roles": [{"role":"Sales User"},{"role":"Sales Manager"},{"role":"销售总监"},{"role":"Sales Commission Manager"},{"role":"Sales Commission Finance"}]
+}

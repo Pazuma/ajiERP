@@ -3,8 +3,9 @@
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
- "field_order": ["delivery_note", "delivery_note_item", "sales_order", "item_code", "item_name", "uom", "delivery_date", "delivered_qty", "already_settled_qty", "remaining_qty", "settlement_qty", "original_rate", "settlement_rate", "discount_amount", "net_amount", "tax_rate", "tax_amount", "settlement_amount", "adjustment_reason", "sales_invoice_item"],
+ "field_order": ["reconciliation_line", "delivery_note", "delivery_note_item", "sales_order", "item_code", "item_name", "uom", "delivery_date", "delivered_qty", "already_settled_qty", "remaining_qty", "settlement_qty", "original_rate", "settlement_rate", "discount_amount", "net_amount", "tax_rate", "tax_amount", "settlement_amount", "adjustment_reason", "sales_invoice_item"],
  "fields": [
+  {"fieldname":"reconciliation_line","fieldtype":"Data","label":"对账明细","read_only":1},
   {"fieldname":"delivery_note","fieldtype":"Link","label":"销售出库单","options":"Delivery Note","read_only":1,"in_list_view":1},
   {"fieldname":"delivery_note_item","fieldtype":"Data","label":"销售出库明细","read_only":1,"in_list_view":1},
   {"fieldname":"sales_order","fieldtype":"Link","label":"销售订单","options":"Sales Order","read_only":1},

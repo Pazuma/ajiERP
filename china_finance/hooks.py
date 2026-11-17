@@ -28,7 +28,17 @@ after_migrate = "china_finance.setup.install.after_migrate"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "/assets/china_finance/css/china_finance.css"
+app_include_css = [
+	"/assets/china_finance/css/china_finance.css",
+	"/assets/china_finance/css/sales_order_finance_preview.css",
+	"/assets/china_finance/css/china_new_voucher.css",
+	"/assets/china_finance/css/china_voucher_summary.css?v=2026102001",
+	"/assets/china_finance/css/china_voucher_attachment_center.css?v=2026091101",
+	"/assets/china_finance/css/china_voucher_recycle_bin.css",
+	"/assets/china_finance/css/china_daily_ledger.css",
+	"/assets/china_finance/css/china_tax_calculation_sheet.css",
+	"/assets/china_finance/css/china_capability_analysis.css",
+]
 # app_include_js = "/assets/china_finance/js/china_finance.js"
 
 # include js, css files in header of web template
@@ -54,14 +64,21 @@ app_include_css = "/assets/china_finance/css/china_finance.css"
 doctype_js = {
 	"Bank Statement Import": "public/js/bank_statement_import.js",
 	"Sales Invoice": ["public/js/sales_invoice_invoice_control.js", "public/js/gl_source_snapshot.js"],
-	"Sales Order": "public/js/sales_order_settlement.js",
+	"Sales Order": [
+		"public/js/sales_order_settlement.js",
+		"public/js/sales_order_finance_preview.js",
+		"public/js/sales_order_finance_accounting.js",
+		"public/js/sales_order_commission.js",
+	],
 	"Delivery Note": ["public/js/delivery_note_settlement.js", "public/js/gl_source_snapshot.js"],
 	"Journal Entry": "public/js/gl_source_snapshot.js",
 	"Payment Entry": [
 		"public/js/payment_entry_invoice_selector.js",
 		"public/js/gl_source_snapshot.js",
 	],
+	"Payment Request": "public/js/payment_request_message.js",
 	"Purchase Invoice": "public/js/gl_source_snapshot.js",
+	"Purchase Follow Up": "public/js/purchase_follow_up.js",
 	"Purchase Receipt": "public/js/gl_source_snapshot.js",
 	"Stock Entry": "public/js/gl_source_snapshot.js",
 	"Asset": "public/js/gl_source_snapshot.js",
@@ -73,6 +90,7 @@ doctype_js = {
 	"China Accounting Voucher": "public/js/china_accounting_voucher.js",
 	"China Cash Flow Assignment": "public/js/china_cash_flow_assignment.js",
 	"China Financial Statement Mapping": "public/js/china_financial_statement_mapping.js",
+	"China Tax Invoice": "public/js/china_tax_invoice_form_recognition.js",
 }
 doctype_list_js = {
 	"Journal Entry": "public/js/source_voucher_number_list.js",
@@ -80,12 +98,17 @@ doctype_list_js = {
 	"China Financial Statement Template": "public/js/china_financial_statement_template_list.js",
 	"China Financial Statement Mapping": "public/js/china_financial_statement_mapping_list.js",
 	"China Sales Settlement": "public/js/china_sales_settlement_list.js",
+	"China Tax Invoice": "public/js/china_tax_invoice_list.js",
 }
 page_js = {
 	"bank-reconciliation-tool": "public/js/bank_reconciliation_tool.js",
 }
 
-app_include_js = ["/assets/china_finance/js/bank_reconciliation_tool.js"]
+app_include_js = [
+	"/assets/china_finance/js/bank_reconciliation_tool.js",
+	"/assets/china_finance/js/general_ledger_total_row.js",
+	"/assets/china_finance/js/china_tax_invoice_list.js",
+]
 
 override_whitelisted_methods = {
 	"erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_bank_transactions":
@@ -200,6 +223,7 @@ ignore_links_on_delete = [
 # Hook on document methods and events
 
 _gl_source_approval_events = {
+	"before_validate": "china_finance.services.voucher.validate_posting_date_not_future",
 	"before_submit": "china_finance.services.voucher.validate_source_approval",
 	"before_cancel": "china_finance.services.voucher.prepare_source_cancellation",
 }
@@ -226,8 +250,19 @@ doc_events = {
 		"Period Closing Voucher",
 	)
 }
+doc_events["Purchase Invoice"] = {
+	**doc_events["Purchase Invoice"],
+	"validate": "china_finance.china_finance.doctype.purchase_follow_up.purchase_follow_up.validate_purchase_invoice_follow_up",
+	"before_submit": [
+		"china_finance.services.voucher.validate_source_approval",
+		"china_finance.china_finance.doctype.purchase_follow_up.purchase_follow_up.validate_purchase_invoice_follow_up_amount",
+	],
+}
 doc_events["Company"] = {"on_update": "china_finance.api.initialize_profile_company_on_update"}
 doc_events["China Finance Settings"] = {"on_update": "china_finance.api.sync_settings_mappings_on_update"}
+doc_events["Payment Request"] = {
+	"before_validate": "china_finance.services.payment_request_message.prepare_payment_request_message",
+}
 doc_events["Sales Order"] = {"before_insert": "china_finance.services.sales_settlement.apply_sales_order_settlement_mode"}
 doc_events["Delivery Note"] = {
 	"before_submit": [
@@ -254,18 +289,34 @@ doc_events["Sales Invoice"] = {
 		"china_finance.services.sales_settlement.validate_sales_invoice_settlement",
 	],
 	"before_cancel": "china_finance.services.voucher.prepare_source_cancellation",
-	"on_cancel": "china_finance.services.sales_settlement.handle_sales_invoice_cancellation",
+	"on_cancel": [
+		"china_finance.services.sales_settlement.handle_sales_invoice_cancellation",
+		"china_finance.services.sales_order_finance_accounting.invalidate_invoice",
+	],
 }
 doc_events["*"] = {
 	"on_submit": "china_finance.services.voucher.on_gl_source_submit",
 	"on_cancel": "china_finance.services.voucher.on_gl_source_cancel",
 }
 
+has_permission = {
+	"Sales Order Finance Accounting": "china_finance.services.sales_order_finance_permissions.accounting_has_permission",
+	"Sales Commission Sheet": "china_finance.services.sales_commission_permissions.has_permission",
+	"Sales Commission Receipt Allocation": "china_finance.services.sales_commission_permissions.has_permission",
+	"Sales Commission Disbursement": "china_finance.services.sales_commission_permissions.has_permission",
+}
+permission_query_conditions = {
+	"Sales Order Finance Accounting": "china_finance.services.sales_order_finance_permissions.accounting_query_conditions",
+	"Sales Commission Sheet": "china_finance.services.sales_commission_permissions.sheet_query_conditions",
+	"Sales Commission Receipt Allocation": "china_finance.services.sales_commission_permissions.receipt_query_conditions",
+	"Sales Commission Disbursement": "china_finance.services.sales_commission_permissions.payment_query_conditions",
+}
+
 # Scheduled Tasks
 # ---------------
 
 scheduler_events = {
-	"daily": ["china_finance.tasks.backfill_voucher_snapshots"],
+	"daily": ["china_finance.tasks.backfill_voucher_snapshots", "china_finance.services.voucher_recycle_bin.purge_expired_recycle_bin"],
 }
 
 # Testing

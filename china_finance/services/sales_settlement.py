@@ -69,12 +69,18 @@ def resolve_sales_settlement_mode(company, customer, transaction_date, override_
 def apply_sales_order_settlement_mode(doc, method=None):
 	if doc.doctype != "Sales Order" or not doc.company or not doc.customer:
 		return
-	if doc.get("custom_china_settlement_mode") and not doc.is_new():
+	if doc.get("custom_china_settlement_mode"):
+		if not doc.get("custom_china_settlement_confirmation_method"):
+			doc.custom_china_settlement_confirmation_method = CONFIRM_EXTERNAL
 		return
-	result = resolve_sales_settlement_mode(doc.company, doc.customer, doc.transaction_date or today())
-	doc.custom_china_settlement_mode = result["mode"]
-	doc.custom_china_settlement_rule = result["rule"]
-	doc.custom_china_settlement_confirmation_method = result["confirmation_method"]
+	resolved = resolve_sales_settlement_mode(
+		doc.company,
+		doc.customer,
+		doc.get("transaction_date") or today(),
+	)
+	doc.custom_china_settlement_mode = resolved["mode"]
+	doc.custom_china_settlement_rule = resolved["rule"]
+	doc.custom_china_settlement_confirmation_method = resolved["confirmation_method"]
 
 
 @frappe.whitelist()
@@ -200,7 +206,146 @@ def get_settleable_delivery_items(delivery_notes):
 	return result
 
 
+@frappe.whitelist()
+def get_customer_settleable_items(company, customer):
+	"""Return delivered, unbilled rows available for a new customer settlement."""
+	_require_roles(PREPARER_ROLES)
+	if not company or not customer:
+		return {"items": []}
+	frappe.has_permission("Customer", "read", customer, throw=True)
+	delivery_notes = frappe.get_all(
+		"Delivery Note",
+		filters={
+			"company": company,
+			"customer": customer,
+			"docstatus": 1,
+			"is_return": 0,
+			"custom_china_settlement_mode": MODE_SETTLEMENT,
+		},
+		pluck="name",
+		order_by="posting_date asc, name asc",
+	)
+	items = get_settleable_delivery_items(delivery_notes)
+	if not items:
+		return {"items": []}
+	first = frappe.db.get_value(
+		"Delivery Note", items[0]["delivery_note"],
+		["currency", "custom_china_settlement_confirmation_method"], as_dict=True,
+	)
+	return {
+		"customer_name": frappe.db.get_value("Customer", customer, "customer_name"),
+		"currency": first.currency,
+		"confirmation_method": first.custom_china_settlement_confirmation_method or CONFIRM_EXTERNAL,
+		"items": items,
+	}
+
+
+def _confirmed_reconciliation(name):
+	statement = frappe.get_doc("China Reconciliation Statement", name)
+	statement.check_permission("read")
+	if statement.docstatus != 1 or statement.status != "Confirmed":
+		frappe.throw(_("仅可从已确认的客户对账单创建销售结算单"))
+	if statement.statement_type != "Customer" or statement.statement_basis != "Delivery":
+		frappe.throw(_("销售结算仅支持送货口径的客户对账单"))
+	return statement
+
+
+def _settled_qty_for_reconciliation_line(line_name, exclude_settlement=None):
+	conditions = "ssi.reconciliation_line=%s AND ss.docstatus=1 AND ss.status=%s"
+	values = [line_name, STATUS_INVOICED]
+	if exclude_settlement:
+		conditions += " AND ss.name!=%s"
+		values.append(exclude_settlement)
+	return flt(frappe.db.sql(
+		f"""SELECT COALESCE(SUM(ssi.settlement_qty), 0)
+		FROM `tabChina Sales Settlement Item` ssi
+		INNER JOIN `tabChina Sales Settlement` ss ON ss.name=ssi.parent
+		WHERE {conditions}""", values,
+	)[0][0])
+
+
+def _reconciliation_item(statement, line, exclude_settlement=None):
+	if line.voucher_type != "Delivery Note" or not line.source_detail_name:
+		frappe.throw(_("对账明细 {0} 缺少有效的销售出库明细").format(line.idx))
+	snapshot = _delivery_item_snapshot(line.source_detail_name)
+	if snapshot.parent != line.voucher_no:
+		frappe.throw(_("对账明细 {0} 与销售出库明细不一致").format(line.idx))
+	if snapshot.company != statement.company or snapshot.customer != statement.party or snapshot.currency != statement.currency:
+		frappe.throw(_("对账明细 {0} 与对账单公司、客户或币种不一致").format(line.idx))
+	if frappe.db.get_value("Delivery Note", snapshot.parent, "custom_china_settlement_mode") != MODE_SETTLEMENT:
+		frappe.throw(_("销售出库单 {0} 未启用对账结算模式").format(snapshot.parent))
+	confirmed_qty = flt(line.qty)
+	already_settled = _settled_qty_for_reconciliation_line(line.name, exclude_settlement)
+	remaining_qty = max(0, min(confirmed_qty - already_settled, snapshot.remaining_qty))
+	item = _load_settlement_item(snapshot, remaining_qty)
+	item.update({
+		"reconciliation_line": line.name,
+		"already_settled_qty": already_settled,
+		"remaining_qty": remaining_qty,
+		"settlement_rate": flt(line.rate),
+	})
+	return item
+
+
+@frappe.whitelist()
+def get_reconciliation_settleable_items(reconciliation_statement):
+	_require_roles(PREPARER_ROLES)
+	statement = _confirmed_reconciliation(reconciliation_statement)
+	items = []
+	for line in statement.lines:
+		item = _reconciliation_item(statement, line)
+		if item["remaining_qty"] > 0:
+			items.append(item)
+	return {
+		"company": statement.company, "customer": statement.party, "currency": statement.currency,
+		"customer_name": frappe.db.get_value("Customer", statement.party, "customer_name"),
+		"confirmation_method": CONFIRM_INTERNAL, "items": items,
+	}
+
+
+@frappe.whitelist()
+def create_settlement_from_reconciliation(reconciliation_statement, posting_date=None):
+	_require_roles(PREPARER_ROLES)
+	data = get_reconciliation_settleable_items(reconciliation_statement)
+	if not data["items"]:
+		frappe.throw(_("该对账单没有剩余可结算明细"))
+	doc = frappe.get_doc({
+		"doctype": "China Sales Settlement", "company": data["company"], "customer": data["customer"],
+		"customer_name": data["customer_name"], "currency": data["currency"],
+		"reconciliation_statement": reconciliation_statement, "posting_date": posting_date or today(),
+		"status": STATUS_DRAFT, "confirmation_method": CONFIRM_INTERNAL,
+		"internal_confirmation_reason": _("依据已确认客户对账单 {0}").format(reconciliation_statement),
+		"items": data["items"],
+	})
+	doc.insert()
+	return {"name": doc.name}
+
+
+def ensure_initial_settlement_from_reconciliation(reconciliation_statement):
+	"""Create only the first automatic draft; manual partial settlements remain unrestricted."""
+	frappe.db.sql(
+		"SELECT name FROM `tabChina Reconciliation Statement` WHERE name=%s FOR UPDATE",
+		reconciliation_statement,
+	)
+	existing = frappe.db.get_value(
+		"China Sales Settlement", {"auto_reconciliation_statement": reconciliation_statement}, "name"
+	)
+	if existing:
+		return {"name": existing}
+	data = get_reconciliation_settleable_items(reconciliation_statement)
+	if not data["items"]:
+		return {"name": None}
+	result = create_settlement_from_reconciliation(reconciliation_statement)
+	frappe.db.set_value(
+		"China Sales Settlement", result["name"], "auto_reconciliation_statement", reconciliation_statement,
+		update_modified=False,
+	)
+	return result
+
+
 def _validate_header(doc):
+	if not doc.reconciliation_statement:
+		frappe.throw(_("请先确认客户送货对账单，再创建销售结算单"))
 	if not doc.company or not doc.customer or not doc.currency:
 		frappe.throw(_("销售结算单必须填写公司、客户和币种"))
 	if not doc.items:
@@ -211,6 +356,15 @@ def _validate_header(doc):
 
 def validate_sales_settlement(doc):
 	_validate_header(doc)
+	if doc.reconciliation_statement:
+		statement = _confirmed_reconciliation(doc.reconciliation_statement)
+		if (doc.company, doc.customer, doc.currency) != (statement.company, statement.party, statement.currency):
+			frappe.throw(_("销售结算单与关联对账单的公司、客户或币种不一致"))
+		lines = {line.name: line for line in statement.lines}
+		if len({row.reconciliation_line for row in doc.items}) != len(doc.items):
+			frappe.throw(_("同一对账明细不能在一张结算单中重复"))
+	else:
+		lines = {}
 	# Derive the display status from the confirmation method while the document is a draft.
 	if doc.docstatus == 0:
 		doc.status = STATUS_PENDING_CUSTOMER if doc.confirmation_method == CONFIRM_EXTERNAL else STATUS_PENDING_INTERNAL
@@ -222,6 +376,15 @@ def validate_sales_settlement(doc):
 		discount_amount = row.discount_amount
 		adjustment_reason = row.adjustment_reason
 		snapshot = _delivery_item_snapshot(row.delivery_note_item)
+		if doc.reconciliation_statement:
+			line = lines.get(row.reconciliation_line)
+			if not line or line.source_detail_name != row.delivery_note_item:
+				frappe.throw(_("结算明细必须来自关联对账单"))
+			reconciled = _reconciliation_item(statement, line, doc.name)
+			if flt(row.settlement_qty, qty_precision) > flt(reconciled["remaining_qty"], qty_precision):
+				frappe.throw(_("物料 {0} 的结算数量超过对账剩余额度").format(row.item_code))
+			settlement_rate = line.rate
+			discount_amount = 0
 		if snapshot.company != doc.company or snapshot.customer != doc.customer or snapshot.currency != doc.currency:
 			frappe.throw(_("结算明细必须来自同一公司、客户和币种的销售出库单"))
 		if frappe.db.get_value("Delivery Note", snapshot.parent, "custom_china_settlement_mode") != MODE_SETTLEMENT:
@@ -259,6 +422,7 @@ def _validate_combination_compatibility(doc):
 @frappe.whitelist()
 def create_settlement_from_delivery_notes(delivery_notes, posting_date=None):
 	_require_roles(PREPARER_ROLES)
+	frappe.throw(_("请先从已确认的客户送货对账单创建销售结算单"))
 	items = get_settleable_delivery_items(delivery_notes)
 	if not items:
 		frappe.throw(_("没有可结算的销售出库明细"))
@@ -267,6 +431,42 @@ def create_settlement_from_delivery_notes(delivery_notes, posting_date=None):
 		"doctype": "China Sales Settlement", "company": first.company, "customer": first.customer,
 		"customer_name": frappe.db.get_value("Customer", first.customer, "customer_name"), "currency": first.currency,
 		"posting_date": posting_date or today(), "status": STATUS_DRAFT,
+		"confirmation_method": first.custom_china_settlement_confirmation_method or CONFIRM_EXTERNAL,
+		"items": items,
+	})
+	doc.insert()
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
+def create_settlement_from_sales_order(sales_order, posting_date=None):
+	"""Create a draft settlement from all currently settleable deliveries for an order."""
+	_require_roles(PREPARER_ROLES)
+	frappe.throw(_("请先从已确认的客户送货对账单创建销售结算单"))
+	order = frappe.get_doc("Sales Order", sales_order)
+	order.check_permission("read")
+	if order.docstatus != 1:
+		frappe.throw(_("仅可从已提交的销售订单创建销售结算单"))
+	if order.get("custom_china_settlement_mode") != MODE_SETTLEMENT:
+		frappe.throw(_("仅可从“对账结算后确认应收”模式的销售订单创建销售结算单"))
+	delivery_notes = frappe.get_all(
+		"Delivery Note Item",
+		filters={"against_sales_order": sales_order, "docstatus": 1},
+		pluck="parent",
+	)
+	delivery_notes = list(dict.fromkeys(delivery_notes))
+	items = get_settleable_delivery_items(delivery_notes)
+	if not items:
+		frappe.throw(_("该销售订单没有可结算的销售出库明细"))
+	first = frappe.db.get_value(
+		"Delivery Note", items[0]["delivery_note"],
+		["company", "customer", "currency", "custom_china_settlement_confirmation_method"],
+		as_dict=True,
+	)
+	doc = frappe.get_doc({
+		"doctype": "China Sales Settlement", "company": first.company, "customer": first.customer,
+		"customer_name": frappe.db.get_value("Customer", first.customer, "customer_name"),
+		"currency": first.currency, "posting_date": posting_date or today(), "status": STATUS_DRAFT,
 		"confirmation_method": first.custom_china_settlement_confirmation_method or CONFIRM_EXTERNAL,
 		"items": items,
 	})
@@ -284,10 +484,17 @@ def validate_settlement_confirmation(doc):
 def _lock_and_validate_balance(doc):
 	qty_precision, _ = _precision(doc.company)
 	for row in doc.items:
+		if doc.reconciliation_statement:
+			frappe.db.sql("SELECT name FROM `tabChina Reconciliation Line` WHERE name=%s FOR UPDATE", row.reconciliation_line)
 		frappe.db.sql("SELECT name FROM `tabDelivery Note Item` WHERE name=%s FOR UPDATE", row.delivery_note_item)
 		snapshot = _delivery_item_snapshot(row.delivery_note_item)
 		if flt(row.settlement_qty, qty_precision) > flt(snapshot.remaining_qty, qty_precision):
 			frappe.throw(_("销售出库明细 {0} 已被其他结算单占用，剩余数量不足").format(row.delivery_note_item))
+		if doc.reconciliation_statement:
+			line = frappe.get_doc("China Reconciliation Line", row.reconciliation_line)
+			remaining = flt(line.qty) - _settled_qty_for_reconciliation_line(line.name, doc.name)
+			if flt(row.settlement_qty, qty_precision) > flt(remaining, qty_precision):
+				frappe.throw(_("对账明细 {0} 已被其他结算单占用，剩余额度不足").format(line.idx))
 
 
 def _make_sales_invoice(doc):

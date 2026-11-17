@@ -1,0 +1,19 @@
+{
+ "actions": [],
+ "creation": "2026-09-08 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {"fieldname":"remarks","fieldtype":"Data","label":"摘要","in_list_view":1},
+  {"fieldname":"account","fieldtype":"Link","label":"会计科目","options":"Account","in_list_view":1},
+  {"default":"0","fieldname":"debit","fieldtype":"Currency","label":"借方金额","in_list_view":1,"read_only":1},
+  {"default":"0","fieldname":"credit","fieldtype":"Currency","label":"贷方金额","in_list_view":1,"read_only":1}
+ ],
+ "istable": 1,
+ "modified": "2026-09-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "China Finance",
+ "name": "China Manual Voucher Draft Entry",
+ "owner": "Administrator"
+}

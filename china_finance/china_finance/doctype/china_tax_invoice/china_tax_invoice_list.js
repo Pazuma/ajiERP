@@ -1,5 +1,16 @@
 frappe.listview_settings["China Tax Invoice"] = {
 	onload(listview) {
+		listview.page.add_inner_button(__("识别发票"), () => frappe.set_route("List", "China Tax Invoice Recognition"), "发票操作");
+		listview.page.add_actions_menu_item(__("识别发票"), () => frappe.prompt([
+			{ fieldname: "company", label: __("公司"), fieldtype: "Link", options: "Company", reqd: 1 },
+			{ fieldname: "direction", label: __("进销项"), fieldtype: "Select", options: "进项\n销项", default: "进项", reqd: 1 },
+			{ fieldname: "source_file", label: __("发票电子原件"), fieldtype: "Attach", reqd: 1 },
+		], (values) => frappe.call({
+			method: "china_finance.services.invoice_recognition.create_recognition",
+			args: values,
+			freeze: true,
+			callback: (r) => frappe.set_route("Form", "China Tax Invoice Recognition", r.message.name),
+		}), __("识别发票")));
 		listview.page.add_actions_menu_item(__("创建进项税抵扣批次"), () => {
 			const invoices = listview.get_checked_items();
 			if (!invoices.length) {

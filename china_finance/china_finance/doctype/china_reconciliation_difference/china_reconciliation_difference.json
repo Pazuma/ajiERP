@@ -10,7 +10,7 @@
   {"fieldname":"amount","fieldtype":"Currency","label":"差异金额","reqd":1,"in_list_view":1},
   {"fieldname":"status","fieldtype":"Select","label":"状态","options":"Open\nResolved\nApproved Timing\nWaived","default":"Open","read_only":1,"in_list_view":1},
   {"fieldname":"source_section","fieldtype":"Section Break","label":"差异来源"},
-  {"fieldname":"source_doctype","fieldtype":"Link","label":"来源单据类型","options":"DocType"},
+  {"fieldname":"source_doctype","fieldtype":"Select","label":"来源单据类型","options":"\nJournal Entry\nPayment Entry\nSales Invoice\nPurchase Invoice\nBank Transaction"},
   {"fieldname":"source_name","fieldtype":"Dynamic Link","label":"来源单据","options":"source_doctype"},
   {"fieldname":"carried_from","fieldtype":"Link","label":"承接上期差异","options":"China Reconciliation Difference","read_only":1},
   {"fieldname":"reason","fieldtype":"Small Text","label":"差异原因","reqd":1},

@@ -109,6 +109,12 @@ class TestStatutoryFormulaEngine(UnitTestCase):
 		self.assertEqual(get_mapping_for_date(revisions, "1002 - TEST", "2026-03-01").row_code, "A")
 		self.assertEqual(get_mapping_for_date(revisions, "1002 - TEST", "2026-08-01").row_code, "B")
 
+	def test_enterprise_balance_sheet_contains_inventory_detail_rows(self):
+		rows = {item["row_code"]: item for item in build_seed_rows(ENTERPRISE_ROWS["Balance Sheet"])}
+		for code in ("RAW_MATERIALS", "WORK_IN_PROGRESS", "FINISHED_GOODS", "TURNOVER_MATERIALS", "INVENTORY_PROVISION"):
+			self.assertIn(code, rows)
+		self.assertEqual(rows["INVENTORIES"]["formula"], "RAW_MATERIALS + WORK_IN_PROGRESS + FINISHED_GOODS + TURNOVER_MATERIALS - INVENTORY_PROVISION")
+
 	def test_deductible_vat_is_presented_as_other_current_asset(self):
 		values = {"OTHER_CURRENT_ASSETS": 0, "TAXES_PAYABLE": 0}
 		apply_vat_net_presentation(values, 69.03)

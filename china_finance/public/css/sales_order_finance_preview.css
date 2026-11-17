@@ -1,0 +1,95 @@
+.china-sales-order-finance-preview {
+	border-top: 1px solid var(--border-color);
+	margin: 16px 0 8px;
+	padding-top: 16px;
+}
+
+.china-sales-order-finance-preview__header {
+	align-items: center;
+	display: flex;
+	gap: 12px;
+	justify-content: space-between;
+}
+
+.china-sales-order-finance-preview h4,
+.china-sales-order-finance-preview h5 {
+	font-size: var(--text-md);
+	margin: 0 0 10px;
+}
+
+.china-sales-order-finance-preview__summary {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: repeat(5, minmax(130px, 1fr));
+}
+
+.china-sales-order-finance-preview__summary > div {
+	background: var(--subtle-fg);
+	border: 1px solid var(--border-color);
+	padding: 10px;
+}
+
+.china-sales-order-finance-preview__summary span,
+.china-sales-order-finance-preview__links,
+.china-sales-order-finance-preview__hint {
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+}
+
+.china-sales-order-finance-preview__summary strong {
+	display: block;
+	font-size: var(--text-md);
+	font-weight: 600;
+	margin-top: 4px;
+}
+
+.china-sales-order-finance-preview__warning {
+	background: var(--orange-50);
+	border-left: 3px solid var(--orange-500);
+	margin-top: 10px;
+	padding: 8px 10px;
+}
+
+.china-sales-order-finance-preview__tables {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	margin-top: 14px;
+}
+
+.china-sales-order-finance-preview table {
+	border-collapse: collapse;
+	font-size: var(--text-sm);
+	width: 100%;
+}
+
+.china-sales-order-finance-preview th,
+.china-sales-order-finance-preview td {
+	border-bottom: 1px solid var(--border-color);
+	padding: 7px 8px;
+	text-align: left;
+}
+
+.china-sales-order-finance-preview th {
+	color: var(--text-muted);
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.china-sales-order-finance-preview__links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin-top: 12px;
+}
+
+@media (max-width: 991px) {
+	.china-sales-order-finance-preview__summary,
+	.china-sales-order-finance-preview__tables {
+		grid-template-columns: 1fr;
+	}
+
+	.china-sales-order-finance-preview__tables {
+		overflow-x: auto;
+	}
+}

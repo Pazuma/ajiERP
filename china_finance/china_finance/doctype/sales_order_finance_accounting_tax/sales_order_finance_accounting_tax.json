@@ -1,0 +1,65 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Order Finance Accounting Tax",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "istable": 1,
+ "track_changes": 0,
+ "field_order": [
+  "currency",
+  "description",
+  "rate",
+  "tax_base",
+  "official_amount",
+  "amount",
+  "account",
+  "reason"
+ ],
+ "fields": [
+  {"fieldname":"currency","label":"币种","fieldtype":"Link","options":"Currency","read_only":1,"hidden":1},
+  {
+   "fieldname": "description",
+   "label": "税费项目",
+   "fieldtype": "Data",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "rate",
+   "label": "税率 (%)",
+   "fieldtype": "Percent",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tax_base",
+   "label": "计税基数",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "official_amount",
+   "label": "发票分摊金额",
+   "fieldtype": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount",
+   "label": "核算金额",
+   "fieldtype": "Currency",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "account",
+   "label": "建议科目",
+   "fieldtype": "Link",
+   "options": "Account"
+  },
+  {
+   "fieldname": "reason",
+   "label": "差异说明",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

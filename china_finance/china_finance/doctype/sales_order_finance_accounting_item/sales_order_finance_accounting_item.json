@@ -1,0 +1,143 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Order Finance Accounting Item",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "istable": 1,
+ "track_changes": 0,
+ "field_order": [
+  "currency",
+  "sales_order_item",
+  "sales_invoice_item",
+  "item_code",
+  "qty",
+  "net_amount",
+  "project",
+  "cost_complete",
+  "material_cost",
+  "auxiliary_cost",
+  "labor_cost",
+  "overhead",
+  "scrap_recovery",
+  "production_cost",
+  "sales_cost",
+  "other_expenses",
+  "suggested_sales_cost",
+  "suggestion_source",
+  "adjustment_reason"
+ ],
+ "fields": [
+  {"fieldname":"currency","label":"币种","fieldtype":"Link","options":"Currency","read_only":1,"hidden":1},
+  {
+   "fieldname": "sales_order_item",
+   "label": "订单行",
+   "fieldtype": "Data",
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice_item",
+   "label": "发票行",
+   "fieldtype": "Data",
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "label": "产品",
+   "fieldtype": "Link",
+   "options": "Item",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty",
+   "label": "本次开票数量",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_amount",
+   "label": "未税收入",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "project",
+   "label": "关联项目",
+   "fieldtype": "Link",
+   "options": "Project",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_complete",
+   "label": "成本已填写（包括明确零成本）",
+   "fieldtype": "Check",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "material_cost",
+   "label": "材料成本",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "auxiliary_cost",
+   "label": "辅料成本",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "labor_cost",
+   "label": "人工成本",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "overhead",
+   "label": "制造费用",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "scrap_recovery",
+   "label": "废料回收",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "production_cost",
+   "label": "生产成本合计",
+   "fieldtype": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_cost",
+   "label": "本次匹配销售成本",
+   "fieldtype": "Currency",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "other_expenses",
+   "label": "其他费用（不计入毛利）",
+   "fieldtype": "Currency"
+  },
+  {
+   "fieldname": "suggested_sales_cost",
+   "label": "自动建议销售成本",
+   "fieldtype": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "suggestion_source",
+   "label": "建议来源",
+   "fieldtype": "Small Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "adjustment_reason",
+   "label": "成本调整说明",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

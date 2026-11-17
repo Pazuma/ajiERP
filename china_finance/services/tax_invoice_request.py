@@ -347,3 +347,18 @@ def create_integration_call(company, provider, operation, idempotency_key, reque
 			frappe.throw(_("幂等键已用于其他税务接口调用"))
 		return doc
 	return frappe.get_doc({"doctype": "China Tax Integration Call", "company": company, "provider": provider, "operation": operation, "idempotency_key": idempotency_key, "request": request, "tax_invoice": tax_invoice, "request_summary": json.dumps(request_summary or {}, ensure_ascii=False), "started_on": now_datetime()}).insert(ignore_permissions=True)
+
+@frappe.whitelist()
+def get_sales_invoice_tax_flow(sales_invoice):
+	"""Return read-only request and tax-invoice links for a Sales Invoice form."""
+	frappe.only_for(("System Manager", "Accounts Manager", "China Finance Manager", "China Tax User"))
+	invoice = frappe.get_doc("Sales Invoice", sales_invoice)
+	invoice.check_permission("read")
+	request_names = frappe.get_all(
+		"China Tax Invoice Request Item", filters={"sales_invoice": sales_invoice}, pluck="parent"
+	)
+	requests = frappe.get_all(
+		"China Tax Invoice Request", filters={"name": ["in", list(set(request_names))]},
+		fields=["name", "status", "tax_invoice", "gross_amount"], order_by="creation desc",
+	) if request_names else []
+	return {"requests": requests, "active_count": sum(row.status not in ("Rejected", "Cancelled") for row in requests)}

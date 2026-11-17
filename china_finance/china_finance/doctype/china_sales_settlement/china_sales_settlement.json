@@ -3,7 +3,7 @@
  "autoname": "naming_series:",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["naming_series", "company", "customer", "customer_name", "currency", "exchange_rate", "status", "confirmation_method", "posting_date", "from_date", "to_date", "confirmation_section", "confirmation_file", "internal_confirmation_reason", "customer_confirmed_by", "customer_confirmed_on", "finance_approved_by", "finance_approved_on", "sales_invoice", "adjustment_count", "cancellation_reason", "remarks", "items_section", "items"],
+ "field_order": ["naming_series", "company", "customer", "customer_name", "currency", "exchange_rate", "reconciliation_statement", "auto_reconciliation_statement", "status", "confirmation_method", "posting_date", "from_date", "to_date", "confirmation_section", "confirmation_file", "internal_confirmation_reason", "customer_confirmed_by", "customer_confirmed_on", "finance_approved_by", "finance_approved_on", "sales_invoice", "adjustment_count", "cancellation_reason", "remarks", "items_section", "items"],
  "fields": [
   {"default":"CSTL-.YYYY.-.#####","fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CSTL-.YYYY.-.#####","reqd":1},
   {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"in_list_view":1},
@@ -11,6 +11,8 @@
   {"fieldname":"customer_name","fieldtype":"Data","label":"客户名称","read_only":1},
   {"fieldname":"currency","fieldtype":"Link","label":"币种","options":"Currency","reqd":1},
   {"default":"1","fieldname":"exchange_rate","fieldtype":"Float","label":"汇率","reqd":1},
+  {"fieldname":"reconciliation_statement","fieldtype":"Link","label":"关联客户对账单","options":"China Reconciliation Statement"},
+  {"fieldname":"auto_reconciliation_statement","fieldtype":"Link","label":"自动创建来源对账单","options":"China Reconciliation Statement","hidden":1,"read_only":1,"unique":1},
   {"default":"草稿","fieldname":"status","fieldtype":"Select","label":"状态","options":"草稿\n待客户确认\n待内部复核\n已生成应收\n已驳回\n已取消","read_only":1,"in_list_view":1},
   {"fieldname":"confirmation_method","fieldtype":"Select","label":"确认方式","options":"外部客户确认\n内部复核","reqd":1},
   {"default":"Today","fieldname":"posting_date","fieldtype":"Date","label":"应收过账日期","reqd":1},

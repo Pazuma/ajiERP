@@ -9,6 +9,8 @@ def execute(filters=None):
 		conditions.append("ti.direction=%(direction)s")
 	if filters.get("invoice_status"):
 		conditions.append("ti.invoice_status=%(invoice_status)s")
+	if frappe.utils.cint(filters.get("exclude_void")):
+		conditions.append("ti.invoice_status!='作废'")
 	data = frappe.db.sql(
 		f"""
 		SELECT ti.name, ti.invoice_date, ti.direction, ti.invoice_type, ti.invoice_number, ti.invoice_status,

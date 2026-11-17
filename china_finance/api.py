@@ -60,6 +60,11 @@ def _initialize_company(
 		"require_file_hash": 1,
 		"freeze_on_close": 1,
 		"reconciliation_tolerance": 0.01,
+		"customer_reconciliation_detail_mode": "全部",
+		"customer_reconciliation_show_order_details": 1,
+		"customer_reconciliation_show_bill_details": 1,
+		"customer_reconciliation_show_payment_details": 1,
+		"customer_reconciliation_show_finance_details": 1,
 	}
 	if settings:
 		doc = frappe.get_doc("China Finance Settings", settings)

@@ -1,0 +1,36 @@
+{
+ "doctype": "Report",
+ "name": "Sales Order Finance Accounting Summary",
+ "ref_doctype": "Sales Order Finance Accounting",
+ "report_type": "Script Report",
+ "is_standard": "Yes",
+ "module": "China Finance",
+ "disabled": 0,
+ "add_total_row": 0,
+ "roles": [
+  {
+   "role": "Sales Order Finance Reader"
+  },
+  {
+   "role": "Sales Order Finance Editor"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "China Finance Manager"
+  },
+  {
+   "role": "China Finance User"
+  },
+  {
+   "role": "China Finance Auditor"
+  },
+  {
+   "role": "System Manager"
+  }
+ ]
+}

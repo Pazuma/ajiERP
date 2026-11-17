@@ -1,0 +1,325 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Commission Sheet",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "istable": 0,
+ "track_changes": 1,
+ "field_order": [
+  "sales_order",
+  "company",
+  "customer",
+  "company_currency",
+  "status",
+  "basis_type",
+  "release_condition",
+  "receipt_tax_mode",
+  "manual_basis",
+  "manual_reason",
+  "source_ready",
+  "source_message",
+  "basis_amount",
+  "receipt_amount",
+  "receivable_baseline",
+  "receipt_ratio",
+  "commission_total",
+  "commission_delta",
+  "sales_people",
+  "previous_version",
+  "revision_reason",
+  "active_key",
+  "source_hash",
+  "source_snapshot",
+  "margin_basis",
+  "margin_source_hash",
+  "margin_approved_by",
+  "margin_approved_on",
+  "confirmed_by",
+  "confirmed_on",
+  "confirmed_date",
+  "release_preview",
+  "void_reason",
+  "voided_by",
+  "voided_on",
+  "voided_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_order",
+   "label": "销售订单",
+   "fieldtype": "Link",
+   "options": "Sales Order",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "label": "公司",
+   "fieldtype": "Link",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "label": "客户",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company_currency",
+   "label": "本位币",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "label": "提成状态",
+   "fieldtype": "Select",
+   "options": "草稿\n已确认\n已替代\n待复核\n已作废",
+   "default": "草稿",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "basis_type",
+   "label": "计提依据",
+   "fieldtype": "Select",
+   "options": "订单未税金额\n已开票未税金额\n实际回款金额\n财务确认毛利\n手工指定基数",
+   "default": "订单未税金额",
+   "reqd": 1
+  },
+  {
+   "fieldname": "release_condition",
+   "label": "发放条件",
+   "fieldtype": "Select",
+   "options": "确认后可发放\n全额回款后可发放\n随回款比例发放",
+   "default": "确认后可发放",
+   "reqd": 1
+  },
+  {
+   "fieldname": "receipt_tax_mode",
+   "label": "回款含税口径",
+   "fieldtype": "Select",
+   "options": "含税实收\n折算未税回款",
+   "default": "含税实收",
+   "reqd": 1
+  },
+  {
+   "fieldname": "manual_basis",
+   "label": "手工计提基数",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "depends_on": "eval:doc.basis_type === '手工指定基数'"
+  },
+  {
+   "fieldname": "manual_reason",
+   "label": "手工基数原因",
+   "fieldtype": "Small Text",
+   "depends_on": "eval:doc.basis_type === '手工指定基数'"
+  },
+  {
+   "fieldname": "source_ready",
+   "label": "来源完整",
+   "fieldtype": "Check",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_message",
+   "label": "来源核对提示",
+   "fieldtype": "Small Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "basis_amount",
+   "label": "当前计提基数",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_amount",
+   "label": "累计已核实含税回款",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receivable_baseline",
+   "label": "含税应收基准",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_ratio",
+   "label": "回款完成系数（0至1）",
+   "fieldtype": "Float",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_total",
+   "label": "累计提成",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_delta",
+   "label": "本版计提变动",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_people",
+   "label": "业务人员提成",
+   "fieldtype": "Table",
+   "options": "Sales Commission Sheet Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "previous_version",
+   "label": "上一版本",
+   "fieldtype": "Link",
+   "options": "Sales Commission Sheet",
+   "read_only": 1
+  },
+  {
+   "fieldname": "revision_reason",
+   "label": "修订原因",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "active_key",
+   "label": "有效版本键",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "source_hash",
+   "label": "来源指纹",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "source_snapshot",
+   "label": "来源快照",
+   "fieldtype": "Long Text",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "margin_basis",
+   "label": "财务批准毛利基数",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "margin_source_hash",
+   "label": "毛利基数指纹",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "margin_approved_by",
+   "label": "毛利批准人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "margin_approved_on",
+   "label": "毛利批准时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_by",
+   "label": "确认人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_on",
+   "label": "确认时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_date",
+   "label": "确认日期",
+   "fieldtype": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "release_preview",
+   "label": "发放情况",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "void_reason",
+   "label": "作废原因",
+   "fieldtype": "Small Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voided_by",
+   "label": "作废人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voided_on",
+   "label": "作废时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voided_date",
+   "label": "作废日期",
+   "fieldtype": "Date",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "Sales Commission Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "销售总监",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales Commission Finance",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "search_fields": "sales_order"
+}
+

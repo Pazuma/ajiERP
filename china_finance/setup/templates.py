@@ -38,7 +38,12 @@ ENTERPRISE_ROWS = {
 		row("RECEIVABLE_FINANCING", "应收款项融资", indent=1),
 		row("PREPAYMENTS", "预付款项", indent=1),
 		row("OTHER_RECEIVABLES", "其他应收款", indent=1),
-		row("INVENTORIES", "存货", indent=1),
+		row("INVENTORIES", "存货", "Formula", "RAW_MATERIALS + WORK_IN_PROGRESS + FINISHED_GOODS + TURNOVER_MATERIALS - INVENTORY_PROVISION", indent=1),
+		row("RAW_MATERIALS", "其中：原材料", indent=2),
+		row("WORK_IN_PROGRESS", "在产品", indent=2),
+		row("FINISHED_GOODS", "库存商品", indent=2),
+		row("TURNOVER_MATERIALS", "周转材料", indent=2),
+		row("INVENTORY_PROVISION", "减：存货跌价准备", direction="Credit Positive", indent=2),
 		row("CONTRACT_ASSETS", "合同资产", indent=1),
 		row("HELD_FOR_SALE_ASSETS", "持有待售资产", indent=1),
 		row("CURRENT_ASSETS_DUE_WITHIN_ONE_YEAR", "一年内到期的非流动资产", indent=1),
@@ -345,7 +350,34 @@ def refresh_enterprise_v3_templates():
 		if not name or frappe.db.exists("China Report Snapshot", {"template": name}):
 			continue
 		doc = frappe.get_doc("China Financial Statement Template", name)
-		doc.set("rows", build_seed_rows(rows))
+		seed_rows = build_seed_rows(rows)
+		existing = {row.row_code: row for row in doc.rows}
+		ordered_rows = []
+		changed = False
+		for row_data in seed_rows:
+			row = existing.get(row_data["row_code"])
+			if row:
+				for field in ("statutory_line_number", "row_type", "is_child", "indent", "bold", "show_zero", "label", "formula", "balance_direction"):
+					if row.get(field) != row_data[field]:
+						row.set(field, row_data[field])
+						changed = True
+				ordered_rows.append(row)
+			else:
+				ordered_rows.append(frappe._dict(row_data))
+				changed = True
+		custom_rows = [row for row in doc.rows if row.row_code not in {item["row_code"] for item in seed_rows}]
+		ordered_rows.extend(custom_rows)
+		if [row.row_code for row in doc.rows] != [row.row_code for row in ordered_rows]:
+			changed = True
+		if not changed:
+			continue
+		doc.set("rows", [])
+		for row in ordered_rows:
+			as_dict = getattr(row, "as_dict", None)
+			values = as_dict() if callable(as_dict) else dict(row)
+			for field in ("name", "parent", "parentfield", "parenttype", "idx"):
+				values.pop(field, None)
+			doc.append("rows", values)
 		doc.flags.ignore_permissions = True
 		doc.save()
 
@@ -754,13 +786,15 @@ def refine_classification_for_template(account, statement_type, valid_rows, clas
 		}
 		row_code = detailed.get(number)
 		if not row_code:
-			if number.startswith(("1401", "1402", "1403", "1404")) or "原材料" in name:
+			if number.startswith(("1401", "1402", "1403")) or "原材料" in name:
 				row_code = "RAW_MATERIALS"
+			elif number.startswith("1404") or "周转材料" in name or "低值易耗品" in name:
+				row_code = "TURNOVER_MATERIALS"
 			elif number.startswith(("5001", "5101", "5201")) or "生产成本" in name or "在产品" in name:
 				row_code = "WORK_IN_PROGRESS"
 			elif number in {"1405", "1406", "1408"} or any(word in name for word in ("库存商品", "产成品", "委托加工物资")):
 				row_code = "FINISHED_GOODS"
-			elif number.startswith("1411") or "周转材料" in name or "低值易耗品" in name:
+			elif number.startswith("1411"):
 				row_code = "TURNOVER_MATERIALS"
 		if row_code and row_code in valid_rows:
 			return row_code
@@ -867,6 +901,7 @@ def classify_account_number(number, statement_type, account=None):
 		return None
 	if statement_type == "Cash Flow":
 		if account and account.account_type in {"Cash", "Bank"}: return None
+		if requires_manual_cash_flow_assignment(number): return None
 		if number.startswith(("6001", "6051", "1122", "1123", "1121", "2203", "2204")):
 			return ("CASH_RECEIVED_SALES", "CASH_RECEIVED_SALES", "OTHER_OPERATING_PAYMENTS")
 		if number.startswith("1101"):
@@ -883,8 +918,6 @@ def classify_account_number(number, statement_type, account=None):
 			return ("OTHER_OPERATING_PAYMENTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
 		if number == "5101":
 			return ("OTHER_OPERATING_PAYMENTS", "OTHER_OPERATING_RECEIPTS", "OTHER_OPERATING_PAYMENTS")
-		if number.startswith(("510102", "510105")):
-			return None
 		if number.startswith(("140", "141", "2201", "2202", "2205", "2206")):
 			return ("CASH_PAID_SUPPLIERS", "OTHER_OPERATING_RECEIPTS", "CASH_PAID_SUPPLIERS")
 		if number.startswith(("2211",)):

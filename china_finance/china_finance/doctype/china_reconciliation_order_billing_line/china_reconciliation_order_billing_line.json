@@ -1,0 +1,29 @@
+{
+ "doctype": "DocType",
+ "name": "China Reconciliation Order Billing Line",
+ "module": "China Finance",
+ "istable": 1,
+ "editable_grid": 1,
+ "field_order": ["order_date","sales_order","customer_po_no","item_code","item_name","uom","ordered_qty","delivered_qty","billed_qty","order_amount","billed_amount","paid_amount","outstanding_amount","delivery_notes","sales_invoices","billing_status","payment_status","included_reason","currency"],
+ "fields": [
+  {"fieldname":"order_date","fieldtype":"Date","label":"订单日期","read_only":1,"in_list_view":1},
+  {"fieldname":"sales_order","fieldtype":"Link","label":"销售订单","options":"Sales Order","read_only":1,"in_list_view":1},
+  {"fieldname":"customer_po_no","fieldtype":"Data","label":"客户订单号","read_only":1},
+  {"fieldname":"item_code","fieldtype":"Link","label":"产品编码","options":"Item","read_only":1,"in_list_view":1},
+  {"fieldname":"item_name","fieldtype":"Data","label":"产品名称","read_only":1,"in_list_view":1},
+  {"fieldname":"uom","fieldtype":"Link","label":"单位","options":"UOM","read_only":1},
+  {"fieldname":"ordered_qty","fieldtype":"Float","label":"订单数量","read_only":1,"in_list_view":1},
+  {"fieldname":"delivered_qty","fieldtype":"Float","label":"已送数量","read_only":1,"in_list_view":1},
+  {"fieldname":"billed_qty","fieldtype":"Float","label":"已开票数量","read_only":1,"in_list_view":1},
+  {"fieldname":"order_amount","fieldtype":"Currency","label":"订单金额","read_only":1,"in_list_view":1},
+  {"fieldname":"billed_amount","fieldtype":"Currency","label":"账单金额","read_only":1,"in_list_view":1},
+  {"fieldname":"paid_amount","fieldtype":"Currency","label":"已收金额","read_only":1,"in_list_view":1},
+  {"fieldname":"outstanding_amount","fieldtype":"Currency","label":"未结金额","read_only":1,"in_list_view":1},
+  {"fieldname":"delivery_notes","fieldtype":"Small Text","label":"送货单","read_only":1,"in_list_view":1},
+  {"fieldname":"sales_invoices","fieldtype":"Small Text","label":"销售发票","read_only":1,"in_list_view":1},
+  {"fieldname":"billing_status","fieldtype":"Data","label":"开票状态","read_only":1,"in_list_view":1},
+  {"fieldname":"payment_status","fieldtype":"Data","label":"收款状态","read_only":1,"in_list_view":1},
+  {"fieldname":"included_reason","fieldtype":"Data","label":"纳入原因","read_only":1},
+  {"fieldname":"currency","fieldtype":"Link","label":"币种","options":"Currency","read_only":1}
+ ]
+}

@@ -1,0 +1,20 @@
+{
+ "doctype": "DocType",
+ "name": "China Reconciliation Opening Document",
+ "module": "China Finance",
+ "istable": 1,
+ "editable_grid": 1,
+ "field_order": ["posting_date","sales_invoice","customer_po_no","related_sales_orders","related_delivery_notes","original_amount","settled_amount","outstanding_amount","currency","snapshot_reference"],
+ "fields": [
+  {"fieldname":"posting_date","fieldtype":"Date","label":"发票日期","read_only":1,"in_list_view":1},
+  {"fieldname":"sales_invoice","fieldtype":"Link","label":"销售发票","options":"Sales Invoice","read_only":1,"in_list_view":1},
+  {"fieldname":"customer_po_no","fieldtype":"Data","label":"客户订单号","read_only":1},
+  {"fieldname":"related_sales_orders","fieldtype":"Small Text","label":"关联销售订单","read_only":1,"in_list_view":1},
+  {"fieldname":"related_delivery_notes","fieldtype":"Small Text","label":"关联送货单","read_only":1,"in_list_view":1},
+  {"fieldname":"original_amount","fieldtype":"Currency","label":"原始账单金额","read_only":1,"in_list_view":1},
+  {"fieldname":"settled_amount","fieldtype":"Currency","label":"起始日前已结","read_only":1,"in_list_view":1},
+  {"fieldname":"outstanding_amount","fieldtype":"Currency","label":"期初未结金额","read_only":1,"in_list_view":1},
+  {"fieldname":"currency","fieldtype":"Link","label":"币种","options":"Currency","read_only":1},
+  {"fieldname":"snapshot_reference","fieldtype":"Data","label":"快照来源","read_only":1}
+ ]
+}

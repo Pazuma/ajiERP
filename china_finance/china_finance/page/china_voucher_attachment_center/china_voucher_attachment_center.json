@@ -1,0 +1,5 @@
+{
+ "doctype": "Page", "name": "china-voucher-attachment-center", "page_name": "china-voucher-attachment-center",
+ "module": "China Finance", "standard": "Yes", "title": "凭证附件中心",
+ "roles": [{"role":"China Archive User"},{"role":"China Finance Auditor"},{"role":"Accounts Manager"},{"role":"China Finance Manager"},{"role":"System Manager"}]
+}

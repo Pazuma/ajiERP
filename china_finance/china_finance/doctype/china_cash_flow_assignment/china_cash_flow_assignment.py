@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime
+from frappe.utils import flt, getdate, now_datetime
 
 
 class ChinaCashFlowAssignment(Document):
@@ -16,6 +16,8 @@ class ChinaCashFlowAssignment(Document):
 	)
 
 	def before_insert(self):
+		if not self.flags.from_cash_flow_assignment_service:
+			frappe.throw(_("现金流量指定单不能手工新建，请从已提交的中国会计凭证生成"))
 		if not self.revision:
 			from china_finance.services.cash_flow_assignment import _next_revision
 
@@ -24,6 +26,7 @@ class ChinaCashFlowAssignment(Document):
 			self.assignment_key = f"{self.china_accounting_voucher}|{int(self.revision)}"
 
 	def validate(self):
+		self.validate_source()
 		old = self.get_doc_before_save()
 		if old:
 			for fieldname in self.IMMUTABLE_SOURCE_FIELDS:
@@ -43,6 +46,34 @@ class ChinaCashFlowAssignment(Document):
 			row.cash_amount = flt(row.cash_amount, 2)
 			row.assigned_amount = flt(row.assigned_amount, 2)
 
+	def validate_source(self):
+		if not self.china_accounting_voucher:
+			frappe.throw(_("现金流量指定单必须关联中国会计凭证"))
+		voucher = frappe.get_doc("China Accounting Voucher", self.china_accounting_voucher)
+		if voucher.docstatus != 1 or voucher.source_event != "Posting":
+			frappe.throw(_("现金流量指定单只能关联已提交的过账中国会计凭证"))
+
+		expected = {
+			"company": voucher.company,
+			"posting_date": getdate(voucher.posting_date),
+			"source_doctype": voucher.source_doctype,
+			"source_name": voucher.source_name,
+		}
+		actual = {
+			"company": self.company,
+			"posting_date": getdate(self.posting_date),
+			"source_doctype": self.source_doctype,
+			"source_name": self.source_name,
+		}
+		if actual != expected:
+			frappe.throw(_("公司、记账日期及来源单据必须与关联的中国会计凭证一致"))
+		if not frappe.db.get_value(
+			self.source_doctype,
+			{"name": self.source_name, "docstatus": 1},
+			"name",
+		):
+			frappe.throw(_("来源单据不存在或尚未提交"))
+
 	def before_submit(self):
 		from china_finance.services.cash_flow_assignment import prepare_cash_flow_assignment_confirmation
 
@@ -54,3 +85,13 @@ class ChinaCashFlowAssignment(Document):
 		self.cancelled_on = now_datetime()
 		self.cancellation_reason = self.cancellation_reason or _("手工或来源单据作废")
 		self.flags.ignore_cash_flow_assignment_status = True
+
+	def on_submit(self):
+		from china_finance.services.cash_flow_assignment import _sync_source_assignment_state
+
+		_sync_source_assignment_state(self)
+
+	def on_cancel(self):
+		from china_finance.services.cash_flow_assignment import _sync_source_assignment_state
+
+		_sync_source_assignment_state(self)

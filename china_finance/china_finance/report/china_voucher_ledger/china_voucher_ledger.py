@@ -152,6 +152,7 @@ def get_auxiliary_accounting(entry):
 
 def get_columns():
 	return [
+		{"label": _("选择"), "fieldname": "_select_voucher", "fieldtype": "Data", "width": 48},
 		{"label": _("凭证字号"), "fieldname": "statutory_number", "fieldtype": "Data", "width": 80},
 		{"label": _("凭证日期"), "fieldname": "posting_date", "fieldtype": "Date", "width": 120},
 		{"label": _("会计期间"), "fieldname": "accounting_period", "fieldtype": "Data", "width": 100},

@@ -14,6 +14,10 @@ class ChinaFinanceSettings(Document):
 			frappe.throw(_("对账金额容差必须大于零"))
 		if self.sales_settlement_mode == "对账结算后确认应收" and not self.sales_settlement_activation_date:
 			frappe.throw(_("启用对账结算后确认应收时必须设置切换生效日期"))
+		if self.enforce_role_separation and not frappe.db.exists(
+			"Workflow", {"document_type": "Journal Entry", "is_active": 1}
+		):
+			frappe.throw(_("启用制单审核分离前，必须先为 Journal Entry 配置活动审批工作流"))
 		for fieldname in ("profit_loss_account", "retained_earnings_account"):
 			account = self.get(fieldname)
 			if account and frappe.db.get_value("Account", account, "company") != self.company:

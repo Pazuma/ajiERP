@@ -3,10 +3,17 @@ frappe.ui.form.on("China Reconciliation Difference", {
 		if (frm.is_new() || frm.doc.status !== "Open") return;
 		const call = (method, values) => frappe.call({
 			method: `china_finance.services.reconciliation_control.${method}`,
-			args: { name: frm.doc.name, ...values }, freeze: true, callback: () => frm.reload_doc(),
+			args: { name: frm.doc.name, ...values }, freeze: true, callback: (response) => {
+				const result = response.message || {};
+				frappe.show_alert({ message: __("处理完成，所属对账单剩余待处理差异 {0} 项", [result.open_count || 0]), indicator: result.open_count ? "orange" : "green" });
+				frm.reload_doc();
+			},
 		});
 		frm.add_custom_button(__("确认解决"), () => frappe.prompt([
-			{ fieldname: "resolution_doctype", fieldtype: "Link", options: "DocType", label: __("处理单据类型") },
+			{
+				fieldname: "resolution_doctype", fieldtype: "Select", label: __("处理单据类型"),
+				options: "\nJournal Entry\nPayment Entry\nSales Invoice\nPurchase Invoice\nBank Transaction",
+			},
 			{ fieldname: "resolution_name", fieldtype: "Dynamic Link", options: "resolution_doctype", label: __("处理单据") },
 			{ fieldname: "resolution_notes", fieldtype: "Small Text", label: __("处理说明"), reqd: 1 },
 			{ fieldname: "evidence_file", fieldtype: "Attach", label: __("处理附件") },

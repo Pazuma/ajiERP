@@ -1,0 +1,240 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Commission Receipt Allocation",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "istable": 0,
+ "track_changes": 1,
+ "field_order": [
+  "sales_order",
+  "company",
+  "customer",
+  "company_currency",
+  "status",
+  "posting_date",
+  "source_type",
+  "source_reference",
+  "payment_entry",
+  "sales_invoice",
+  "direction",
+  "verified_source_amount",
+  "amount",
+  "net_amount",
+  "reason",
+  "evidence",
+  "source_key",
+  "source_hash",
+  "idempotency_key",
+  "confirmed_by",
+  "confirmed_on",
+  "confirmed_date",
+  "void_reason",
+  "voided_by",
+  "voided_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_order",
+   "label": "销售订单",
+   "fieldtype": "Link",
+   "options": "Sales Order",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "label": "公司",
+   "fieldtype": "Link",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "label": "客户",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company_currency",
+   "label": "本位币",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "label": "状态",
+   "fieldtype": "Select",
+   "options": "草稿\n已确认\n已作废",
+   "default": "草稿",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "label": "回款日期",
+   "fieldtype": "Date",
+   "default": "Today",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source_type",
+   "label": "来源类型",
+   "fieldtype": "Select",
+   "options": "人工核实\nPayment Entry",
+   "default": "人工核实",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_reference",
+   "label": "来源凭据编号",
+   "fieldtype": "Data",
+   "reqd": 1
+  },
+  {
+   "fieldname": "payment_entry",
+   "label": "收付款凭据",
+   "fieldtype": "Link",
+   "options": "Payment Entry",
+   "depends_on": "eval:doc.source_type === 'Payment Entry'"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "label": "对应销售发票",
+   "fieldtype": "Link",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "direction",
+   "label": "方向",
+   "fieldtype": "Select",
+   "options": "收款\n退款",
+   "default": "收款",
+   "reqd": 1
+  },
+  {
+   "fieldname": "verified_source_amount",
+   "label": "人工核实凭据总金额",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "depends_on": "eval:doc.source_type === '人工核实'"
+  },
+  {
+   "fieldname": "amount",
+   "label": "本订单本次分配金额",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "net_amount",
+   "label": "折算未税回款",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reason",
+   "label": "核实原因",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "evidence",
+   "label": "回款证据附件",
+   "fieldtype": "Attach"
+  },
+  {
+   "fieldname": "source_key",
+   "label": "来源键",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "source_hash",
+   "label": "来源指纹",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "idempotency_key",
+   "label": "幂等键",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "confirmed_by",
+   "label": "确认人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_on",
+   "label": "确认时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_date",
+   "label": "确认日期",
+   "fieldtype": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "void_reason",
+   "label": "作废原因",
+   "fieldtype": "Small Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voided_by",
+   "label": "作废人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voided_on",
+   "label": "作废时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "Sales Commission Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "销售总监",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales Commission Finance",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "search_fields": "sales_order"
+}
+

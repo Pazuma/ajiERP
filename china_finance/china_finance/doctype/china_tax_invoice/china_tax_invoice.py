@@ -19,6 +19,7 @@ class ChinaTaxInvoice(Document):
 			self.invoice_key = "|".join((self.direction, self.seller_tax_id.strip().upper(), self.invoice_number.strip().upper()))
 
 	def validate(self):
+		self.validate_recognition_task()
 		self.validate_input_tax_status_changes()
 		self.net_amount = 0
 		self.tax_amount = 0
@@ -39,6 +40,15 @@ class ChinaTaxInvoice(Document):
 			frappe.throw(_("业务单据分摊金额不能超过发票价税合计"))
 		if self.original_file:
 			self.file_hash = calculate_file_hash(self.original_file)
+
+	def validate_recognition_task(self):
+		if not self.recognition_task:
+			return
+		recognition = frappe.get_doc("China Tax Invoice Recognition", self.recognition_task)
+		if recognition.company != self.company or recognition.direction != self.direction:
+			frappe.throw(_("发票识别任务与税务发票的公司或进销项不一致"))
+		if self.source_system != "Invoice Recognition" or self.source_id != recognition.name:
+			frappe.throw(_("识别生成的税务发票必须保留识别任务来源"))
 
 	def validate_input_tax_status_changes(self):
 		if self.direction != "进项":

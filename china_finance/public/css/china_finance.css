@@ -52,3 +52,18 @@
 .china-voucher-ledger-report .china-voucher-status-text.orange { color: var(--orange-600); }
 .china-voucher-ledger-report .china-voucher-status-text.red { color: var(--red-600); }
 .china-voucher-ledger-report .china-voucher-status-text.gray { color: var(--text-muted); }
+
+.cf-message-preview {
+	max-width: 720px;
+	padding: 20px 24px;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background: var(--card-bg);
+	color: var(--text-color);
+}
+.cf-message-preview h4 { margin: 12px 0 18px; font-size: 18px; }
+.cf-preview-note { color: var(--text-muted); font-size: 12px; }
+.cf-message-details { margin: 16px 0; border-top: 1px solid var(--border-color); }
+.cf-message-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--border-color); }
+.cf-message-row span { color: var(--text-muted); }
+.cf-message-footer { margin-top: 18px; }

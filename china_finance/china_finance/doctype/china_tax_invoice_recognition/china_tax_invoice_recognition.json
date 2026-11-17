@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["naming_series", "company", "direction", "status", "source_file", "file_hash", "provider", "provider_request_id", "recognition_section", "recognized_data", "confidence_score", "validation_summary", "warnings", "result_section", "tax_invoice", "started_on", "completed_on", "error_message"],
+ "fields": [
+  {"fieldname":"naming_series","fieldtype":"Select","label":"编号规则","options":"CTIR-.YYYY.-.#####","default":"CTIR-.YYYY.-.#####","reqd":1},
+  {"fieldname":"company","fieldtype":"Link","label":"公司","options":"Company","reqd":1,"in_list_view":1},
+  {"fieldname":"direction","fieldtype":"Select","label":"进销项","options":"进项\n销项","reqd":1,"in_list_view":1},
+  {"fieldname":"status","fieldtype":"Select","label":"状态","options":"Draft\nQueued\nProcessing\nCompleted\nNeeds Review\nFailed\nConverted","default":"Draft","reqd":1,"read_only":1,"in_list_view":1},
+  {"fieldname":"source_file","fieldtype":"Attach","label":"发票电子原件","reqd":1},
+  {"fieldname":"file_hash","fieldtype":"Data","label":"SHA-256","read_only":1},
+  {"fieldname":"provider","fieldtype":"Data","label":"识别服务商","read_only":1},
+  {"fieldname":"provider_request_id","fieldtype":"Data","label":"服务商请求编号","read_only":1},
+  {"fieldname":"recognition_section","fieldtype":"Section Break","label":"识别结果"},
+  {"fieldname":"recognized_data","fieldtype":"Long Text","label":"识别结果（JSON）","read_only":1},
+  {"fieldname":"confidence_score","fieldtype":"Percent","label":"整体置信度","read_only":1},
+  {"fieldname":"validation_summary","fieldtype":"Small Text","label":"校验摘要","read_only":1},
+  {"fieldname":"warnings","fieldtype":"Long Text","label":"待核对提示","read_only":1},
+  {"fieldname":"result_section","fieldtype":"Section Break","label":"处理结果"},
+  {"fieldname":"tax_invoice","fieldtype":"Link","label":"生成的税务发票","options":"China Tax Invoice","read_only":1},
+  {"fieldname":"started_on","fieldtype":"Datetime","label":"开始时间","read_only":1},
+  {"fieldname":"completed_on","fieldtype":"Datetime","label":"完成时间","read_only":1},
+  {"fieldname":"error_message","fieldtype":"Long Text","label":"错误信息","read_only":1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "China Finance",
+ "name": "China Tax Invoice Recognition",
+ "naming_rule": "By \"Naming Series\" field",
+ "permissions": [
+  {"role":"System Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"Accounts Manager","read":1,"write":1,"create":1,"delete":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Tax User","read":1,"write":1,"create":1,"report":1,"export":1,"print":1,"email":1,"share":1},
+  {"role":"China Finance Auditor","read":1,"report":1,"export":1,"print":1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

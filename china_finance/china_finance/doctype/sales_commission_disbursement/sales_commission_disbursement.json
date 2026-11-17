@@ -1,0 +1,187 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Commission Disbursement",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "istable": 0,
+ "track_changes": 1,
+ "field_order": [
+  "sales_order",
+  "company",
+  "customer",
+  "company_currency",
+  "status",
+  "commission_sheet",
+  "sales_person",
+  "direction",
+  "amount",
+  "posting_date",
+  "payment_reference",
+  "evidence",
+  "reversal_of",
+  "reason",
+  "idempotency_key",
+  "confirmed_by",
+  "confirmed_on",
+  "confirmed_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_order",
+   "label": "销售订单",
+   "fieldtype": "Link",
+   "options": "Sales Order",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "label": "公司",
+   "fieldtype": "Link",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "label": "客户",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company_currency",
+   "label": "本位币",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "label": "状态",
+   "fieldtype": "Select",
+   "options": "草稿\n已确认\n已作废",
+   "default": "草稿",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "commission_sheet",
+   "label": "对应提成版本",
+   "fieldtype": "Link",
+   "options": "Sales Commission Sheet",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_person",
+   "label": "业务人员",
+   "fieldtype": "Link",
+   "options": "Sales Person",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "direction",
+   "label": "登记方向",
+   "fieldtype": "Select",
+   "options": "发放\n追回\n冲销发放",
+   "default": "发放",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "label": "本次金额",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "label": "实际发生日期",
+   "fieldtype": "Date",
+   "default": "Today",
+   "reqd": 1
+  },
+  {
+   "fieldname": "payment_reference",
+   "label": "实际支付/追回凭据编号",
+   "fieldtype": "Data",
+   "reqd": 1
+  },
+  {
+   "fieldname": "evidence",
+   "label": "凭据附件",
+   "fieldtype": "Attach",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reversal_of",
+   "label": "冲销原发放记录",
+   "fieldtype": "Link",
+   "options": "Sales Commission Disbursement",
+   "depends_on": "eval:doc.direction === '冲销发放'"
+  },
+  {
+   "fieldname": "reason",
+   "label": "备注或冲销原因",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "idempotency_key",
+   "label": "幂等键",
+   "fieldtype": "Data",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "confirmed_by",
+   "label": "确认人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_on",
+   "label": "确认时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_date",
+   "label": "确认日期",
+   "fieldtype": "Date",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "Sales Commission Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "销售总监",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales Commission Finance",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "search_fields": "sales_order"
+}
+

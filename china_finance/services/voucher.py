@@ -57,6 +57,18 @@ def get_posting_date(doc):
 	return getdate(doc.creation)
 
 
+def validate_posting_date_not_future(doc, method=None):
+	"""Accounting documents may not be dated after the site's current date."""
+	posting_date = get_posting_date(doc)
+	if doc.doctype == "Period Closing Voucher" and doc.get("period_end_date"):
+		posting_date = getdate(doc.period_end_date)
+	if posting_date > getdate(frappe.utils.nowdate()):
+		frappe.throw(
+			_("记账日期不能晚于今天：{0}").format(posting_date),
+			title=_("记账日期无效"),
+		)
+
+
 def get_company(doc):
 	if doc.meta.has_field("company") and doc.get("company"):
 		return doc.company
@@ -82,6 +94,12 @@ def validate_source_approval(doc, method=None):
 
 def on_gl_source_submit(doc, method=None):
 	create_voucher_from_source(doc, "Posting")
+	# A draft linked to this Journal Entry becomes immutable only after the
+	# standard document has submitted and its statutory snapshot has been made.
+	if doc.doctype == "Journal Entry":
+		from china_finance.services.manual_voucher import sync_manual_voucher_draft_posted
+
+		sync_manual_voucher_draft_posted(doc)
 
 
 def on_gl_source_cancel(doc, method=None):
@@ -238,6 +256,13 @@ def get_source_snapshot_status(source_doctype, source_name):
 	settings = get_company_settings(get_company(doc))
 	if not settings:
 		return {"not_applicable": True}
+	pending_issue = frappe.db.get_value(
+		"China Voucher Sync Issue",
+		{"source_doctype": source_doctype, "source_name": source_name, "status": "Pending"},
+		["name", "last_error"], as_dict=True, order_by="modified desc",
+	)
+	if pending_issue and not frappe.has_permission("China Voucher Sync Issue", "read", doc=pending_issue.name):
+		pending_issue = None
 	voucher_name = frappe.db.get_value(
 		"China Accounting Voucher", {"source_key": f"Posting|{source_doctype}|{source_name}"}, "name"
 	)
@@ -257,6 +282,7 @@ def get_source_snapshot_status(source_doctype, source_name):
 			"snapshot_ready": False,
 			"can_create_assignment": has_cash_entry,
 			"reason": _("审计快照尚未生成"),
+			"sync_issue": pending_issue,
 		}
 	voucher = frappe.get_doc("China Accounting Voucher", voucher_name)
 	assignment = frappe.db.get_value(
@@ -270,6 +296,7 @@ def get_source_snapshot_status(source_doctype, source_name):
 
 	cash_legs = get_cash_legs_for_voucher(voucher)
 	needs_assignment = bool(doc.docstatus == 1 and cash_legs)
+	assignment_status = _cash_flow_assignment_status(assignment, needs_assignment)
 	return {
 		"snapshot_ready": voucher.docstatus == 1,
 		"snapshot_name": voucher.name,
@@ -277,8 +304,35 @@ def get_source_snapshot_status(source_doctype, source_name):
 		"can_view_snapshot": voucher.has_permission("read"),
 		"assignment": assignment,
 		"assignment_required": needs_assignment,
+		"assignment_status": assignment_status,
 		"assignment_reason": _("该单据不包含现金/银行分录") if not needs_assignment and not assignment else "",
+		"sync_issue": pending_issue,
 	}
+
+
+def _cash_flow_assignment_status(assignment, needs_assignment):
+	if assignment:
+		return {"Draft": _("待确认"), "Confirmed": _("已确认"), "Cancelled": _("已作废")}.get(
+			assignment.status, assignment.status
+		)
+	return _("未生成") if needs_assignment else _("无需指定")
+
+
+def sync_source_cash_flow_state(source_doctype, source_name, assignment=None, needs_assignment=True):
+	if source_doctype not in ("Journal Entry", "Payment Entry") or not frappe.db.has_column(
+		source_doctype, "custom_china_cash_flow_status"
+	):
+		return
+	status = _cash_flow_assignment_status(assignment, needs_assignment)
+	frappe.db.set_value(
+		source_doctype,
+		source_name,
+		{
+			"custom_china_cash_flow_status": status,
+			"custom_china_cash_flow_assignment": assignment.name if assignment else None,
+		},
+		update_modified=False,
+	)
 
 
 @frappe.whitelist()
@@ -351,7 +405,7 @@ def create_voucher_from_source(doc, source_event="Posting", force=False):
 	if not entries:
 		return None
 
-	voucher_word = classify_voucher_word(entries, settings)
+	voucher_word = get_source_voucher_word(doc, entries, settings)
 	company_currency = frappe.get_cached_value("Company", company, "default_currency")
 	voucher = frappe.get_doc(
 		{
@@ -367,12 +421,17 @@ def create_voucher_from_source(doc, source_event="Posting", force=False):
 			"prepared_by": doc.owner,
 			"reviewed_by": get_reviewer(doc.doctype, doc.name),
 			"posted_by": frappe.session.user,
+			"attachment_count": get_source_attachment_count(doc),
 			"currency": company_currency,
 			"remarks": getattr(doc, "remarks", None) or getattr(doc, "user_remark", None),
 			"entries": entries,
 		}
 	)
 	voucher.flags.ignore_permissions = True
+	# An audit-only cancellation snapshot deliberately keeps a Dynamic Link to
+	# its cancelled source document, which Frappe otherwise rejects on insert.
+	if source_event == "Cancellation":
+		voucher.flags.ignore_links = True
 	voucher.insert()
 	voucher.submit()
 	if doc.doctype in ("Journal Entry", "Payment Entry") and frappe.db.has_column(doc.doctype, "custom_china_voucher_number"):
@@ -386,7 +445,9 @@ def create_voucher_from_source(doc, source_event="Posting", force=False):
 	if source_event == "Posting":
 		from china_finance.services.cash_flow_assignment import create_assignment_if_required
 
-		create_assignment_if_required(voucher.name)
+		assignment_name = create_assignment_if_required(voucher.name)
+		if not assignment_name:
+			sync_source_cash_flow_state(doc.doctype, doc.name, needs_assignment=False)
 	if reversal_of:
 		frappe.db.set_value(
 			"China Accounting Voucher",
@@ -464,8 +525,47 @@ def reverse_voucher_entries(voucher_name):
 	]
 
 
+def get_source_voucher_word(doc, entries, settings):
+	"""Prefer the immutable manual-entry selection, then keep old classification."""
+	if (
+		doc.doctype == "Journal Entry"
+		and frappe.db.has_column("Journal Entry", "custom_china_voucher_word")
+	):
+		word = (getattr(doc, "custom_china_voucher_word", None) or "").strip()
+		if word:
+			return word
+	return classify_voucher_word(entries, settings)
+
+
+def get_source_attachment_count(doc):
+	"""Read additive Journal Entry metadata without affecting older installations."""
+	if (
+		doc.doctype == "Journal Entry"
+		and frappe.db.has_column("Journal Entry", "custom_china_attachment_count")
+	):
+		return max(cint(getattr(doc, "custom_china_attachment_count", 0) or 0), 0)
+	return 0
+
+
 def classify_voucher_word(entries, settings):
 	return "记"
+
+
+def get_voucher_sequence_scope(voucher, settings):
+	"""Return the configured sequence scope without changing historic keys."""
+	if settings.sequence_reset == "会计年度":
+		return {
+			"sequence_key": "|".join((voucher.company, voucher.fiscal_year, voucher.voucher_word, "formal")),
+			"accounting_period": None,
+			"annual": True,
+		}
+	return {
+		"sequence_key": "|".join(
+			(voucher.company, voucher.fiscal_year, voucher.accounting_period, voucher.voucher_word, "formal")
+		),
+		"accounting_period": voucher.accounting_period,
+		"annual": False,
+	}
 
 
 def assign_voucher_number(voucher):
@@ -481,8 +581,8 @@ def assign_voucher_number(voucher):
 	settings = get_company_settings(voucher.company)
 	if not settings:
 		frappe.throw(_("公司 {0} 未启用中国财务设置").format(voucher.company))
-	period_key = voucher.accounting_period
-	sequence_key = "|".join((voucher.company, voucher.fiscal_year, period_key, voucher.voucher_word, "formal"))
+	scope = get_voucher_sequence_scope(voucher, settings)
+	sequence_key = scope["sequence_key"]
 
 	row = frappe.db.sql(
 		"SELECT name, current_value FROM `tabChina Voucher Sequence` WHERE sequence_key=%s FOR UPDATE",
@@ -497,9 +597,9 @@ def assign_voucher_number(voucher):
 					"sequence_key": sequence_key,
 					"company": voucher.company,
 					"fiscal_year": voucher.fiscal_year,
-					"accounting_period": voucher.accounting_period,
+					"accounting_period": scope["accounting_period"],
 					"voucher_word": voucher.voucher_word,
-					"current_value": get_existing_formal_sequence(voucher, sequence_key),
+					"current_value": get_existing_formal_sequence(voucher, scope),
 				}
 			).insert(ignore_permissions=True)
 		except frappe.DuplicateEntryError:
@@ -513,23 +613,23 @@ def assign_voucher_number(voucher):
 	sequence = cint(row[0].current_value) + 1
 	frappe.db.set_value("China Voucher Sequence", row[0].name, "current_value", sequence, update_modified=False)
 	voucher.sequence_number = sequence
-	# The sequence key contains the accounting period, so the displayed
-	# voucher mark restarts at 1 each month while remaining concise.
 	voucher.statutory_number = f"{voucher.voucher_word}{sequence}"
 	voucher.voucher_key = f"{sequence_key}|{sequence:08d}"
 
 
-def get_existing_formal_sequence(voucher, sequence_key):
-	"""Seed the new formal sequence from historical Journal/Payment vouchers."""
-	return frappe.db.sql(
-		"""
+def get_existing_formal_sequence(voucher, scope):
+	"""Seed a new sequence from the matching historical scope without renumbering."""
+	query = """
 		SELECT COALESCE(MAX(sequence_number), 0)
 		FROM `tabChina Accounting Voucher`
-		WHERE company=%s AND fiscal_year=%s AND accounting_period=%s
-			AND voucher_word=%s AND source_doctype IN ('Journal Entry', 'Payment Entry')
-		""",
-		(voucher.company, voucher.fiscal_year, voucher.accounting_period, voucher.voucher_word),
-	)[0][0]
+		WHERE company=%s AND fiscal_year=%s AND voucher_word=%s
+			AND source_doctype IN ('Journal Entry', 'Payment Entry')
+	"""
+	params = [voucher.company, voucher.fiscal_year, voucher.voucher_word]
+	if not scope["annual"]:
+		query += " AND accounting_period=%s"
+		params.append(voucher.accounting_period)
+	return frappe.db.sql(query, tuple(params))[0][0]
 
 
 def calculate_entries_hash(entries):

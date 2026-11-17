@@ -1,6 +1,9 @@
 frappe.ui.form.on("China Tax Invoice Request", {
 	refresh(frm) {
 		if (frm.is_new()) return;
+		const sourceInvoices = [...new Set((frm.doc.items || []).map((row) => row.sales_invoice).filter(Boolean))];
+		if (sourceInvoices.length === 1) frm.add_custom_button(__("查看销售发票"), () => frappe.set_route("Form", "Sales Invoice", sourceInvoices[0]), __("关联单据"));
+		if (frm.doc.tax_invoice) frm.add_custom_button(__("查看税务发票"), () => frappe.set_route("Form", "China Tax Invoice", frm.doc.tax_invoice), __("关联单据"));
 		if (frm.doc.status === "Draft") {
 			frm.add_custom_button(__("提交审批"), () => invoke("submit_request"));
 		}

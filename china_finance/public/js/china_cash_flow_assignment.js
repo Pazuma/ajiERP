@@ -1,6 +1,14 @@
 frappe.ui.form.on("China Cash Flow Assignment", {
 	refresh(frm) {
-		if (frm.is_new()) return;
+		if (frm.is_new()) {
+			frm.disable_save();
+			frappe.show_alert({
+				message: __("现金流量指定单不能直接新建，请从已提交的中国会计凭证进入"),
+				indicator: "orange",
+			}, 8);
+			return;
+		}
+		render_assignment_summary(frm);
 
 		frappe.call({
 			method: "china_finance.services.cash_flow_assignment.get_cash_flow_row_options",
@@ -48,7 +56,41 @@ frappe.ui.form.on("China Cash Flow Assignment", {
 	},
 });
 
+function render_assignment_summary(frm) {
+	const rows = frm.doc.items || [];
+	const cash_legs = new Map();
+	rows.forEach((row) => cash_legs.set(row.gl_entry, flt(row.cash_amount)));
+	const total = Array.from(cash_legs.values()).reduce((sum, amount) => sum + amount, 0);
+	const assigned = rows.reduce((sum, row) => sum + flt(row.assigned_amount), 0);
+	const remaining = Math.max(0, total - assigned);
+	const source_label = {
+		"Payment Entry": __("收付款单"),
+		"Journal Entry": __("会计凭证"),
+	}[frm.doc.source_doctype] || __(frm.doc.source_doctype || "-");
+	const source_link = frm.doc.source_name
+		? `<a href="/app/${frappe.router.slug(frm.doc.source_doctype)}/${encodeURIComponent(frm.doc.source_name)}">${frappe.utils.escape_html(frm.doc.source_name)}</a>`
+		: "-";
+	frm.fields_dict.assignment_summary.$wrapper.html(`
+		<div class="alert alert-light border mb-4">
+			<div><strong>${source_label}</strong> ${source_link}</div>
+			<div class="mt-2">
+				${__("可指定金额")}：<strong>${format_currency(total)}</strong>&nbsp;&nbsp;
+				${__("已指定金额")}：<strong>${format_currency(assigned)}</strong>&nbsp;&nbsp;
+				${__("未指定金额")}：<strong class="${remaining > 0.005 ? "text-danger" : "text-success"}">${format_currency(remaining)}</strong>
+			</div>
+		</div>
+	`);
+}
+
 frappe.ui.form.on("China Cash Flow Assignment Item", {
+	assigned_amount(frm) {
+		render_assignment_summary(frm);
+	},
+
+	cash_flow_row_code(frm) {
+		render_assignment_summary(frm);
+	},
+
 	split_row(frm, cdt, cdn) {
 		if (frm.doc.status !== "Draft") return;
 		const row = locals[cdt][cdn];
@@ -64,6 +106,7 @@ frappe.ui.form.on("China Cash Flow Assignment Item", {
 			assigned_amount: 0,
 		});
 		frm.refresh_field("items");
+		render_assignment_summary(frm);
 		frappe.show_alert({
 			message: __("已新增内部资金划转行，请调整两行的指定金额使其合计等于现金发生额"),
 			indicator: "blue",

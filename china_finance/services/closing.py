@@ -365,6 +365,22 @@ def preview_closing_checks(company, from_date, to_date, period_closing_voucher=N
 
 
 @frappe.whitelist()
+def run_and_save_closing_checks(name):
+	"""Persist a draft preview; submission still performs a fresh server-side check."""
+	frappe.only_for(("System Manager", "China Finance Manager"))
+	doc = frappe.get_doc("China Closing Run", name)
+	doc.check_permission("write")
+	if doc.docstatus != 0:
+		frappe.throw(_("只有草稿结账运行单可以保存检查结果"))
+	checks = run_closing_checks(doc.company, doc.from_date, doc.to_date, doc.period_closing_voucher, doc.closing_type)
+	doc.set("checks", checks)
+	doc.last_checked_on = now_datetime()
+	doc.blocking_check_count = sum(1 for row in checks if row["severity"] == "Blocking" and not row["passed"])
+	doc.save()
+	return {"name": doc.name, "row_count": len(checks), "blocking_count": doc.blocking_check_count, "checked_on": doc.last_checked_on}
+
+
+@frappe.whitelist()
 def reopen_closing(name, reason):
 	frappe.only_for(("System Manager", "China Finance Manager"))
 	if not reason:
@@ -376,6 +392,8 @@ def reopen_closing(name, reason):
 	if later:
 		frappe.throw(_("存在更晚期间的结账记录，不能重新打开当前期间"))
 	doc.db_set("status", "Reopened")
+	doc.db_set("report_snapshot_status", "已重新开账")
+	doc.db_set("archive_status", "已重新开账")
 	doc.db_set("reopen_reason", reason)
 	doc.db_set("reopened_by", frappe.session.user)
 	doc.db_set("reopened_on", now_datetime())

@@ -180,6 +180,23 @@ def _open_difference(name):
 	return doc
 
 
+def _difference_result(doc, status):
+	open_count = frappe.db.count("China Reconciliation Difference", {"statement": doc.statement, "status": "Open"})
+	return {"name": doc.name, "status": status, "statement": doc.statement, "open_count": open_count}
+
+
+@frappe.whitelist()
+def get_statement_difference_summary(statement):
+	frappe.only_for(RECONCILIATION_USERS)
+	doc = frappe.get_doc("China Reconciliation Statement", statement)
+	doc.check_permission("read")
+	rows = frappe.get_all("China Reconciliation Difference", filters={"statement": statement}, fields=["status", "amount"])
+	counts = {status: 0 for status in ("Open", "Resolved", "Approved Timing", "Waived")}
+	for row in rows:
+		counts[row.status] = counts.get(row.status, 0) + 1
+	return {"counts": counts, "open_amount": sum(flt(row.amount) for row in rows if row.status == "Open")}
+
+
 @frappe.whitelist()
 def resolve_difference(name, resolution_notes, resolution_doctype=None, resolution_name=None, evidence_file=None):
 	frappe.only_for(FINANCE_MANAGERS)
@@ -195,7 +212,7 @@ def resolve_difference(name, resolution_notes, resolution_doctype=None, resoluti
 	doc.db_set("evidence_file", evidence_file)
 	doc.db_set("resolved_by", frappe.session.user)
 	doc.db_set("resolved_on", now_datetime())
-	return {"name": doc.name, "status": "Resolved"}
+	return _difference_result(doc, "Resolved")
 
 
 @frappe.whitelist()
@@ -207,7 +224,7 @@ def approve_timing_difference(name):
 	doc.db_set("status", "Approved Timing")
 	doc.db_set("approved_by", frappe.session.user)
 	doc.db_set("approved_on", now_datetime())
-	return {"name": doc.name, "status": "Approved Timing"}
+	return _difference_result(doc, "Approved Timing")
 
 
 @frappe.whitelist()
@@ -221,7 +238,7 @@ def waive_difference(name, resolution_notes, evidence_file=None):
 	doc.db_set("evidence_file", evidence_file)
 	doc.db_set("approved_by", frappe.session.user)
 	doc.db_set("approved_on", now_datetime())
-	return {"name": doc.name, "status": "Waived"}
+	return _difference_result(doc, "Waived")
 
 
 def get_reconciliation_closing_checks(company, from_date, to_date):

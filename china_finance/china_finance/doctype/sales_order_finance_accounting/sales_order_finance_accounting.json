@@ -1,0 +1,365 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Order Finance Accounting",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "istable": 0,
+ "track_changes": 1,
+ "field_order": [
+  "sales_order",
+  "sales_invoice",
+  "company",
+  "customer",
+  "posting_date",
+  "status",
+  "previous_version",
+  "active_key",
+  "currency",
+  "company_currency",
+  "exchange_rate",
+  "source_hash",
+  "source_snapshot",
+  "confirmed_by",
+  "confirmed_on",
+  "reason",
+  "items_section",
+  "items",
+  "taxes_section",
+  "taxes",
+  "totals_section",
+  "net_revenue",
+  "official_tax",
+  "tax_total",
+  "production_cost",
+  "sales_cost",
+  "other_expenses",
+  "gross_profit",
+  "management_profit",
+  "base_revenue",
+  "base_sales_cost",
+  "base_tax",
+  "base_gross_profit",
+  "gross_margin",
+  "complete",
+  "accounting_preview"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_order",
+   "label": "销售订单",
+   "fieldtype": "Link",
+   "options": "Sales Order",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "label": "销售发票",
+   "fieldtype": "Link",
+   "options": "Sales Invoice",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "label": "公司",
+   "fieldtype": "Link",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "label": "客户",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "label": "核算日期",
+   "fieldtype": "Date",
+   "default": "Today",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "label": "核算状态",
+   "fieldtype": "Select",
+   "options": "草稿\n已确认\n已替代\n待复核",
+   "default": "草稿",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_version",
+   "label": "上一版本",
+   "fieldtype": "Link",
+   "options": "Sales Order Finance Accounting",
+   "read_only": 1
+  },
+  {
+   "fieldname": "active_key",
+   "label": "有效核算键",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "unique": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "label": "核算币种",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company_currency",
+   "label": "本位币",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "exchange_rate",
+   "label": "发票汇率",
+   "fieldtype": "Float",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_hash",
+   "label": "来源快照指纹",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_snapshot",
+   "label": "来源快照",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_by",
+   "label": "确认人",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_on",
+   "label": "确认时间",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reason",
+   "label": "核算差异或修订原因",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "items_section",
+   "label": "本次开票产品核算",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "items",
+   "label": "核算产品",
+   "fieldtype": "Table",
+   "options": "Sales Order Finance Accounting Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "taxes_section",
+   "label": "本次核算税费",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "taxes",
+   "label": "税费明细",
+   "fieldtype": "Table",
+   "options": "Sales Order Finance Accounting Tax"
+  },
+  {
+   "fieldname": "totals_section",
+   "label": "财务核算结果（不改变正式账簿）",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "net_revenue",
+   "label": "本次未税收入",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "official_tax",
+   "label": "发票分摊税额",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tax_total",
+   "label": "核算税费",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "production_cost",
+   "label": "生产成本",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_cost",
+   "label": "匹配销售成本",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "other_expenses",
+   "label": "其他费用",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gross_profit",
+   "label": "管理毛利",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "management_profit",
+   "label": "扣费后管理利润",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_revenue",
+   "label": "本位币未税收入",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_sales_cost",
+   "label": "本位币销售成本",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_tax",
+   "label": "本位币核算税费",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_gross_profit",
+   "label": "本位币毛利",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gross_margin",
+   "label": "毛利率 (%)",
+   "fieldtype": "Percent",
+   "read_only": 1
+  },
+  {
+   "fieldname": "complete",
+   "label": "核算资料完整",
+   "fieldtype": "Check",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accounting_preview",
+   "label": "核算记账预览",
+   "fieldtype": "HTML"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "Sales Order Finance Editor",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Accounts User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "China Finance Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "China Finance User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales Order Finance Reader",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "China Finance Auditor",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "search_fields": "sales_order,sales_invoice"
+}

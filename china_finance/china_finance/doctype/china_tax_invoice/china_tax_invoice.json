@@ -5,7 +5,7 @@
   "party_section","seller_name","seller_tax_id","party_column_2","buyer_name","buyer_tax_id","original_invoice","invoice_request","credit_note","red_status","remaining_red_amount",
   "amount_section","currency","amount_column_2","net_amount","amount_column_3","tax_amount","amount_column_4","gross_amount",
   "status_section","verification_status","status_column_2","deduction_status","status_column_3","usage_status","status_column_4","accounting_status","input_tax_section","verification_by","verification_on","input_tax_column_2","selected_by","selected_on","input_tax_column_3","deduction_period","deducted_by","deducted_on","input_tax_column_4","non_deduction_reason","non_deductible_by","non_deductible_on",
-  "source_section","source_system","source_id","invoice_key","source_column_2","original_file","file_hash","source_column_3","remarks",
+  "source_section","source_system","source_id","invoice_key","recognition_task","source_column_2","original_file","file_hash","source_column_3","remarks",
   "items_section","items","allocations_section","allocations"
  ],
  "fields": [
@@ -65,6 +65,7 @@
   {"default":"Manual","fieldname":"source_system","fieldtype":"Data","label":"来源系统","reqd":1},
   {"fieldname":"source_id","fieldtype":"Data","label":"来源记录 ID"},
   {"fieldname":"invoice_key","fieldtype":"Data","hidden":1,"label":"发票唯一键","read_only":1,"unique":1},
+  {"fieldname":"recognition_task","fieldtype":"Link","label":"发票识别任务","options":"China Tax Invoice Recognition","read_only":1},
   {"fieldname":"source_column_2","fieldtype":"Column Break"},
   {"fieldname":"original_file","fieldtype":"Attach","label":"电子原件"},
   {"fieldname":"file_hash","fieldtype":"Data","label":"SHA-256","read_only":1},

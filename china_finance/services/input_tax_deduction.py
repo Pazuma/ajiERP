@@ -54,6 +54,31 @@ def _ensure_eligible_for_selection(doc, company, exclude_batch=None):
 
 
 @frappe.whitelist()
+def get_input_tax_deduction_candidates(company, deduction_period=None, exclude_batch=None):
+	"""Return eligible invoices for the batch form without changing their state."""
+	_only_for(TAX_USERS)
+	if not company:
+		frappe.throw(_("请选择公司"))
+	filters = {
+		"company": company, "direction": "进项", "invoice_status": "蓝票",
+		"docstatus": 1, "verification_status": "查验通过", "deduction_status": "待勾选",
+	}
+	if deduction_period:
+		filters["invoice_date"] = ["<=", getdate(deduction_period)]
+	rows = frappe.get_all(
+		"China Tax Invoice",
+		filters=filters,
+		fields=["name", "invoice_number", "invoice_date", "seller_name", "net_amount", "tax_amount", "gross_amount"],
+		order_by="invoice_date asc, name asc",
+	)
+	result = []
+	for row in rows:
+		if not _active_batch_for_invoice(row.name, exclude_batch):
+			result.append(row)
+	return result
+
+
+@frappe.whitelist()
 def verify_input_invoices(tax_invoices):
 	_only_for(TAX_USERS)
 	result = {"processed": 0, "succeeded": 0, "failed": 0, "errors": []}

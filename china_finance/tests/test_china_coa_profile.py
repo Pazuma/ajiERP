@@ -23,6 +23,18 @@ class TestChinaCoaProfileIntegration(IntegrationTestCase):
 	def test_new_company_initialization_uses_numbered_profile(self):
 		from china_finance.api import initialize_company
 
+		# ERPNext's standard company hook references this exact global root before
+		# creating company departments. Keep the fixture local to this test suite.
+		if not frappe.db.exists("Department", "All Departments"):
+			root = frappe.get_doc({
+				"doctype": "Department",
+				"name": "All Departments",
+				"department_name": "All Departments",
+				"is_group": 1,
+			})
+			root.flags.name_set = True
+			root.insert(ignore_permissions=True, ignore_mandatory=True)
+
 		suffix = frappe.generate_hash(length=5).upper()
 		company = frappe.get_doc({
 			"doctype": "Company",
@@ -152,6 +164,11 @@ class TestChinaCoaProfile(UnitTestCase):
 		self.assertEqual(classify_account_number("1101", "Cash Flow", account)[2], "CASH_PAID_INVESTMENTS")
 		self.assertEqual(classify_account_number("6115", "Cash Flow", account)[1], "CASH_RECEIVED_ASSET_DISPOSAL")
 		self.assertEqual(classify_account_number("4002", "Cash Flow", account)[1], "CASH_RECEIVED_INVESTMENT")
+
+	def test_non_cash_adjustment_accounts_have_no_cash_flow_suggestion(self):
+		account = SimpleNamespace(account_type="Accumulated Depreciation", root_type="Asset")
+		for number in ("1231", "1471", "160201", "170201", "510102", "510105"):
+			self.assertIsNone(classify_account_number(number, "Cash Flow", account))
 
 	def test_small_enterprise_detail_rows_are_selected_only_by_matching_template(self):
 		account = SimpleNamespace(account_number="1131", account_name="应收股利", name="应收股利")

@@ -1,0 +1,78 @@
+{
+ "doctype": "DocType",
+ "name": "Sales Commission Sheet Item",
+ "module": "China Finance",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "istable": 1,
+ "track_changes": 0,
+ "field_order": [
+  "sales_person",
+  "commission_rate",
+  "commission_amount",
+  "remark",
+  "employee",
+  "beneficiary_user",
+  "company_currency"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_person",
+   "label": "业务人员",
+   "fieldtype": "Link",
+   "options": "Sales Person",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "commission_rate",
+   "label": "个人提成比例 (%)",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "commission_amount",
+   "label": "个人累计提成",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "remark",
+   "label": "参与说明",
+   "fieldtype": "Small Text",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "employee",
+   "label": "员工",
+   "fieldtype": "Link",
+   "options": "Employee",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "beneficiary_user",
+   "label": "受益账号",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "company_currency",
+   "label": "本位币",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "search_fields": "sales_person"
+}
+

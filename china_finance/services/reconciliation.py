@@ -53,6 +53,20 @@ def generate_statement(
 	for row in period_rows:
 		balance += flt(row.debit) - flt(row.credit)
 		lines.append({**row, "balance": balance})
+	statement_basis = None
+	snapshot_key = None
+	ledger_snapshot = None
+	if statement_type == "Customer":
+		from china_finance.services.customer_reconciliation_statement import get_customer_ledger_snapshot
+
+		snapshot = get_customer_ledger_snapshot(company, party, from_date, to_date)
+		ledger_snapshot = snapshot
+		statement_basis = "Ledger"
+		snapshot_key = snapshot["snapshot_key"]
+		opening = snapshot["opening_balance"]
+		period_debit = snapshot["period_debit"]
+		period_credit = snapshot["period_credit"]
+		lines = snapshot["rows"]
 	if statement_type == "Supplier":
 		apply_purchase_reconciliation_statuses(lines)
 
@@ -65,7 +79,10 @@ def generate_statement(
 			"company": company,
 			"scope": scope,
 			"period_key": f"{from_date}|{to_date}",
-			"statement_type": statement_type,
+		"statement_type": statement_type,
+		"party_type": statement_type if statement_type in ("Customer", "Supplier") else None,
+		"statement_basis": statement_basis,
+			"snapshot_key": snapshot_key,
 			"party": party,
 			"bank_account": bank_account,
 			"account": account,
@@ -74,11 +91,19 @@ def generate_statement(
 			"to_date": to_date,
 			"version": version,
 			"replaces": replaces,
-			"opening_balance": opening,
-			"period_debit": period_debit,
-			"period_credit": period_credit,
-			"closing_balance": opening + period_debit - period_credit,
-			"lines": lines,
+		"opening_balance": opening,
+		"period_debit": period_debit,
+		"period_credit": period_credit,
+		"period_balance": ledger_snapshot["period_balance"] if ledger_snapshot else period_debit - period_credit,
+		"closing_balance": opening + period_debit - period_credit,
+		"currency": ledger_snapshot["currency"] if ledger_snapshot else None,
+		"opening_document_count": ledger_snapshot.get("opening_document_count", 0) if ledger_snapshot else 0,
+		"opening_document_total": ledger_snapshot.get("opening_document_total", 0) if ledger_snapshot else 0,
+		"opening_adjustment": ledger_snapshot.get("opening_adjustment", 0) if ledger_snapshot else 0,
+		"order_billing_count": ledger_snapshot.get("order_billing_count", 0) if ledger_snapshot else 0,
+		"opening_documents": ledger_snapshot.get("opening_documents", []) if ledger_snapshot else [],
+		"order_billing_rows": ledger_snapshot.get("order_billing_rows", []) if ledger_snapshot else [],
+		"lines": lines,
 		}
 	)
 	doc.insert()
