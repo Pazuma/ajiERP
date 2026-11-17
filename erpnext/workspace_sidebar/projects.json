@@ -21,22 +21,21 @@
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "chart",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Dashboard",
-   "link_to": "Project",
-   "link_type": "Dashboard",
+   "label": "\u9879\u76ee\u5de5\u4f5c\u53f0",
+   "link_to": "project-workbench",
+   "link_type": "Page",
    "show_arrow": 0,
    "type": "Link"
   },
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "projects",
+   "icon": "briefcase",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Project",
+   "label": "\u9879\u76ee",
    "link_to": "Project",
    "link_type": "DocType",
    "show_arrow": 0,
@@ -45,10 +44,10 @@
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "list-todo",
+   "icon": "list-checks",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Task",
+   "label": "\u4efb\u52a1",
    "link_to": "Task",
    "link_type": "DocType",
    "show_arrow": 0,
@@ -60,9 +59,33 @@
    "icon": "calendar-clock",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Timesheet",
+   "label": "\u5de5\u65f6\u8868",
    "link_to": "Timesheet",
    "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "list",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u6d3b\u52a8\u7c7b\u578b",
+   "link_to": "Activity Type",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "chart",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Dashboard",
+   "link_to": "Project",
+   "link_type": "Dashboard",
    "show_arrow": 0,
    "type": "Link"
   },
@@ -78,30 +101,20 @@
    "type": "Section Break"
   },
   {
-   "child": 1,
+   "child": 0,
    "collapsible": 1,
+   "icon": "folder",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Activity Type",
-   "link_to": "Activity Type",
+   "label": "\u5176\u4ed6\u8868\u5355",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Section Break"
   },
   {
    "child": 1,
    "collapsible": 1,
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Activity Cost",
-   "link_to": "Activity Cost",
-   "link_type": "DocType",
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 1,
-   "collapsible": 1,
+   "icon": "file-cog",
    "indent": 0,
    "keep_closed": 0,
    "label": "Project Template",
@@ -115,6 +128,18 @@
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
+   "label": "Project Progress Template",
+   "link_to": "Project Progress Template",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "folder-cog",
+   "indent": 0,
+   "keep_closed": 0,
    "label": "Project Type",
    "link_to": "Project Type",
    "link_type": "DocType",
@@ -124,10 +149,23 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "notebook-pen",
    "indent": 0,
    "keep_closed": 0,
    "label": "Project Update",
    "link_to": "Project Update",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "calculator",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Activity Cost",
+   "link_to": "Activity Cost",
    "link_type": "DocType",
    "show_arrow": 0,
    "type": "Link"
@@ -142,6 +180,17 @@
    "link_type": "DocType",
    "show_arrow": 0,
    "type": "Section Break"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "\u7814\u53d1\u9879\u76ee\u6e05\u5355",
+   "link_to": "RD Project List",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
   },
   {
    "child": 1,
@@ -212,7 +261,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-02-23 22:49:54.941187",
+ "modified": "2026-10-20 13:57:44.457778",
  "modified_by": "Administrator",
  "module": "Projects",
  "module_onboarding": "Projects Onboarding",

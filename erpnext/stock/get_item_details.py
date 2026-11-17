@@ -347,7 +347,7 @@ def validate_item_details(ctx: ItemDetailsCtx, item):
 				if item.is_sub_contracted_item != 1:
 					throw(_("Item {0} must be a Sub-contracted Item").format(item.name))
 			else:
-				if item.is_stock_item:
+				if item.is_stock_item and ctx.doctype != "Sales Order":
 					throw(_("Item {0} must be a Non-Stock Item").format(item.name))
 
 

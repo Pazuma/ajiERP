@@ -40,11 +40,11 @@
   },
   {
    "chart": "Work Order Qty Analysis",
-   "width": "Full"
+   "width": "Half"
   },
   {
    "chart": "Job Card Analysis",
-   "width": "Full"
+   "width": "Half"
   }
  ],
  "creation": "2020-07-08 22:40:22.626607",
@@ -54,7 +54,7 @@
  "idx": 0,
  "is_default": 0,
  "is_standard": 1,
- "modified": "2020-07-09 12:39:39.455039",
+ "modified": "2026-10-21 06:28:47.584166",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Manufacturing",

@@ -26,13 +26,33 @@ def execute(filters=None):
 	)
 
 	for project in data:
-		project["total_tasks"] = frappe.db.count("Task", filters={"project": project.name})
-		project["completed_tasks"] = frappe.db.count(
+		project["standard_total_tasks"] = frappe.db.count("Task", filters={"project": project.name})
+		project["standard_completed_tasks"] = frappe.db.count(
 			"Task", filters={"project": project.name, "status": "Completed"}
 		)
-		project["overdue_tasks"] = frappe.db.count(
+		project["standard_overdue_tasks"] = frappe.db.count(
 			"Task", filters={"project": project.name, "status": "Overdue"}
 		)
+		progress_items = frappe.db.get_all(
+			"Project Progress Item",
+			filters={"parent": project.name, "parenttype": "Project"},
+			fields=["status", "expected_end_date"],
+		)
+		project["progress_item_total"] = len(progress_items)
+		project["progress_item_completed"] = sum(item.status == "已完成" for item in progress_items)
+		project["progress_item_overdue"] = sum(
+			item.status == "延期"
+			or (
+				item.expected_end_date
+				and item.expected_end_date < frappe.utils.getdate()
+				and item.status not in ("已完成", "延期")
+			)
+			for item in progress_items
+		)
+		# Keep the existing report fields, using progress nodes as the primary project task metric.
+		project["total_tasks"] = project["progress_item_total"]
+		project["completed_tasks"] = project["progress_item_completed"]
+		project["overdue_tasks"] = project["progress_item_overdue"]
 
 	chart = get_chart_data(data)
 	report_summary = get_report_summary(data)
@@ -62,7 +82,19 @@ def get_columns():
 			"width": 120,
 		},
 		{"fieldname": "status", "label": _("Status"), "fieldtype": "Data", "width": 120},
-		{"fieldname": "total_tasks", "label": _("Total Tasks"), "fieldtype": "Data", "width": 120},
+		{"fieldname": "total_tasks", "label": _("Total Progress Items"), "fieldtype": "Data", "width": 120},
+		{
+			"fieldname": "progress_item_total",
+			"label": _("Progress Items"),
+			"fieldtype": "Data",
+			"width": 120,
+		},
+		{
+			"fieldname": "standard_total_tasks",
+			"label": _("Standard Tasks"),
+			"fieldtype": "Data",
+			"width": 120,
+		},
 		{
 			"fieldname": "completed_tasks",
 			"label": _("Tasks Completed"),
@@ -99,7 +131,7 @@ def get_chart_data(data):
 			"datasets": [
 				{"name": _("Overdue"), "values": overdue[:30]},
 				{"name": _("Completed"), "values": completed[:30]},
-				{"name": _("Total Tasks"), "values": total[:30]},
+				{"name": _("Total Progress Items"), "values": total[:30]},
 			],
 		},
 		"type": "bar",
@@ -127,19 +159,19 @@ def get_report_summary(data):
 		{
 			"value": total,
 			"indicator": "Blue",
-			"label": _("Total Tasks"),
+			"label": _("Total Progress Items"),
 			"datatype": "Int",
 		},
 		{
 			"value": completed,
 			"indicator": "Green",
-			"label": _("Completed Tasks"),
+			"label": _("Completed Progress Items"),
 			"datatype": "Int",
 		},
 		{
 			"value": total_overdue,
 			"indicator": "Green" if total_overdue == 0 else "Red",
-			"label": _("Overdue Tasks"),
+			"label": _("Overdue Progress Items"),
 			"datatype": "Int",
 		},
 	]
